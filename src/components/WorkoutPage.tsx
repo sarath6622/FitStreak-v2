@@ -41,14 +41,6 @@ export default function WorkoutPage() {
           ) : (
             <h1 className="text-xl font-bold text-white">Workouts</h1>
           )}
-
-          <Image
-            src="/profile.jpg"
-            alt="Profile"
-            width={36}
-            height={36}
-            className="rounded-full border border-gray-700"
-          />
         </header>
 
         {/* 1️⃣ Muscle group selection */}
