@@ -1,3 +1,4 @@
+// page.tsx
 'use client';
 
 import Link from 'next/link';
@@ -5,9 +6,11 @@ import { useUser } from '@clerk/nextjs';
 import Navbar from '@/components/Navbar';
 import PRSection from '@/components/history/PRSection';
 import workoutData from '@/data/workoutHistory.json';
+import { getPRs } from '@/lib/historyUtils';
 
 export default function Home() {
   const { user } = useUser();
+  const prs = getPRs(workoutData); // ✅ Calculate PRs here
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-black text-white">
@@ -17,7 +20,7 @@ export default function Home() {
           <p className="text-lg text-gray-300 mb-6">
             Track your fitness journey, visualize progress, and get personalized workouts.
           </p>
-          <PRSection workoutHistory={workoutData} />
+          <PRSection prs={prs} /> {/* ✅ Pass PRs */}
           <Link
             href="/sign-in"
             className="bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-blue-700 transition"
@@ -28,7 +31,6 @@ export default function Home() {
       ) : (
         <>
           <Navbar />
-
           <main className="flex-grow flex flex-col items-center justify-center text-center p-8">
             <h2 className="text-3xl font-bold mb-2">
               Welcome back, {user.firstName}!
@@ -42,9 +44,8 @@ export default function Home() {
             >
               Start a Workout
             </Link>
-            {/* PR Section under the welcome message */}
             <div className="mt-8 w-full max-w-2xl">
-              <PRSection workoutHistory={workoutData} />
+              <PRSection prs={prs} /> {/* ✅ Pass PRs */}
             </div>
           </main>
         </>

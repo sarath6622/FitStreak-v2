@@ -2,17 +2,47 @@
 
 import { useState, useMemo } from "react";
 import workoutData from "@/data/workoutHistory.json";
-import { CalendarDays, Trophy, Filter, BarChart3 } from "lucide-react";
+import { Filter, BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Bar } from "recharts";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
 
-// Utility to format dates
+// -------------------- Types --------------------
+interface Exercise {
+  exerciseId: number;
+  name: string;
+  muscleGroup: string;
+  sets: number;
+  reps: number;
+  weight: number[];
+  rest: number;
+  intensity: string;
+  completed: boolean;
+}
+
+interface WorkoutSession {
+  date: string;
+  duration: number;
+  notes: string;
+  exercises: Exercise[];
+}
+
+// -------------------- Utilities --------------------
 const formatDate = (dateString: string) =>
-  new Date(dateString).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 
-// Get PRs for each exercise
-const getPRs = (history) => {
+const getPRs = (history: WorkoutSession[]): Record<string, number> => {
   const prs: Record<string, number> = {};
   history.forEach((session) => {
     session.exercises.forEach((ex) => {
@@ -25,32 +55,39 @@ const getPRs = (history) => {
   return prs;
 };
 
-// Chart data for a specific exercise
-const getExerciseChartData = (history, exerciseName: string) => {
+const getExerciseChartData = (
+  history: WorkoutSession[],
+  exerciseName: string
+) => {
   return history
-    .filter((session) => session.exercises.some((ex) => ex.name === exerciseName))
+    .filter((session) =>
+      session.exercises.some((ex) => ex.name === exerciseName)
+    )
     .map((session) => {
-      const ex = session.exercises.find((e) => e.name === exerciseName);
+      const ex = session.exercises.find((e) => e.name === exerciseName)!;
       return {
         date: formatDate(session.date),
         topWeight: Math.max(...ex.weight),
-        volume: ex.weight.reduce((sum, w) => sum + w * ex.reps, 0),
       };
     });
 };
 
+// -------------------- Component --------------------
 export default function HistoryPage() {
   const [selectedExercise, setSelectedExercise] = useState<string>("Squats");
 
-  const prs = useMemo(() => getPRs(workoutData), []);
+  const prs = useMemo(() => getPRs(workoutData as WorkoutSession[]), []);
   const chartData = useMemo(
-    () => getExerciseChartData(workoutData, selectedExercise),
+    () => getExerciseChartData(workoutData as WorkoutSession[], selectedExercise),
     [selectedExercise]
   );
 
-  // Unique exercises for filter dropdown
   const allExercises = Array.from(
-    new Set(workoutData.flatMap((s) => s.exercises.map((e) => e.name)))
+    new Set(
+      (workoutData as WorkoutSession[]).flatMap((s) =>
+        s.exercises.map((e) => e.name)
+      )
+    )
   );
 
   return (
@@ -86,9 +123,15 @@ export default function HistoryPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
               <XAxis dataKey="date" stroke="#ccc" />
               <YAxis stroke="#ccc" />
-              <Tooltip contentStyle={{ backgroundColor: "#222", border: "none" }} />
-              <Line type="monotone" dataKey="topWeight" stroke="#facc15" strokeWidth={2} />
-              <Line type="monotone" dataKey="volume" stroke="#38bdf8" strokeWidth={2} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#222", border: "none" }}
+              />
+              <Line
+                type="monotone"
+                dataKey="topWeight"
+                stroke="#facc15"
+                strokeWidth={2}
+              />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
