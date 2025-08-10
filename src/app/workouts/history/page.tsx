@@ -91,10 +91,10 @@ export default function HistoryPage() {
   );
 
   return (
-    <main className="max-w-2xl mx-auto py-6 space-y-6">
+    <main className="max-w-2xl m-3 py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white">Workout History</h1>
+        <h1 className="text-xl font-bold text-white px-2">Workout History</h1>
         <Button variant="outline" className="flex items-center gap-2">
           <Filter size={16} /> Filter
         </Button>

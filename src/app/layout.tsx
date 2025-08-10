@@ -1,12 +1,4 @@
 import type { Metadata } from 'next'
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
@@ -32,26 +24,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider>
       <html lang="en" className="bg-black">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black dark:bg-black text-black dark:text-white`}>
           {/* Always show header, but conditionally render buttons */}
           <header className="flex justify-between items-center p-4 h-16 border-b bg-black border-gray-700 shadow-md text-white">
             <h1 className="text-lg font-semibold">FitStreak</h1>
             <div className="flex gap-4 items-center">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="bg-gray-200 px-4 py-2 rounded">Sign In</button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="bg-[#6c47ff] text-white rounded px-4 py-2">Sign Up</button>
-                </SignUpButton>
-              </SignedOut>
 
-              <SignedIn>
-                <UserButton />
-
-              </SignedIn>
             </div>
           </header>
 
@@ -60,6 +39,5 @@ export default function RootLayout({
           <Navbar />
         </body>
       </html>
-    </ClerkProvider>
   )
 }

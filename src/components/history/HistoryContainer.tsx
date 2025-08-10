@@ -22,7 +22,7 @@ export default function HistoryContainer() {
   );
 
   return (
-    <main className="max-w-2xl mx-auto py-6 space-y-6">
+    <main className="max-w-2xl m-2 py-6 space-y-6">
       <HistoryHeader />
       <PRSection prs={prs} />
       <ProgressChartSection

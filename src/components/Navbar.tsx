@@ -8,7 +8,7 @@ const navItems = [
   { href: "/", label: "Home", icon: <Home size={20} /> },
   { href: "/workouts", label: "Workouts", icon: <Dumbbell size={20} /> },
   { href: "/workouts/history", label: "History", icon: <History size={20} /> },
-  { href: "/profile", label: "Profile", icon: <User size={20} /> },
+  { href: "/workouts", label: "Profile", icon: <User size={20} /> },
 ];
 
 export default function Navbar() {
