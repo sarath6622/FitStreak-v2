@@ -32,9 +32,9 @@ export default function Home() {
 
   // User is logged in: show Navbar and dashboard
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      <Navbar />
 
+    <div className="min-h-screen bg-black text-white flex flex-col">
+     
       <main className="flex-grow flex flex-col items-center justify-center px-4 pt-8 pb-20">
         <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-lg w-full max-w-2xl p-8 flex flex-col items-center">
           <h2 className="text-3xl font-bold mb-2">

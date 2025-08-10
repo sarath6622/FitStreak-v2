@@ -14,7 +14,13 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
+import Navbar from "@/components/Navbar";
 
+import { toast } from "sonner";
+
+toast.success("Operation successful!");
+toast.error("Oops! Something went wrong.");
+toast("This is a basic toast");
 // -------------------- Types --------------------
 interface Exercise {
   exerciseId: number;
@@ -91,7 +97,7 @@ export default function HistoryPage() {
   );
 
   return (
-    <main className="max-w-2xl m-3 py-6 space-y-6">
+    <main className="max-w-2xl py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-white px-2">Workout History</h1>

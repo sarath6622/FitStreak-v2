@@ -73,7 +73,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="max-w-sm mx-auto p-6 bg-gray-900 rounded-xl shadow-lg space-y-6 text-white mt-12">
+    <div className="max-w-sm mx-auto p-6 bg-gray-900 rounded-xl shadow-lg space-y-6 text-white">
       <h2 className="text-2xl font-bold text-center">
         {mode === "login" ? "Sign In" : "Create Account"}
       </h2>
