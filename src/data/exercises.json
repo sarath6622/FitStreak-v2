@@ -1,0 +1,677 @@
+[
+  {
+    "name": "Barbell Bench Press",
+    "muscleGroup": "Chest",
+    "subGroup": "Middle Chest",
+    "equipment": ["Barbell", "Bench"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Triceps", "Anterior Deltoid"]
+  },
+  {
+    "name": "Incline Dumbbell Press",
+    "muscleGroup": "Chest",
+    "subGroup": "Upper Chest",
+    "equipment": ["Dumbbell", "Incline Bench"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Triceps", "Shoulders"]
+  },
+  {
+    "name": "Decline Barbell Press",
+    "muscleGroup": "Chest",
+    "subGroup": "Lower Chest",
+    "equipment": ["Barbell", "Decline Bench"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Triceps", "Shoulders"]
+  },
+  {
+    "name": "Incline Fly",
+    "muscleGroup": "Chest",
+    "subGroup": "Upper Chest",
+    "equipment": ["Dumbbell", "Incline Bench"],
+    "movementType": "Isolation",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Pec Deck Fly",
+    "muscleGroup": "Chest",
+    "subGroup": "Middle Chest",
+    "equipment": ["Machine"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Cable Crossover",
+    "muscleGroup": "Chest",
+    "subGroup": "All Chest",
+    "equipment": ["Cable"],
+    "movementType": "Isolation",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Low-to-High Cable Fly",
+    "muscleGroup": "Chest",
+    "subGroup": "Upper Chest",
+    "equipment": ["Cable"],
+    "movementType": "Isolation",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Push-Up",
+    "muscleGroup": "Chest",
+    "subGroup": "Middle Chest",
+    "equipment": ["Bodyweight"],
+    "movementType": "Compound",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Triceps", "Shoulders", "Core"]
+  },
+  {
+    "name": "Decline Push-Up",
+    "muscleGroup": "Chest",
+    "subGroup": "Lower Chest",
+    "equipment": ["Bodyweight"],
+    "movementType": "Compound",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Triceps", "Shoulders"]
+  },
+  {
+    "name": "Dips",
+    "muscleGroup": "Chest",
+    "subGroup": "Lower Chest",
+    "equipment": ["Parallel Bars"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Triceps", "Shoulders"]
+  },
+  {
+    "name": "Barbell Squat",
+    "muscleGroup": "Legs",
+    "subGroup": "Quadriceps",
+    "equipment": ["Barbell", "Rack"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Glutes", "Hamstrings", "Core"]
+  },
+  {
+    "name": "Front Squat",
+    "muscleGroup": "Legs",
+    "subGroup": "Quadriceps",
+    "equipment": ["Barbell", "Rack"],
+    "movementType": "Compound",
+    "difficulty": "Advanced",
+    "secondaryMuscleGroups": ["Glutes", "Core", "Upper Back"]
+  },
+  {
+    "name": "Bulgarian Split Squat",
+    "muscleGroup": "Legs",
+    "subGroup": "Quadriceps",
+    "equipment": ["Dumbbell", "Bench"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Glutes", "Hamstrings", "Core"]
+  },
+  {
+    "name": "Step-Up",
+    "muscleGroup": "Legs",
+    "subGroup": "Quadriceps",
+    "equipment": ["Bench", "Dumbbell"],
+    "movementType": "Compound",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Glutes", "Hamstrings", "Core"]
+  },
+  {
+    "name": "Walking Lunge",
+    "muscleGroup": "Legs",
+    "subGroup": "Quadriceps",
+    "equipment": ["Dumbbell", "Barbell", "Bodyweight"],
+    "movementType": "Compound",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Glutes", "Hamstrings", "Core"]
+  },
+  {
+    "name": "Leg Press",
+    "muscleGroup": "Legs",
+    "subGroup": "Quadriceps",
+    "equipment": ["Machine"],
+    "movementType": "Compound",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Glutes", "Hamstrings"]
+  },
+  {
+    "name": "Hack Squat",
+    "muscleGroup": "Legs",
+    "subGroup": "Quadriceps",
+    "equipment": ["Machine"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Glutes", "Hamstrings"]
+  },
+  {
+    "name": "Sissy Squat",
+    "muscleGroup": "Legs",
+    "subGroup": "Quadriceps",
+    "equipment": ["Machine", "Bodyweight"],
+    "movementType": "Isolation",
+    "difficulty": "Advanced",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Leg Extension",
+    "muscleGroup": "Legs",
+    "subGroup": "Quadriceps",
+    "equipment": ["Machine"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Leg Curl",
+    "muscleGroup": "Legs",
+    "subGroup": "Hamstrings",
+    "equipment": ["Machine"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Romanian Deadlift",
+    "muscleGroup": "Legs",
+    "subGroup": "Hamstrings",
+    "equipment": ["Barbell", "Dumbbell"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Glutes", "Lower Back"]
+  },
+  {
+    "name": "Seated Leg Curl",
+    "muscleGroup": "Legs",
+    "subGroup": "Hamstrings",
+    "equipment": ["Machine"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Standing Leg Curl",
+    "muscleGroup": "Legs",
+    "subGroup": "Hamstrings",
+    "equipment": ["Machine"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Glute Ham Raise",
+    "muscleGroup": "Legs",
+    "subGroup": "Hamstrings",
+    "equipment": ["GHR Machine"],
+    "movementType": "Compound",
+    "difficulty": "Advanced",
+    "secondaryMuscleGroups": ["Glutes"]
+  },
+  {
+    "name": "Nordic Curl",
+    "muscleGroup": "Legs",
+    "subGroup": "Hamstrings",
+    "equipment": ["Bodyweight", "Pad"],
+    "movementType": "Isolation",
+    "difficulty": "Advanced",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Calf Raise",
+    "muscleGroup": "Legs",
+    "subGroup": "Calves",
+    "equipment": ["Machine", "Bodyweight"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Seated Calf Raise",
+    "muscleGroup": "Legs",
+    "subGroup": "Calves",
+    "equipment": ["Machine"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Donkey Calf Raise",
+    "muscleGroup": "Legs",
+    "subGroup": "Calves",
+    "equipment": ["Machine"],
+    "movementType": "Isolation",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Lat Pulldown",
+    "muscleGroup": "Back",
+    "subGroup": "Lats",
+    "equipment": ["Cable", "Machine"],
+    "movementType": "Compound",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Biceps", "Upper Back"]
+  },
+  {
+    "name": "Pull-Up",
+    "muscleGroup": "Back",
+    "subGroup": "Lats",
+    "equipment": ["Bodyweight", "Bar"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Biceps", "Forearms", "Upper Back"]
+  },
+  {
+    "name": "Chin-Up",
+    "muscleGroup": "Back",
+    "subGroup": "Lats",
+    "equipment": ["Bodyweight", "Bar"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Biceps", "Forearms", "Upper Back"]
+  },
+  {
+    "name": "Barbell Row",
+    "muscleGroup": "Back",
+    "subGroup": "Upper Back",
+    "equipment": ["Barbell"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Lats", "Biceps", "Lower Back"]
+  },
+  {
+    "name": "Pendlay Row",
+    "muscleGroup": "Back",
+    "subGroup": "Upper Back",
+    "equipment": ["Barbell"],
+    "movementType": "Compound",
+    "difficulty": "Advanced",
+    "secondaryMuscleGroups": ["Lats", "Biceps", "Lower Back"]
+  },
+  {
+    "name": "Dumbbell Row",
+    "muscleGroup": "Back",
+    "subGroup": "Lats",
+    "equipment": ["Dumbbell", "Bench"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Biceps", "Upper Back"]
+  },
+  {
+    "name": "Inverted Row",
+    "muscleGroup": "Back",
+    "subGroup": "Upper Back",
+    "equipment": ["Bar", "Bodyweight"],
+    "movementType": "Compound",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Biceps", "Forearms"]
+  },
+  {
+    "name": "Seated Cable Row",
+    "muscleGroup": "Back",
+    "subGroup": "Upper Back",
+    "equipment": ["Cable", "Machine"],
+    "movementType": "Compound",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Lats", "Biceps"]
+  },
+  {
+    "name": "T-Bar Row",
+    "muscleGroup": "Back",
+    "subGroup": "Lats",
+    "equipment": ["Barbell", "T-Bar Attachment"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Upper Back", "Biceps"]
+  },
+  {
+    "name": "Face Pull",
+    "muscleGroup": "Shoulders",
+    "subGroup": "Posterior Deltoid",
+    "equipment": ["Cable", "Rope Attachment"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Upper Back"]
+  },
+  {
+    "name": "Rear Delt Fly",
+    "muscleGroup": "Shoulders",
+    "subGroup": "Posterior Deltoid",
+    "equipment": ["Dumbbell", "Cable", "Machine"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Upper Back"]
+  },
+  {
+    "name": "Shoulder Press",
+    "muscleGroup": "Shoulders",
+    "subGroup": "Anterior/Medial Deltoid",
+    "equipment": ["Barbell", "Dumbbell", "Machine"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Triceps"]
+  },
+  {
+    "name": "Overhead Press",
+    "muscleGroup": "Shoulders",
+    "subGroup": "Anterior Deltoid",
+    "equipment": ["Barbell", "Dumbbell"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Triceps"]
+  },
+  {
+    "name": "Arnold Press",
+    "muscleGroup": "Shoulders",
+    "subGroup": "Anterior Deltoid",
+    "equipment": ["Dumbbell"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Triceps", "Upper Chest"]
+  },
+  {
+    "name": "Upright Row",
+    "muscleGroup": "Shoulders",
+    "subGroup": "Lateral Deltoid",
+    "equipment": ["Barbell", "Dumbbell", "Cable"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Traps"]
+  },
+  {
+    "name": "Lateral Raise",
+    "muscleGroup": "Shoulders",
+    "subGroup": "Lateral Deltoid",
+    "equipment": ["Dumbbell", "Cable"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Front Raise",
+    "muscleGroup": "Shoulders",
+    "subGroup": "Anterior Deltoid",
+    "equipment": ["Dumbbell", "Barbell", "Cable"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Reverse Fly",
+    "muscleGroup": "Shoulders",
+    "subGroup": "Posterior Deltoid",
+    "equipment": ["Dumbbell", "Cable", "Machine"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Upper Back"]
+  },
+  {
+    "name": "Barbell Curl",
+    "muscleGroup": "Biceps",
+    "subGroup": "Biceps Brachii",
+    "equipment": ["Barbell"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Dumbbell Curl",
+    "muscleGroup": "Biceps",
+    "subGroup": "Biceps Brachii",
+    "equipment": ["Dumbbell"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Hammer Curl",
+    "muscleGroup": "Biceps",
+    "subGroup": "Brachialis",
+    "equipment": ["Dumbbell"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Forearms"]
+  },
+  {
+    "name": "Preacher Curl",
+    "muscleGroup": "Biceps",
+    "subGroup": "Biceps Brachii",
+    "equipment": ["Barbell", "EZ-Bar", "Dumbbell", "Preacher Bench"],
+    "movementType": "Isolation",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Concentration Curl",
+    "muscleGroup": "Biceps",
+    "subGroup": "Biceps Brachii",
+    "equipment": ["Dumbbell"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Cable Curl",
+    "muscleGroup": "Biceps",
+    "subGroup": "Biceps Brachii",
+    "equipment": ["Cable"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Incline Dumbbell Curl",
+    "muscleGroup": "Biceps",
+    "subGroup": "Biceps Brachii",
+    "equipment": ["Dumbbell", "Incline Bench"],
+    "movementType": "Isolation",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Triceps Pushdown",
+    "muscleGroup": "Triceps",
+    "subGroup": "All Heads",
+    "equipment": ["Cable", "Bar/Rope"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Overhead Tricep Extension",
+    "muscleGroup": "Triceps",
+    "subGroup": "Long Head",
+    "equipment": ["Dumbbell", "Cable", "EZ-Bar"],
+    "movementType": "Isolation",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Skullcrusher",
+    "muscleGroup": "Triceps",
+    "subGroup": "Long Head",
+    "equipment": ["Barbell", "EZ-Bar", "Dumbbell"],
+    "movementType": "Isolation",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Close Grip Bench Press",
+    "muscleGroup": "Triceps",
+    "subGroup": "All Heads",
+    "equipment": ["Barbell", "Bench"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Chest", "Shoulders"]
+  },
+  {
+    "name": "Plank",
+    "muscleGroup": "Core",
+    "subGroup": "Anterior Abs",
+    "equipment": ["Bodyweight"],
+    "movementType": "Isometric",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Shoulders", "Glutes"]
+  },
+  {
+    "name": "Crunches",
+    "muscleGroup": "Core",
+    "subGroup": "Upper Abs",
+    "equipment": ["Bodyweight"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Sit-Up",
+    "muscleGroup": "Core",
+    "subGroup": "Upper Abs",
+    "equipment": ["Bodyweight"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Hip Flexors"]
+  },
+  {
+    "name": "Cable Crunch",
+    "muscleGroup": "Core",
+    "subGroup": "Upper Abs",
+    "equipment": ["Cable"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Bicycle Crunch",
+    "muscleGroup": "Core",
+    "subGroup": "Obliques",
+    "equipment": ["Bodyweight"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Upper Abs", "Lower Abs"]
+  },
+  {
+    "name": "Russian Twist",
+    "muscleGroup": "Core",
+    "subGroup": "Obliques",
+    "equipment": ["Bodyweight", "Plate", "Medicine Ball"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Hanging Leg Raise",
+    "muscleGroup": "Core",
+    "subGroup": "Lower Abs",
+    "equipment": ["Bodyweight", "Pull-Up Bar"],
+    "movementType": "Isolation",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Hip Flexors"]
+  },
+  {
+    "name": "Ab Wheel Rollout",
+    "muscleGroup": "Core",
+    "subGroup": "Anterior Abs",
+    "equipment": ["Ab Wheel"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Obliques", "Lower Back", "Shoulders"]
+  },
+  {
+    "name": "Deadlift",
+    "muscleGroup": "Back",
+    "subGroup": "Lower Back",
+    "equipment": ["Barbell"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Hamstrings", "Glutes", "Traps", "Forearms"]
+  },
+  {
+    "name": "Good Morning",
+    "muscleGroup": "Back",
+    "subGroup": "Lower Back",
+    "equipment": ["Barbell"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Hamstrings", "Glutes"]
+  },
+  {
+    "name": "Hyperextension",
+    "muscleGroup": "Back",
+    "subGroup": "Lower Back",
+    "equipment": ["Roman Chair", "Bodyweight"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Hamstrings", "Glutes"]
+  },
+  {
+    "name": "Back Extension",
+    "muscleGroup": "Back",
+    "subGroup": "Lower Back",
+    "equipment": ["Bench", "Bodyweight"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Hamstrings", "Glutes"]
+  },
+  {
+    "name": "Straight Arm Pulldown",
+    "muscleGroup": "Back",
+    "subGroup": "Lats",
+    "equipment": ["Cable", "Bar"],
+    "movementType": "Isolation",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Teres Major"]
+  },
+  {
+    "name": "Mountain Climber",
+    "muscleGroup": "Core",
+    "subGroup": "Lower Abs",
+    "equipment": ["Bodyweight"],
+    "movementType": "Cardio",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Shoulders", "Hip Flexors"]
+  },
+  {
+    "name": "Side Plank",
+    "muscleGroup": "Core",
+    "subGroup": "Obliques",
+    "equipment": ["Bodyweight"],
+    "movementType": "Isometric",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Glutes", "Shoulders"]
+  },
+  {
+    "name": "Woodchopper",
+    "muscleGroup": "Core",
+    "subGroup": "Obliques",
+    "equipment": ["Cable", "Medicine Ball"],
+    "movementType": "Compound",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": []
+  },
+  {
+    "name": "Dead Bug",
+    "muscleGroup": "Core",
+    "subGroup": "Transverse Abdominis",
+    "equipment": ["Bodyweight"],
+    "movementType": "Compound",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Hip Flexors"]
+  },
+  {
+    "name": "Bird Dog",
+    "muscleGroup": "Core",
+    "subGroup": "Transverse Abdominis",
+    "equipment": ["Bodyweight"],
+    "movementType": "Compound",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Lower Back", "Glutes"]
+  }
+]
