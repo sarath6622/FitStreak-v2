@@ -28,7 +28,7 @@ export default function RootLayout({
     <html lang="en" className="bg-black">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black dark:bg-black text-black dark:text-white`}>
         {/* Always show header, but conditionally render buttons */}
-        <header className="sticky top-0 z-50 flex justify-between items-center p-4 h-16 border-b bg-black border-gray-700 shadow-md text-white">
+        <header className=" top-0 z-50 flex justify-between items-center p-4 border-b bg-black border-gray-700 shadow-md text-white">
           <h1 className="text-lg font-semibold">FitStreak</h1>
           <div className="flex gap-4 items-center">
             {/* Additional header content */}

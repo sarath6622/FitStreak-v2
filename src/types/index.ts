@@ -5,6 +5,7 @@ export interface Exercise {
   muscleGroup: string;
   sets: number;
   reps: number;
+  repsPerSet: number[];
   weight: number[];
   rest: number;
   intensity: string;

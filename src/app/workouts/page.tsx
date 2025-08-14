@@ -1,5 +1,5 @@
 import Navbar from "@/components/Navbar";
-import WorkoutPage from "@/components/WorkoutPage";
+import WorkoutPage from "@/components/workout/WorkoutPage";
 
 export default function WorkoutsRoute() {
   return (

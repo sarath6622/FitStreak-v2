@@ -1,6 +1,27 @@
 // src/lib/historyUtils.ts
 import type { WorkoutSession } from "@/types";
 
+// src/lib/historyUtils.ts
+
+export function calculatePRs(workouts: WorkoutSession[]) {
+  const prs: Record<string, number> = {};
+
+  workouts.forEach(workout => {
+    workout.exercises.forEach(ex => {
+      ex.weight.forEach((w, idx) => {
+        const reps = ex.repsPerSet?.[idx] ?? 0;
+
+        // PR = highest weight used for any set (regardless of reps)
+        if (!prs[ex.name] || w > prs[ex.name]) {
+          prs[ex.name] = w;
+        }
+      });
+    });
+  });
+
+  return prs;
+}
+
 export const formatDate = (dateString: string) =>
   new Date(dateString).toLocaleDateString("en-US", {
     month: "short",
