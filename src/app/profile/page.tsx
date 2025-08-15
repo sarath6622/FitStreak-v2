@@ -30,7 +30,7 @@ const ProfilePage: React.FC = () => {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [])
 
   const fetchProfile = async (uid: string, authUser: FirebaseUser) => {
     const userRef = doc(db, "users", uid);

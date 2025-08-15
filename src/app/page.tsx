@@ -57,7 +57,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className=" bg-black text-white flex flex-col">
       <main className="flex-grow flex flex-col items-center justify-center px-4 pt-8 pb-20">
 <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-lg w-full max-w-md p-4 flex flex-col items-center">
   <h2 className="text-lg font-bold mb-2 flex items-center">
