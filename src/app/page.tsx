@@ -9,6 +9,7 @@ import PRSection from "@/components/history/PRSection";
 import Auth from "@/components/Auth";
 import { calculatePRs } from "@/lib/historyUtils";
 import type { WorkoutSession } from "@/types";
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [prs, setPrs] = useState<Record<string, number>>({});
@@ -19,9 +20,9 @@ export default function Home() {
       setUser(firebaseUser);
 
       if (firebaseUser) {
-        // Fetch workouts from Firestore
         const workoutsRef = collection(db, "users", firebaseUser.uid, "workouts");
         const snapshot = await getDocs(workoutsRef);
+
         const workouts: WorkoutSession[] = snapshot.docs.map(doc => {
           const data = doc.data();
           return {
@@ -32,7 +33,6 @@ export default function Home() {
           };
         });
 
-        console.log("Workouts from Firestore:", workouts);
         setPrs(calculatePRs(workouts));
       }
 
@@ -57,31 +57,33 @@ export default function Home() {
   }
 
   return (
-    <div className=" bg-black text-white flex flex-col">
-      <main className="flex-grow flex flex-col items-center justify-center px-4 pt-8 pb-20">
-<div className="bg-gray-800 border border-gray-700 rounded-xl shadow-lg w-full max-w-md p-4 flex flex-col items-center">
-  <h2 className="text-lg font-bold mb-2 flex items-center">
-    {user.photoURL && (
-      <img
-        src={user.photoURL}
-        alt={user.displayName || "Profile"}
-        className="inline-block w-8 h-8 rounded-full border border-gray-600 mr-2"
-      />
-    )}
-    Welcome back{user.displayName ? `, ${user.displayName}` : ""}!
-  </h2>
-  <p className="text-gray-300 mb-4 text-sm text-center">
-    Track your workouts, view your progress, and achieve your goals!
-  </p>
-  <Link
-    href="/workouts"
-    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm shadow transition"
-  >
-    Start a Workout
-  </Link>
-</div>
+    <div className="bg-black text-white flex flex-col min-h-screen">
+      <main className="flex-grow flex flex-col items-center px-4 pt-6 pb-16">
+        {/* Welcome card */}
+        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-md w-full max-w-sm p-4 flex flex-col items-center">
+          <h2 className="text-base font-semibold mb-2 flex items-center">
+            {user.photoURL && (
+              <img
+                src={user.photoURL}
+                alt={user.displayName || "Profile"}
+                className="inline-block w-7 h-7 rounded-full border border-gray-600 mr-2"
+              />
+            )}
+            Welcome back{user.displayName ? `, ${user.displayName}` : ""}!
+          </h2>
+          <p className="text-gray-300 mb-3 text-xs text-center leading-relaxed">
+            Track your workouts, view your progress, and achieve your goals!
+          </p>
+          <Link
+            href="/workouts"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium text-xs shadow transition"
+          >
+            Start a Workout
+          </Link>
+        </div>
 
-        <div className="mt-10 w-full max-w-2xl">
+        {/* PR Section */}
+        <div className="mt-6 w-full max-w-2xl">
           <PRSection prs={prs} />
         </div>
       </main>
