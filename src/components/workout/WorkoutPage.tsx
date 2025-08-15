@@ -19,58 +19,56 @@ export default function WorkoutPage() {
     "Chest", "Legs", "Back", "Shoulders", "Biceps", "Triceps", "Core"
   ];
 
-  useEffect(() => {
-    const fetchWorkoutData = async () => {
-      setLoading(true);
-      const user = auth.currentUser;
-      if (!user) {
-        setCompleted({});
-        setSuggestedMuscles(muscleGroups.slice(0, 3));
-        setLoading(false);
-        return;
+const fetchWorkoutData = async () => {
+  setLoading(true);
+  const user = auth.currentUser;
+  if (!user) {
+    setCompleted({});
+    setSuggestedMuscles(muscleGroups.slice(0, 3));
+    setLoading(false);
+    return;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  const data = await getCompletedExercisesForToday(user.uid, today);
+  setCompleted(data);
+
+  // --- Fetch last 7 days history for suggestions ---
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const workoutsRef = collection(db, "users", user.uid, "workouts");
+  const q = query(
+    workoutsRef,
+    where("date", ">=", sevenDaysAgo.toISOString().split("T")[0]),
+    orderBy("date", "desc")
+  );
+
+  const snapshot = await getDocs(q);
+  const workouts = snapshot.docs.map(doc => doc.data());
+
+  const counts: Record<string, number> = {};
+  muscleGroups.forEach(m => counts[m] = 0);
+
+  workouts.forEach(workout => {
+    workout.exercises.forEach((ex: any) => {
+      if (counts[ex.muscleGroup] !== undefined) {
+        counts[ex.muscleGroup]++;
       }
+    });
+  });
 
-      const today = new Date().toISOString().split("T")[0];
-      const data = await getCompletedExercisesForToday(user.uid, today);
-      setCompleted(data);
+  const sorted = Object.entries(counts)
+    .sort((a, b) => a[1] - b[1])
+    .map(([muscle]) => muscle);
 
-      // --- Fetch last 7 days history for suggestions ---
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  setSuggestedMuscles(sorted.slice(0, 3));
+  setLoading(false);
+};
 
-      const workoutsRef = collection(db, "users", user.uid, "workouts");
-      const q = query(
-        workoutsRef,
-        where("date", ">=", sevenDaysAgo.toISOString().split("T")[0]),
-        orderBy("date", "desc")
-      );
-
-      const snapshot = await getDocs(q);
-      const workouts = snapshot.docs.map(doc => doc.data());
-
-      // Count frequency of muscle groups
-      const counts: Record<string, number> = {};
-      muscleGroups.forEach(m => counts[m] = 0);
-
-      workouts.forEach(workout => {
-        workout.exercises.forEach((ex: any) => {
-          if (counts[ex.muscleGroup] !== undefined) {
-            counts[ex.muscleGroup]++;
-          }
-        });
-      });
-
-      // Sort by least trained
-      const sorted = Object.entries(counts)
-        .sort((a, b) => a[1] - b[1])
-        .map(([muscle]) => muscle);
-
-      setSuggestedMuscles(sorted.slice(0, 3));
-      setLoading(false);
-    };
-
-    fetchWorkoutData();
-  }, []);
+useEffect(() => {
+  fetchWorkoutData();
+}, []);
 
   return (
     <>
@@ -156,12 +154,13 @@ export default function WorkoutPage() {
 
       {/* Workout Logger Modal */}
       {selectedExercise && (
-        <WorkoutLoggerModal
-          muscleGroup={selectedMuscle!}
-          exerciseName={selectedExercise}
-          onClose={() => setSelectedExercise(null)}
-        />
-      )}
+  <WorkoutLoggerModal
+    muscleGroup={selectedMuscle!}
+    exerciseName={selectedExercise}
+    onClose={() => setSelectedExercise(null)}
+    onWorkoutSaved={fetchWorkoutData} // NEW
+  />
+)}
     </>
   );
 }

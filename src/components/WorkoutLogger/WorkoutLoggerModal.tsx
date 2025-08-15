@@ -20,19 +20,21 @@ interface WorkoutLoggerModalProps {
   muscleGroup: string;
   exerciseName: string;
   onClose: () => void;
+  onWorkoutSaved?: () => void; // NEW
 }
 
 const defaultRest = 90;
-const repOptions = [5, 8, 10, 12, 15,20];
+const repOptions = [5, 8, 10, 12, 15, 20];
 
 export default function WorkoutLoggerModal({
   muscleGroup,
   exerciseName,
   onClose,
+  onWorkoutSaved,
 }: WorkoutLoggerModalProps) {
-  const [sets, setSets] = useState(3);
-  const [weights, setWeights] = useState<number[]>(Array(3).fill(0));
-  const [repsPerSet, setRepsPerSet] = useState<number[]>(Array(3).fill(10));
+  const [sets, setSets] = useState(1);
+  const [weights, setWeights] = useState<number[]>([0]);
+  const [repsPerSet, setRepsPerSet] = useState<number[]>([10]);
   const [duration, setDuration] = useState(45);
   const [rest, setRest] = useState(defaultRest);
   const [isSaving, setIsSaving] = useState(false);
@@ -57,25 +59,25 @@ export default function WorkoutLoggerModal({
   };
 
   useEffect(() => {
-  const fetchExistingData = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
+    const fetchExistingData = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
 
-    const today = new Date().toISOString().split("T")[0];
-    const workoutData = await getWorkoutForExercise(user.uid, today, exerciseName);
+      const today = new Date().toISOString().split("T")[0];
+      const workoutData = await getWorkoutForExercise(user.uid, today, exerciseName);
 
-    if (workoutData && workoutData.exercise) {
-      const ex = workoutData.exercise;
-      setSets(ex.sets || 1);
-      setWeights(ex.weight || Array(ex.sets || 1).fill(0));
-      setRepsPerSet(ex.repsPerSet || Array(ex.sets || 1).fill(10));
-      setDuration(workoutData.duration || 45);
-      setRest(workoutData.rest || defaultRest);
-    }
-  };
+      if (workoutData && workoutData.exercise) {
+        const ex = workoutData.exercise;
+        setSets(ex.sets || 1);
+        setWeights(ex.weight || Array(ex.sets || 1).fill(0));
+        setRepsPerSet(ex.repsPerSet || Array(ex.sets || 1).fill(10));
+        setDuration(workoutData.duration || 45);
+        setRest(workoutData.rest || defaultRest);
+      }
+    };
 
-  fetchExistingData();
-}, [exerciseName]);
+    fetchExistingData();
+  }, [exerciseName]);
 
   // Sync weights/reps array with sets
   useEffect(() => {
@@ -115,32 +117,32 @@ export default function WorkoutLoggerModal({
     return Object.keys(errs).length === 0;
   };
 
-const handleSave = async () => {
-  if (!validate()) {
-    toast.error("Please fix form errors before saving.");
-    return;
-  }
+  const handleSave = async () => {
+    if (!validate()) {
+      toast.error("Please fix form errors before saving.");
+      return;
+    }
 
-  setIsSaving(true);
+    setIsSaving(true);
 
-  const workoutData = {
-    date: new Date().toISOString().split("T")[0],
-    duration,
-    rest,
-    exercises: [
-      {
-        exerciseId: uuidv4(),
-        name: exerciseName,
-        muscleGroup,
-        sets,
-        repsPerSet,
-        weight: weights,
-        completed: true,
-      },
-    ],
-  };
+    const workoutData = {
+      date: new Date().toISOString().split("T")[0],
+      duration,
+      rest,
+      exercises: [
+        {
+          exerciseId: uuidv4(),
+          name: exerciseName,
+          muscleGroup,
+          sets,
+          repsPerSet,
+          weight: weights,
+          completed: true,
+        },
+      ],
+    };
 
-try {
+    try {
   const user = auth.currentUser;
   if (!user) {
     toast.error("You must be logged in to save workouts.");
@@ -166,14 +168,15 @@ try {
   );
 
   toast.success("Workout saved successfully!");
+  if (onWorkoutSaved) onWorkoutSaved(); // NEW LINE
   onClose();
 } catch (e) {
   console.error(e);
   toast.error("Failed to save workout. Please try again.");
 } finally {
-    setIsSaving(false);
-  }
-};
+  setIsSaving(false);
+}
+  };
 
   return (
     <div
