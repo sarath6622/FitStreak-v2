@@ -33,8 +33,17 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-black">
       <head>
-        {/* This is where we add any extra head tags that `metadata` doesn't cover */}
+        {/* PWA meta tags */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="FitStreak" />
+
+        {/* Icons */}
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="manifest" href="/manifest.json" />
+
+        {/* Theme color for Android and Safari */}
+        <meta name="theme-color" content="#FFD700" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black dark:bg-black text-black dark:text-white`}
