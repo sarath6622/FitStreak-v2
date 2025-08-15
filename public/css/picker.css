@@ -1,0 +1,36 @@
+/* picker.css */
+.picker-item-text {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  transition: color 0.2s, font-weight 0.2s;
+}
+
+.picker-item-selected .picker-item-text {
+  color: white;
+  font-weight: 600;
+}
+
+.picker-column {
+  position: relative;
+}
+
+.picker-column::before,
+.picker-column::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 30%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.picker-column::before {
+  top: 0;
+  background: linear-gradient(to bottom, #0f172a, transparent);
+}
+
+.picker-column::after {
+  bottom: 0;
+  background: linear-gradient(to top, #0f172a, transparent);
+}
