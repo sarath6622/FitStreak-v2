@@ -12,15 +12,13 @@ import DurationInput from "@/components/WorkoutLogger/DurationInput";
 import RestInput from "@/components/WorkoutLogger/RestInput";
 
 import { auth } from "@/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { upsertWorkout } from "@/services/workoutService";
-import { getWorkoutForExercise } from "@/services/workoutService";
+import { upsertWorkout, getWorkoutForExercise } from "@/services/workoutService";
 
 interface WorkoutLoggerModalProps {
   muscleGroup: string;
   exerciseName: string;
   onClose: () => void;
-  onWorkoutSaved?: () => void; // NEW
+  onWorkoutSaved?: () => void;
 }
 
 const defaultRest = 90;
@@ -39,25 +37,26 @@ export default function WorkoutLoggerModal({
   const [rest, setRest] = useState(defaultRest);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [autoConfirmFlags, setAutoConfirmFlags] = useState<boolean[]>([]);
+  const [forceRemount, setForceRemount] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // ESC close
-  const escFunction = useCallback(
-    (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    },
-    [onClose]
-  );
+  const escFunction = useCallback((event: KeyboardEvent) => {
+    if (event.key === "Escape") onClose();
+  }, [onClose]);
 
   useEffect(() => {
-    document.addEventListener("keydown", escFunction, false);
-    return () => document.removeEventListener("keydown", escFunction, false);
+    document.addEventListener("keydown", escFunction);
+    return () => document.removeEventListener("keydown", escFunction);
   }, [escFunction]);
 
-  // Overlay click close
+  // Close on overlay click
   const onOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose();
   };
 
+  // Fetch workout from DB
   useEffect(() => {
     const fetchExistingData = async () => {
       const user = auth.currentUser;
@@ -73,33 +72,43 @@ export default function WorkoutLoggerModal({
         setRepsPerSet(ex.repsPerSet || Array(ex.sets || 1).fill(10));
         setDuration(workoutData.duration || 45);
         setRest(workoutData.rest || defaultRest);
-      }
-    };
 
+        // autoConfirm = true for DB-loaded rows
+        const flagsFromDb = Array((ex.sets || 1)).fill(true);
+        setAutoConfirmFlags(flagsFromDb);
+        setForceRemount(true);
+
+        console.log("[DB FETCH] loaded weights:", ex.weight, "flags:", flagsFromDb);
+      }
+
+      setIsLoading(false);
+    };
     fetchExistingData();
   }, [exerciseName]);
 
-  // Sync weights/reps array with sets
+  // Reset the forceRemount flag after remounting once
   useEffect(() => {
-    setWeights((current) =>
-      sets > current.length
-        ? [...current, ...Array(sets - current.length).fill(0)]
-        : current.slice(0, sets)
-    );
+    if (forceRemount) {
+      console.log("[REMOUNT] forcing remount of WeightRepsInput");
+      setForceRemount(false);
+    }
+  }, [forceRemount]);
 
-    setRepsPerSet((current) =>
-      sets > current.length
-        ? [...current, ...Array(sets - current.length).fill(10)]
-        : current.slice(0, sets)
+  // Ensure arrays sync with number of sets
+  useEffect(() => {
+    setWeights((cur) =>
+      sets > cur.length ? [...cur, ...Array(sets - cur.length).fill(0)] : cur.slice(0, sets)
     );
-
-    // Clear related errors
+    setRepsPerSet((cur) =>
+      sets > cur.length ? [...cur, ...Array(sets - cur.length).fill(10)] : cur.slice(0, sets)
+    );
+    // Clear errors on change of set count
     setErrors((prev) => {
-      const newErrors = { ...prev };
-      Object.keys(newErrors).forEach((key) => {
-        if (key.startsWith("weight-") || key.startsWith("rep-")) delete newErrors[key];
+      const copy = { ...prev };
+      Object.keys(copy).forEach((k) => {
+        if (k.startsWith("weight-") || k.startsWith("rep-")) delete copy[k];
       });
-      return newErrors;
+      return copy;
     });
   }, [sets]);
 
@@ -117,6 +126,7 @@ export default function WorkoutLoggerModal({
     return Object.keys(errs).length === 0;
   };
 
+  // Handle saving
   const handleSave = async () => {
     if (!validate()) {
       toast.error("Please fix form errors before saving.");
@@ -124,59 +134,59 @@ export default function WorkoutLoggerModal({
     }
 
     setIsSaving(true);
-
-    const workoutData = {
-      date: new Date().toISOString().split("T")[0],
-      duration,
-      rest,
-      exercises: [
-        {
-          exerciseId: uuidv4(),
-          name: exerciseName,
-          muscleGroup,
-          sets,
-          repsPerSet,
-          weight: weights,
-          completed: true,
-        },
-      ],
-    };
-
     try {
-  const user = auth.currentUser;
-  if (!user) {
-    toast.error("You must be logged in to save workouts.");
-    return;
-  }
+      const user = auth.currentUser;
+      if (!user) {
+        toast.error("You must be logged in to save workouts.");
+        return;
+      }
 
-  const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toISOString().split("T")[0];
+      await upsertWorkout(user.uid, today, {
+        exerciseId: uuidv4(),
+        name: exerciseName,
+        muscleGroup,
+        sets,
+        repsPerSet,
+        weight: weights,
+        completed: true,
+      }, duration, rest);
 
-  await upsertWorkout(
-    user.uid,
-    today,
-    {
-      exerciseId: uuidv4(),
-      name: exerciseName,
-      muscleGroup,
-      sets,
-      repsPerSet,
-      weight: weights,
-      completed: true,
-    },
-    duration,
-    rest
-  );
-
-  toast.success("Workout saved successfully!");
-  if (onWorkoutSaved) onWorkoutSaved(); // NEW LINE
-  onClose();
-} catch (e) {
-  console.error(e);
-  toast.error("Failed to save workout. Please try again.");
-} finally {
-  setIsSaving(false);
-}
+      toast.success("Workout saved successfully!");
+      if (onWorkoutSaved) onWorkoutSaved();
+      onClose();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save workout. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  // add new set + disable auto confirm for that row
+  const addNewSet = () => {
+    setSets((s) => s + 1);
+    setWeights((prev) => {
+      const next = [...prev, 0];
+      return next;
+    });
+    setRepsPerSet((prev) => [...prev, 10]);
+    setAutoConfirmFlags((prev) => {
+      const next = [...prev, false];
+      console.log("[ADD SET] new weights:", next, "flags:", next);
+      return next;
+    });
+  };
+
+  console.log("[RENDER] forceRemount =", forceRemount);
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
+        <span className="text-white">Loading...</span>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -185,6 +195,7 @@ export default function WorkoutLoggerModal({
       aria-modal="true"
       role="dialog"
     >
+
       <motion.div
         initial={{ opacity: 0, scale: 0.85 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -192,12 +203,7 @@ export default function WorkoutLoggerModal({
         transition={{ duration: 0.25 }}
         className="bg-gray-900 rounded-xl p-6 w-80 text-white shadow-lg relative"
       >
-        {/* Close */}
-        <button
-          onClick={onClose}
-          aria-label="Close modal"
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
-        >
+        <button onClick={onClose} className="absolute top-4 right-4">
           <X size={20} />
         </button>
 
@@ -205,48 +211,48 @@ export default function WorkoutLoggerModal({
 
         <SetsControl
           sets={sets}
-          setSets={setSets}
+          setSets={addNewSet}
           error={errors.sets}
           disabled={isSaving}
         />
 
         <WeightRepsInput
+          key={forceRemount ? weights.join("-") : undefined}
           weights={weights}
           repsPerSet={repsPerSet}
-          onWeightChange={(i, v) =>
-            setWeights((prev) => {
-              const arr = [...prev];
-              arr[i] = isNaN(Number(v)) ? 0 : Number(v);
-              return arr;
-            })
-          }
-
-          onRepsChange={(i, v) =>
-            setRepsPerSet((prev) => {
-              const arr = [...prev];
-              arr[i] = isNaN(Number(v)) ? 1 : Number(v);
-              return arr;
-            })
-          }
-
           errors={errors}
           repOptions={repOptions}
           disabled={isSaving}
+          initialAutoConfirmFlags={autoConfirmFlags}
+          onWeightChange={(i, v) => {
+            const next = [...weights];
+            next[i] = isNaN(Number(v)) ? 0 : Number(v);
+            setWeights(next);
+          }}
+          onRepsChange={(i, v) => {
+            const next = [...repsPerSet];
+            next[i] = isNaN(Number(v)) ? 1 : Number(v);
+            setRepsPerSet(next);
+          }}
         />
 
-        <DurationInput
-          duration={duration}
-          setDuration={(v) => setDuration(Number(v))}
-          error={errors.duration}
-          disabled={isSaving}
-        />
-
-        <RestInput rest={rest} setRest={(v) => setRest(Number(v))} disabled={isSaving} />
+        <DurationInput duration={duration} setDuration={(v) => setDuration(Number(v))} />
+        <RestInput rest={rest} setRest={(v) => setRest(Number(v))} />
 
         <button
-          onClick={handleSave}
-          className="w-full bg-yellow-500 text-black font-bold py-3 rounded-lg hover:bg-yellow-400 flex items-center justify-center gap-2 disabled:opacity-50"
           disabled={isSaving}
+          onClick={handleSave}
+          className={`
+    w-full
+    flex items-center justify-center gap-2
+    py-3
+    rounded-lg
+    font-semibold
+    transition-colors
+    ${isSaving
+              ? "bg-yellow-400 text-black opacity-70 cursor-not-allowed"
+              : "bg-yellow-500 hover:bg-yellow-400 text-black"}
+  `}
         >
           <Save size={18} />
           {isSaving ? "Saving..." : "Save Workout"}

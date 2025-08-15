@@ -5,19 +5,25 @@ interface RestInputProps {
 }
 
 export default function RestInput({ rest, setRest, disabled }: RestInputProps) {
+  const options = [30, 60, 90, 120];
+
   return (
-    <div className="flex items-center justify-between mb-6">
-      <label htmlFor="rest">Rest (seconds)</label>
-      <input
-        id="rest"
-        type="number"
-        min={0}
-        max={600}
-        value={rest}
-        onChange={(e) => setRest(Number(e.target.value))}
-        className="w-20 bg-gray-800 p-2 rounded-md text-center"
-        disabled={disabled}
-      />
+    <div className="flex flex-row mb-4 justify-between items-center">
+      <label htmlFor="rest" className="text-sm mb-1">Rest</label>
+      <div className="flex items-center gap-1 mb-1">
+        {options.map((sec) => (
+          <button
+            key={sec}
+            onClick={() => setRest(sec)}
+            disabled={disabled}
+            className={`px-2 py-1 rounded text-xs
+              ${rest === sec ? "bg-yellow-500 text-black" : "bg-gray-700 text-gray-300"}
+            `}
+          >
+            {sec}s
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
