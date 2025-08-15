@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   themeColor: "#FFD700",
   manifest: "/manifest.json",
   icons: {
-    apple: "/icons/icon-192x192.png",
-    icon: "/icons/icon-192x192.png",
+    apple: "/icons/ios/AppIcon-180@2x.png",
+    icon: "/icons/android/res/mipmap-xxxhdpi/ic_launcher.png",
   },
 };
 
@@ -40,11 +40,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="FitStreak" />
 
         {/* Icons */}
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <link rel="manifest" href="/manifest.json" />
+<link rel="apple-touch-icon" sizes="180x180" href="/icons/ios/AppIcon-180@2x.png" />
+<link rel="apple-touch-icon" sizes="167x167" href="/icons/ios/AppIcon-83.5@2x~ipad.png" />
+<link rel="apple-touch-icon" sizes="152x152" href="/icons/ios/AppIcon-76@2x~ipad.png" />
+<link rel="apple-touch-icon" sizes="120x120" href="/icons/ios/AppIcon-60@2x.png" />
 
-        {/* Theme color for Android and Safari */}
-        <meta name="theme-color" content="#1A1A1A" />
+<link rel="manifest" href="/manifest.json" />
+
+        {/* Theme color for Android and Safari */}     
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black dark:bg-black text-black dark:text-white`}
