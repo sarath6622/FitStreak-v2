@@ -43,7 +43,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
 
         {/* Theme color for Android and Safari */}
-        <meta name="theme-color" content="#FFD700" />
+        <meta name="theme-color" content="#1A1A1A" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black dark:bg-black text-black dark:text-white`}
