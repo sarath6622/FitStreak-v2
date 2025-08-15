@@ -76,3 +76,85 @@ export const upsertWorkout = async (uid: string, date: string, exercise: any, du
     });
   }
 };
+
+import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
+
+// Returns the most recent workouts for a user (limit = how many to return)
+export async function getWorkoutsForUser(
+  userId: string,
+  opts: { limit: number }
+) {
+  const q = query(
+    collection(db, "workouts"),
+    where("userId", "==", userId),
+    orderBy("date", "desc"),
+    limit(opts.limit)
+  );
+
+  const snap = await getDocs(q);
+
+  const workouts = snap.docs.map((doc) => {
+    const d = doc.data();
+    return {
+      date: d.date,
+      muscleGroup: d.muscleGroup,
+      sets: d.sets,
+      weight: d.weight,
+      repsPerSet: d.repsPerSet,
+    };
+  });
+
+  return workouts;
+}
+
+export interface WorkoutExerciseHistoryItem {
+  date: string; // workout date
+  muscleGroup: string;
+  sets: number;
+  weight: number[];     // weight per set
+  repsPerSet: number[]; // reps per set
+  name: string;
+}
+
+/**
+ * Fetches the user's recent workout history to analyze patterns.
+ * @param userId The ID of the user.
+ * @param limitCount Number of most recent workouts to fetch.
+ * @returns Array of workout history items sorted descending by date.
+ */
+export async function getUserWorkoutHistory(
+  userId: string,
+  limitCount: number
+): Promise<WorkoutExerciseHistoryItem[]> {
+  const workoutsRef = collection(db, "users", userId, "workouts");
+
+  const q = query(
+    workoutsRef,
+    orderBy("date", "desc"),
+    limit(limitCount)
+  );
+
+  const querySnapshot = await getDocs(q);
+
+  const exercisesHistory: WorkoutExerciseHistoryItem[] = [];
+
+  querySnapshot.docs.forEach((doc) => {
+    const data = doc.data();
+    const workoutDate = data.date;
+
+    if (Array.isArray(data.exercises)) {
+      data.exercises.forEach((ex: any) => {
+        exercisesHistory.push({
+          date: workoutDate,
+          muscleGroup: ex.muscleGroup,
+          sets: ex.sets,
+          weight: ex.weight || [],
+          repsPerSet: ex.repsPerSet || [],
+          name: ex.name,
+        });
+      });
+    }
+  });
+
+  return exercisesHistory;
+}
