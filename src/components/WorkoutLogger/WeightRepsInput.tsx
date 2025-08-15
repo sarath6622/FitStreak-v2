@@ -1,4 +1,4 @@
-import { Check, Copy } from "lucide-react";
+import { Check } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Picker from "react-mobile-picker";
 
@@ -90,41 +90,6 @@ export default function WeightRepsInput({
         if (onRowConfirm) onRowConfirm(idx);
     };
 
-    // weight picker - 2 columns (tens + decimal portion: 0,2.5,5,7.5)
-    const renderWeightPicker = (weight: number, idx: number) => {
-        const tens = Math.floor(weight / 10);
-        const decimal = weight % 10;
-
-        return (
-            <Picker
-                value={{ tens, decimal }}
-                onChange={(val) => {
-                    const newWeight =
-                        Number(val.tens) * 10 + Number(val.decimal);
-                    onWeightChange(idx, newWeight.toString());
-                }}
-                disabled={disabled}
-                height={90}
-                itemHeight={30}
-            >
-                <Picker.Column name="tens">
-                    {[...Array(21)].map((_, i) => (
-                        <Picker.Item key={i} value={i}>
-                            <span>{i}</span>
-                        </Picker.Item>
-                    ))}
-                </Picker.Column>
-                <Picker.Column name="decimal">
-                    {[0, 2.5, 5, 7.5].map((v) => (
-                        <Picker.Item key={v} value={v}>
-                            <span>{v}</span>
-                        </Picker.Item>
-                    ))}
-                </Picker.Column>
-            </Picker>
-        );
-    };
-
     return (
         <div className="mb-4">
             <label className="block mb-2 font-medium text-white">
@@ -144,33 +109,41 @@ export default function WeightRepsInput({
                 return (
                     <div
                         key={idx}
-                        className={`mb-2 rounded-lg p-1 
-        ${confirmedRows[idx]
+                        className={`mb-2 rounded-lg p-1 ${confirmedRows[idx]
                                 ? "bg-green-900/40 border border-green-500"
-                                : "border border-yellow-400/50"}
-      `}
+                                : "border border-yellow-400/50"
+                            }`}
                     >
                         <div className="grid grid-cols-[40px_1fr_1fr_32px] gap-2 items-center">
                             <span className="text-center text-white text-sm">{idx + 1}</span>
 
-                            {/* Weight */}
+                            {/* Weight (numeric input) */}
                             {showPicker ? (
-                                <div className="flex flex-col items-center w-full">
-                                    <span className="block text-[10px] w-auto text-gray-400 text-center">Choose weight</span>
-                                    <div className="border border-gray-600 rounded-md w-auto">
-                                        {renderWeightPicker(weight, idx)}
+                                <div className="flex flex-col items-center w-full align-center">
+                                    <div className="flex items-center gap-1 w-full">
+                                        <input
+                                            type="number"
+                                            inputMode="decimal"
+                                            step="0.5"
+                                            min="0"
+                                            placeholder="0"
+                                            className="flex-1 bg-gray-800 border border-gray-600 rounded-md text-center py-1 w-1/2"
+                                            value={weight === 0 ? "" : weight}
+                                            onChange={(e) => onWeightChange(idx, e.target.value)}
+                                            disabled={disabled}
+                                        />
+                                        <span className="text-xs text-gray-300">kg</span>
                                     </div>
                                 </div>
                             ) : (
                                 <span className="text-center text-white">{weight} kg</span>
                             )}
 
-                            {/* Reps */}
+                            {/* Reps picker */}
                             {showPicker ? (
-                                <div className="flex flex-col items-center">
-
-                                    <span className="block w-auto text-[10px] text-gray-400 text-center">Choose reps</span>
-                                    <div className="border border-gray-400 rounded-md w-1/2">
+                                <div className="flex flex-col items-center w-full">
+                                    <span className="text-[10px] text-gray-400 mb-1">Choose reps</span>
+                                    <div className="w-full border border-gray-600 rounded-md bg-gray-800">
                                         <Picker
                                             value={{ reps: repsPerSet[idx] }}
                                             onChange={(val) => onRepsChange(idx, val.reps.toString())}
@@ -192,15 +165,12 @@ export default function WeightRepsInput({
                                 <span className="text-center text-white">{repsPerSet[idx]}</span>
                             )}
 
-                            {/* Confirm Tick */}
                             <button
                                 type="button"
                                 onClick={() => toggleConfirm(idx)}
-                                className={`w-7 h-7 rounded-full flex items-center justify-center 
-            ${confirmedRows[idx]
-                                        ? "bg-green-500 text-white"
-                                        : "bg-gray-700 text-gray-300"}
-          `}
+                                className={`w-7 h-7 rounded-full flex items-center justify-center
+      ${confirmedRows[idx] ? "bg-green-500 text-white" : "bg-gray-700 text-gray-300"}
+    `}
                             >
                                 <Check size={12} strokeWidth={3} />
                             </button>
