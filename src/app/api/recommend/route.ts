@@ -27,30 +27,68 @@ export async function POST(req: NextRequest) {
       .join("\n");
 
     // Prepare prompt with conditional muscleGroup targeting and JSON-only output requested
-    const prompt = muscleGroup
-      ? `
+const prompt = muscleGroup
+  ? `
 You are a virtual fitness coach. Here are the user's last 7 workouts:\n\n${workoutSummary}\n\n
 Based on this history, suggest a personalized workout plan for TODAY focused ONLY on the muscle group: "${muscleGroup}".
+
 Rules:
 - Do not repeat the same muscle group as the most recent workout if it is NOT the selected muscle group.
-- Suggest sets & reps.
-- Provide your response in valid JSON format ONLY, with an array of exercises. Each exercise object should have "exercise" (string), "sets" (number), "reps" (string), and optionally "notes" (string).
-- Do not include any explanations, introductions, or other text outside the JSON array.
+- Suggest realistic sets & reps.
+- Always return exercises enriched with metadata.
+- Make sure the workout is atleast an hour long.
+- Analyze the user's history to suggest sets and reps difficulty as the user has been logging workouts for a while.
+
+Output Format:
+Return ONLY valid JSON, an array of exercises.
+Each exercise must have the following fields:
+{
+  "name": string,
+  "muscleGroup": string,
+  "subGroup": string,
+  "equipment": string[],
+  "movementType": string,
+  "difficulty": string,
+  "secondaryMuscleGroups": string[],
+  "sets": number,
+  "reps": string,
+  "notes": string (optional)
+}
+
+No text outside JSON.
 `
-      : `
+  : `
 You are a virtual fitness coach. Here are the user's last 7 workouts:\n\n${workoutSummary}\n\n
 Based on this history, suggest a personalized workout for TODAY.
+
 Rules:
-- Do not repeat the same muscle group as the most recent workout
-- Make sure that each major muscle is trained at least once per week
-- Suggest the sets & reps as well.
-Please answer in JSON format ONLY, providing an array of exercises with "exercise", "sets", "reps", and optional "notes".
-No extra text outside the JSON.
+- Do not repeat the same muscle group as the most recent workout.
+- Ensure each major muscle is trained at least once per week.
+- Suggest realistic sets & reps.
+- Always return exercises enriched with metadata.
+
+Output Format:
+Return ONLY valid JSON, an array of exercises.
+Each exercise must have the following fields:
+{
+  "name": string,
+  "muscleGroup": string,
+  "subGroup": string,
+  "equipment": string[],
+  "movementType": string,
+  "difficulty": string,
+  "secondaryMuscleGroups": string[],
+  "sets": number,
+  "reps": string,
+  "notes": string (optional)
+}
+
+No text outside JSON.
 `;
 
     // Call Groq SDK
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile", // update the model if needed
+      model: "llama3-70b-8192", // update the model if needed
       messages: [
         {
           role: "user",
@@ -60,7 +98,8 @@ No extra text outside the JSON.
     });
 
     const recommendation = completion.choices[0].message.content;
-
+    console.log("Generated recommendation:", recommendation);
+    
     return NextResponse.json({ recommendation });
   } catch (err) {
     console.error(err);

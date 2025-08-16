@@ -9,7 +9,7 @@ interface SetsControlProps {
 
 export default function SetsControl({ sets, setSets, error, disabled }: SetsControlProps) {
   return (
-    <div className="flex flex-col mb-4">
+    <div className="flex flex-col mb-4 text-gray-300">
       <label className="flex items-center justify-between mb-1">
         <span>Sets</span>
         <span className="text-sm text-red-400">{error}</span>

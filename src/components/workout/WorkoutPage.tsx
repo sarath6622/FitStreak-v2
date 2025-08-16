@@ -8,6 +8,7 @@ import { getCompletedExercisesForToday } from "@/services/workoutService";
 import ExerciseList from "@/components/ExerciseList";
 import WorkoutLoggerModal from "@/components/WorkoutLogger/WorkoutLoggerModal";
 import SuggestionSection from "../SuggestionSection";
+import TodaysWorkouts from "../TodaysWorkouts";
 
 export default function WorkoutPage() {
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
@@ -74,74 +75,80 @@ export default function WorkoutPage() {
   return (
     <>
       <div className="max-w-md mx-auto px-4 py-6 space-y-8 bg-black min-h-screen">
-  {/* Sticky Header */}
-  <header className="z-40 sticky top-0 bg-black px-3 py-2 backdrop-blur-md border-b border-gray-800 shadow-sm">
-    <div className="flex items-center justify-between">
-      {selectedMuscle ? (
-        <button
-          onClick={() =>
-            selectedExercise ? setSelectedExercise(null) : setSelectedMuscle(null)
-          }
+        {/* Sticky Header */}
+        <header className="z-40 sticky top-0 bg-black px-3 py-2 backdrop-blur-md border-b border-gray-800 shadow-sm">
+          <div className="flex items-center justify-between">
+            {selectedMuscle ? (
+              <button
+                onClick={() =>
+                  selectedExercise ? setSelectedExercise(null) : setSelectedMuscle(null)
+                }
 
-          className="flex items-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800 px-3 py-1 rounded-full transition"
-        >
-          <ArrowLeft size={16} /> Back
-        </button>
-      ) : (
-        <h1 className="text-lg font-semibold text-white leading-none">Workouts</h1>
-      )}
-    </div>
-  </header>
+                className="flex items-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800 px-3 py-1 rounded-full transition"
+              >
+                <ArrowLeft size={16} /> Back
+              </button>
+            ) : (
+              <h1 className="text-lg font-semibold text-white leading-none">Workouts</h1>
+            )}
+          </div>
+        </header>
 
-  {/* Content */}
-  <div className="space-y-8">
-    {/* Suggested Section */}
-    {!selectedMuscle && (
-      <div className="bg-gray-900 rounded-xl shadow-md">
-        <SuggestionSection
-          userId={auth.currentUser?.uid || ""}
-          onSelect={(m) => setSelectedMuscle(m)}
-        />
+        {/* Content */}
+        <div className="space-y-8">
+          {/* Suggested Section */}
+          {!selectedMuscle && (
+            <div className="bg-gray-900 rounded-xl shadow-md">
+              <SuggestionSection
+                userId={auth.currentUser?.uid || ""}
+                onSelect={(m) => {
+                  setSelectedMuscle(m);
+                  fetchWorkoutData(); // <- this refetches data after save!
+                }}
+              />
+
+            </div>
+          )}
+          <TodaysWorkouts />
+
+          {/* All Muscle Groups */}
+          {!selectedMuscle && (
+            <section className="bg-gray-900 rounded-xl p-5 shadow-md">
+              <h2 className="text-lg font-semibold text-white mb-4">
+                All Muscle Groups
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                {muscleGroups.map((group) => (
+                  <button
+                    key={group}
+                    onClick={() => setSelectedMuscle(group)}
+                    className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl py-5 text-sm font-semibold text-white shadow hover:scale-[1.02] hover:shadow-lg transition-transform"
+                  >
+                    {group}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Exercise List */}
+          {selectedMuscle && !selectedExercise && (
+            loading ? (
+              <div className="flex flex-col items-center justify-center text-gray-400 space-y-2">
+                <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                <span>Loading Exercises...</span>
+              </div>
+            ) : (
+              <>
+                <ExerciseList
+                  muscleGroup={selectedMuscle}
+                  onSelectExercise={(exercise) => setSelectedExercise(exercise)}
+                  completedExercises={completed} />
+              </>
+            )
+          )}
+        </div>
       </div>
-    )}
-
-    {/* All Muscle Groups */}
-    {!selectedMuscle && (
-      <section className="bg-gray-900 rounded-xl p-5 shadow-md">
-        <h2 className="text-lg font-semibold text-white mb-4">
-          All Muscle Groups
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
-          {muscleGroups.map((group) => (
-            <button
-              key={group}
-              onClick={() => setSelectedMuscle(group)}
-              className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl py-5 text-sm font-semibold text-white shadow hover:scale-[1.02] hover:shadow-lg transition-transform"
-            >
-              {group}
-            </button>
-          ))}
-        </div>
-      </section>
-    )}
-
-    {/* Exercise List */}
-    {selectedMuscle && !selectedExercise && (
-      loading ? (
-        <div className="flex flex-col items-center justify-center text-gray-400 space-y-2">
-          <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-          <span>Loading Exercises...</span>
-        </div>
-      ) : (
-        <ExerciseList
-          muscleGroup={selectedMuscle}
-          onSelectExercise={(exercise) => setSelectedExercise(exercise)}
-          completedExercises={completed}
-        />
-      )
-    )}
-  </div>
-</div>
 
       {/* Workout Logger Modal */}
       {selectedExercise && (

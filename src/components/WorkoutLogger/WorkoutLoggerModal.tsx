@@ -22,7 +22,7 @@ interface WorkoutLoggerModalProps {
 }
 
 const defaultRest = 90;
-const repOptions = [5, 8, 10, 12, 15, 20,25,30,35,40,45,50];
+const repOptions = [5, 8, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50];
 
 export default function WorkoutLoggerModal({
   muscleGroup,

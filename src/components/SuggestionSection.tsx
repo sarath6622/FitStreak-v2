@@ -1,5 +1,6 @@
 "use client";
 
+import { Lightbulb } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface SuggestionSectionProps {
@@ -14,7 +15,13 @@ interface MuscleSummary {
 }
 
 interface WorkoutPlan {
-  exercise: string;
+  name: string;
+  muscleGroup: string;
+  subGroup: string;
+  equipment: string[];
+  movementType: string;
+  difficulty: string;
+  secondaryMuscleGroups: string[];
   sets: number;
   reps: string;
   notes?: string;
@@ -123,7 +130,7 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
 
   return (
     <div className="max-w-md mx-auto p-5 bg-gray-900 rounded-xl shadow-lg border border-gray-700">
-      <h2 className="text-blue-400 font-semibold text-lg mb-4">Suggested for You</h2>
+      <h2 className="flex align-center text-blue-400 font-semibold text-lg mb-4">Suggested for You</h2>
 
       {/* Muscle Group Pills */}
       <div className="flex flex-wrap gap-2 mb-4">
@@ -159,13 +166,30 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
           <h3 className="text-blue-300 font-semibold text-base mb-2">
             Workout plan for {selectedMuscle}:
           </h3>
-          <ul className="list-disc list-inside space-y-1 text-sm">
-            {workoutPlan.map(({ exercise, sets, reps, notes }, idx) => (
-              <li key={idx}>
-                <span className="font-semibold text-blue-200">{exercise}</span>: {sets} sets × {reps} reps
-                {notes && <em className="ml-1 text-gray-400">({notes})</em>}
-              </li>
-            ))}
+          <ul className="list-disc list-inside space-y-2 text-sm">
+            {workoutPlan.map(
+              (
+                {
+                  name,
+                  sets,
+                  reps,
+                  notes,
+                  subGroup,
+                  equipment,
+                  movementType,
+                  difficulty,
+                  secondaryMuscleGroups,
+                },
+                idx
+              ) => (
+                <li key={idx} className="space-y-1">
+                  <span className="font-semibold text-blue-200">{name}</span> –{" "}
+                  {sets} sets × {reps}
+                  {notes && <em className="ml-1 text-gray-400">({notes})</em>}
+                  
+                </li>
+              )
+            )}
           </ul>
           <button
             onClick={startWorkout}
