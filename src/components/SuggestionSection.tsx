@@ -51,37 +51,51 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [generationLoading, setGenerationLoading] = useState(false);
 
-  useEffect(() => {
-    if (!userId) return;
-    async function fetchMuscleAnalysis() {
-      setLoading(true);
-      setAnalysisLoading(true);
-      try {
-        const res = await fetch("/api/analyze-muscles", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId }),
-        });
-        const data = await res.json();
-        let summaries: MuscleSummary[] = [];
-        try {
-          summaries = JSON.parse(data.summary);
-        } catch {
-          console.error("Failed to parse muscle summary from AI");
-        }
+useEffect(() => {
+  if (!userId) return;
 
-        setMuscleSummaries(summaries);
-      } catch (err) {
-        console.error("Failed to fetch muscle summary", err);
-        setMuscleSummaries([]);
+  // Try to read from localStorage
+  const cached = localStorage.getItem("muscleSummary");
+  const cachedDate = localStorage.getItem("muscleSummaryDate");
+
+  // If we have a cached summary from TODAY → use it
+  const today = new Date().toDateString();
+  if (cached && cachedDate === today) {
+    setMuscleSummaries(JSON.parse(cached));
+    return;
+  }
+
+  async function fetchMuscleAnalysis() {
+    setAnalysisLoading(true);
+    try {
+      const res = await fetch("/api/analyze-muscles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      let summaries: MuscleSummary[] = [];
+      try {
+        summaries = JSON.parse(data.summary);
+      } catch {
+        console.error("Failed to parse muscle summary from AI");
       }
 
-      setLoading(false);
-      setAnalysisLoading(false);
+      setMuscleSummaries(summaries);
+
+      // ✅ Cache result + date in localStorage
+      localStorage.setItem("muscleSummary", JSON.stringify(summaries));
+      localStorage.setItem("muscleSummaryDate", today);
+    } catch (err) {
+      console.error("Failed to fetch muscle summary", err);
+      setMuscleSummaries([]);
     }
 
-    fetchMuscleAnalysis();
-  }, [userId]);
+    setAnalysisLoading(false);
+  }
+
+  fetchMuscleAnalysis();
+}, [userId]);
 
   const toggleMuscle = (muscle: string) => {
     setSelectedMuscles((prev) => {
