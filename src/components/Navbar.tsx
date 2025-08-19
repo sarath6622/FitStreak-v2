@@ -34,9 +34,8 @@ export default function Navbar() {
             <li key={href}>
               <Link
                 href={href}
-                className={`text-sm font-medium transition ${
-                  pathname === href ? "text-blue-500" : "text-gray-400 hover:text-blue-400"
-                }`}
+                className={`text-sm font-medium transition ${pathname === href ? "text-blue-500" : "text-gray-400 hover:text-blue-400"
+                  }`}
               >
                 {label}
               </Link>
@@ -57,11 +56,10 @@ export default function Navbar() {
             <li>
               <Link
                 href="/login"
-                className={`flex items-center gap-1 ${
-                  pathname === "/login"
+                className={`flex items-center gap-1 ${pathname === "/login"
                     ? "text-blue-500"
                     : "text-gray-400 hover:text-blue-400"
-                }`}
+                  }`}
               >
                 <User size={20} />
                 Login
@@ -72,52 +70,97 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Navbar */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-black border-t border-gray-700 shadow z-50">
-        <ul className="flex justify-around items-center py-3">
-          {navItems.map(({ href, label, icon }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className={`flex flex-col items-center text-xs transition ${
-                  pathname === href ? "text-blue-500" : "text-gray-400 hover:text-blue-400"
-                }`}
-              >
-                {icon}
-                <span>{label}</span>
-              </Link>
-            </li>
-          ))}
+      {/* Mobile Navbar */}
+      <nav className="sm:hidden fixed bottom-0 left-4 right-4 z-50">
+        <div className="bg-[#1b1b1d]/80 backdrop-blur-sm  p-2 shadow-lg">
+          <ul className="flex justify-around items-center">
+            {navItems.map(({ href, label, icon }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className={`
+              flex flex-col items-center text-xs px-4 py-2 transition
+              ${pathname === href
+                      ? "bg-blue-600/20 text-blue-300 rounded-2xl"
+                      : "text-gray-400"}
+            `}
+                >
+                  {icon}
+                  <span
+                    className={`
+                transition-all duration-200 overflow-hidden
+                ${pathname === href
+                        ? "opacity-100 max-h-4 mt-1"
+                        : "opacity-0 max-h-0 mt-0"
+                      }
 
-          {user ? (
-            <li>
-              <Link
-                href="/profile"
-                className="flex flex-col items-center text-xs text-gray-400 hover:text-blue-400"
-              >
-                <img
-                  src={user.photoURL || "/default-avatar.png"}
-                  alt="Profile"
-                  className="w-6 h-6 rounded-full border border-gray-500"
-                />
-                <span>Profile</span>
-              </Link>
-            </li>
-          ) : (
-            <li>
-              <Link
-                href="/login"
-                className={`flex flex-col items-center text-xs transition ${
-                  pathname === "/login"
-                    ? "text-blue-500"
-                    : "text-gray-400 hover:text-blue-400"
-                }`}
-              >
-                <User size={20} />
-                <span>Login</span>
-              </Link>
-            </li>
-          )}
-        </ul>
+              `}
+                  >
+                    {label}
+                  </span>
+                </Link>
+              </li>
+            ))}
+
+            {user ? (
+              <li>
+                <Link
+                  href="/profile"
+                  className={`
+              flex flex-col items-center text-xs px-4 py-2 transition
+              ${pathname === "/profile"
+                      ? "bg-blue-600/20 text-blue-300 rounded-2xl"
+                      : "text-gray-400"}
+            `}
+                >
+                  <img
+                    src={user.photoURL || "/default-avatar.png"}
+                    alt="Profile"
+                    className="w-6 h-6 rounded-full border border-gray-500"
+                  />
+                  <span
+                    className={`
+                transition-all duration-200 overflow-hidden
+                ${pathname === "/profile"
+                        ? "opacity-100 max-h-4 mt-1"
+                        : "opacity-0 max-h-0 mt-0"
+                      }
+
+              `}
+                  >
+                    Profile
+                  </span>
+                </Link>
+              </li>
+            ) : (
+              <li>
+                <Link
+                  href="/login"
+                  className={`
+              flex flex-col items-center text-xs px-4 py-2 transition
+              ${pathname === "/login"
+                      ? "bg-blue-600/20 text-blue-300 rounded-2xl"
+                      : "text-gray-400"}
+            `}
+                >
+                  <User size={20} />
+                  <span
+                    className={`
+                transition-all duration-200 overflow-hidden
+                ${pathname === "/login"
+                        ? "opacity-100 max-h-4 mt-1"
+                        : "opacity-0 max-h-0 mt-0"
+                      }
+
+              `}
+                  >
+                    Login
+                  </span>
+                </Link>
+              </li>
+            )}
+          </ul>
+        </div>
       </nav>
     </>
   );
