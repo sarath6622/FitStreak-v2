@@ -136,7 +136,7 @@ export default function WeightRepsInput({
                   inputMode="numeric"
                   min="0"
                   placeholder="0"
-                  className="bg-gray-800 border border-gray-600 rounded-md text-center py-1 w-full text-white text-xs"
+                  className="bg-gray-800 border border-gray-600 rounded-md text-center py-1 w-full text-white"
                   value={repsPerSet[idx] === 0 ? "" : repsPerSet[idx]}
                   onChange={(e) => onRepsChange(idx, e.target.value)}
                   disabled={disabled}
