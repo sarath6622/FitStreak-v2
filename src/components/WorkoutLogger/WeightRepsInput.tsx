@@ -133,6 +133,7 @@ export default function WeightRepsInput({
               {showPicker ? (
                 <input
                   type="number"
+                  inputMode="numeric"
                   min="0"
                   placeholder="0"
                   className="bg-gray-800 border border-gray-600 rounded-md text-center py-1 w-full text-white text-xs"
