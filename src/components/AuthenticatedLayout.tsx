@@ -4,10 +4,29 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/firebase";
 import Navbar from "@/components/Navbar";
+import { Sparkles } from "lucide-react";
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+
+  const loadingMessages = [
+    "Summoning your workout wizard 🧙‍♂️",
+    "Assembling dumbbells…",
+    "Waking up the AI coach 🤖",
+    "Looking for unused muscle fibers 💪",
+    "Finding the perfect burn 🔥"
+  ];
+
   const [loading, setLoading] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState("");
+
+  useEffect(() => {
+    if (loading) {
+      // Pick a random message
+      const randomMsg = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+      setLoadingMessage(randomMsg);
+    }
+  }, [loading]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -18,8 +37,13 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
   }, []);
 
   if (loading) {
-    // Optional: Show a loading spinner or blank screen while checking auth state
-    return <div className="bg-black text-white flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
+        <Sparkles className="w-6 h-6 mb-3 animate-spin" />
+        <h1 className="text-3xl font-bold mb-1">FitStreak</h1>
+        <p className="text-sm text-gray-400 animate-pulse">Summoning your personal coach...</p>
+      </div>
+    );
   }
 
   return (

@@ -9,6 +9,7 @@ import PRSection from "@/components/history/PRSection";
 import Auth from "@/components/Auth";
 import { calculatePRs } from "@/lib/historyUtils";
 import type { WorkoutSession } from "@/types";
+import { Sparkles } from "lucide-react";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -42,19 +43,26 @@ export default function Home() {
     return unsubscribe;
   }, []);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <div className="w-full max-w-md">
-          <Auth />
-        </div>
+if (loading) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="flex items-center gap-2 text-gray-300 animate-pulse">
+        <Sparkles className="animate-spin w-5 h-5" />
+        <span>Loading...</span>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-white">Loading...</div>;
-  }
+if (!user) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="w-full max-w-md">
+        <Auth />
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="bg-black text-white flex flex-col min-h-screen">
