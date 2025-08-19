@@ -341,6 +341,33 @@
     "difficulty": "Beginner",
     "secondaryMuscleGroups": ["Upper Back"]
   },
+    {
+    "name": "Standing Multiflight Front Raise",
+    "muscleGroup": "Shoulders",
+    "subGroup": "Anterior Deltoid",
+    "equipment": ["Cable", "Dual Pulley Attachment"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Upper Chest"]
+  },
+  {
+    "name": "Hip Thrust Machine",
+    "muscleGroup": "Glutes",
+    "subGroup": "Gluteus Maximus",
+    "equipment": ["Hip Thrust Machine"],
+    "movementType": "Compound",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Hamstrings", "Quadriceps"]
+  },
+  {
+    "name": "Standing Multiflight Lateral Machine",
+    "muscleGroup": "Shoulders",
+    "subGroup": "Lateral Deltoid",
+    "equipment": ["Cable", "Dual Pulley Attachment"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Upper Traps"]
+  },
   {
     "name": "Rear Delt Fly",
     "muscleGroup": "Shoulders",
