@@ -71,8 +71,8 @@ export default function Navbar() {
 
       {/* Mobile Navbar */}
       {/* Mobile Navbar */}
-      <nav className="sm:hidden fixed bottom-0 left-4 right-4 z-50">
-        <div className="bg-[#1b1b1d]/80 backdrop-blur-sm  p-2 shadow-lg">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50">
+        <div className="bg-[#1b1b1d]/80 backdrop-blur-xl  p-2 shadow-lg">
           <ul className="flex justify-around items-center">
             {navItems.map(({ href, label, icon }) => (
               <li key={href}>
