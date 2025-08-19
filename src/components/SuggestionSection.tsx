@@ -50,52 +50,54 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
   const [hasGenerated, setHasGenerated] = useState(false);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [generationLoading, setGenerationLoading] = useState(false);
+  const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
+  const availableDurations = [30, 45, 60, 90, 120]; // in minutes
 
-useEffect(() => {
-  if (!userId) return;
+  useEffect(() => {
+    if (!userId) return;
 
-  // Try to read from localStorage
-  const cached = localStorage.getItem("muscleSummary");
-  const cachedDate = localStorage.getItem("muscleSummaryDate");
+    // Try to read from localStorage
+    const cached = localStorage.getItem("muscleSummary");
+    const cachedDate = localStorage.getItem("muscleSummaryDate");
 
-  // If we have a cached summary from TODAY → use it
-  const today = new Date().toDateString();
-  if (cached && cachedDate === today) {
-    setMuscleSummaries(JSON.parse(cached));
-    return;
-  }
-
-  async function fetchMuscleAnalysis() {
-    setAnalysisLoading(true);
-    try {
-      const res = await fetch("/api/analyze-muscles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-      const data = await res.json();
-      let summaries: MuscleSummary[] = [];
-      try {
-        summaries = JSON.parse(data.summary);
-      } catch {
-        console.error("Failed to parse muscle summary from AI");
-      }
-
-      setMuscleSummaries(summaries);
-
-      // ✅ Cache result + date in localStorage
-      localStorage.setItem("muscleSummary", JSON.stringify(summaries));
-      localStorage.setItem("muscleSummaryDate", today);
-    } catch (err) {
-      console.error("Failed to fetch muscle summary", err);
-      setMuscleSummaries([]);
+    // If we have a cached summary from TODAY → use it
+    const today = new Date().toDateString();
+    if (cached && cachedDate === today) {
+      setMuscleSummaries(JSON.parse(cached));
+      return;
     }
 
-    setAnalysisLoading(false);
-  }
+    async function fetchMuscleAnalysis() {
+      setAnalysisLoading(true);
+      try {
+        const res = await fetch("/api/analyze-muscles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId }),
+        });
+        const data = await res.json();
+        let summaries: MuscleSummary[] = [];
+        try {
+          summaries = JSON.parse(data.summary);
+        } catch {
+          console.error("Failed to parse muscle summary from AI");
+        }
 
-  fetchMuscleAnalysis();
-}, [userId]);
+        setMuscleSummaries(summaries);
+
+        // ✅ Cache result + date in localStorage
+        localStorage.setItem("muscleSummary", JSON.stringify(summaries));
+        localStorage.setItem("muscleSummaryDate", today);
+      } catch (err) {
+        console.error("Failed to fetch muscle summary", err);
+        setMuscleSummaries([]);
+      }
+
+      setAnalysisLoading(false);
+    }
+
+    fetchMuscleAnalysis();
+  }, [userId]);
 
   const toggleMuscle = (muscle: string) => {
     setSelectedMuscles((prev) => {
@@ -144,7 +146,11 @@ useEffect(() => {
       const res = await fetch("/api/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, muscleGroups: selectedMuscles }), // <-- send an array
+        body: JSON.stringify({
+          userId,
+          muscleGroups: selectedMuscles,
+          duration: selectedDuration || 60, // Default to 60 minutes if not set
+        }),
       });
       const data = await res.json();
       const parsedPlan: WorkoutPlan[] = JSON.parse(data.recommendation);
@@ -162,24 +168,63 @@ useEffect(() => {
       <h2 className="flex align-center text-blue-400 font-semibold text-lg mb-4">Suggested for You</h2>
 
       {/* Muscle Group Pills */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {muscleSummaries
-          .filter((m) => m.daysAgo !== 0)
-          .map((m) => (
-            <button
-              key={m.muscleGroup}
-              onClick={() => toggleMuscle(m.muscleGroup)}
-              disabled={loading}
-              className={`px-3 py-1 rounded-full text-sm font-medium shadow-sm border border-transparent focus:outline-none transition-all
-                ${getColorClass(m.daysAgo, selectedMuscles.includes(m.muscleGroup))}
-${selectedMuscles.includes(m.muscleGroup) ? "scale-105" : "scale-100"}
-              `}
-              title={`Last trained ${m.daysAgo} day${m.daysAgo === 1 ? "" : "s"} ago (${m.lastTrained})`}
-            >
-              {m.muscleGroup}
-              <span className="opacity-70 text-xs ml-1">– {m.daysAgo}d</span>
-            </button>
-          ))}
+      {/* ---- Muscle Group Selector ---- */}
+      <div className="mb-5">
+        <h4 className="text-sm font-semibold text-gray-300 mb-2 tracking-wide">
+          Choose Muscle Groups
+        </h4>
+
+        <div className="flex flex-wrap gap-2 p-2 bg-gray-800 border border-gray-700 rounded-lg">
+          {muscleSummaries
+            .filter((m) => m.daysAgo !== 0)
+            .map((m) => {
+              const selected = selectedMuscles.includes(m.muscleGroup);
+              return (
+                <button
+                  key={m.muscleGroup}
+                  onClick={() => toggleMuscle(m.muscleGroup)}
+                  disabled={loading}
+                  className={`
+              px-3 py-1 rounded-full text-sm font-medium transition-all
+              ${selected
+                      ? "bg-blue-600 text-white ring-2 ring-blue-300 scale-105"
+                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"}
+            `}
+                  title={`Last trained ${m.daysAgo} day${m.daysAgo === 1 ? "" : "s"} ago (${m.lastTrained})`}
+                >
+                  {m.muscleGroup}
+                  <span className="opacity-70 text-xs ml-1">– {m.daysAgo}d</span>
+                </button>
+              );
+            })}
+        </div>
+      </div>
+      {/* Planned duration pills */}
+      <div className="mb-5">
+        <h4 className="text-sm font-semibold text-gray-300 mb-2 tracking-wide">
+          Choose Duration
+        </h4>
+
+        <div className="flex flex-wrap gap-2 p-2 bg-gray-800 border border-gray-700 rounded-lg">
+          {availableDurations.map((min) => {
+            const selected = selectedDuration === min;
+            return (
+              <button
+                key={min}
+                onClick={() => setSelectedDuration(min)}
+                className={`
+            px-3 py-1 rounded-full text-sm font-medium transition-all
+            ${selected
+                    ? "bg-blue-600 text-white ring-2 ring-blue-300 scale-105"
+                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"}
+          `}
+                title={`${min} minutes`}
+              >
+                {min} min
+              </button>
+            );
+          })}
+        </div>
       </div>
       <button
         onClick={generateWorkout}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { getUserWorkoutHistory } from "@/services/workoutService";
+import { log } from "node:console";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -13,7 +14,8 @@ export async function POST(req: NextRequest) {
     }
 
     const workoutHistory = await getUserWorkoutHistory(userId, 10);
-
+    console.log("[Analyze Muscles] Fetched workout history:", workoutHistory);
+    
     // --- FIX STARTS HERE ---
     // First, filter the flat array of exercises to remove low-volume sets
     const filteredExercises = workoutHistory.filter(
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
     // Use finalProcessedHistory in the prompt
     const historyJson = JSON.stringify(finalProcessedHistory, null, 2);
     
-    const prompt = `
+const prompt = `
 You are a virtual fitness coach analyzing a user's workout history.
 Each workout entry includes:
 - 'date' (YYYY-MM-DD) of the workout
@@ -74,12 +76,15 @@ Each workout entry includes:
 Workout history:
 ${historyJson}
 
+Here is the full list of major muscle groups that MUST be evaluated, even if missing from the history:
+["Chest","Back","Legs","Shoulders","Biceps","Triceps","Abs","Calves","Glutes"]
+
 Instructions:
 
-1. For each major muscle group, find the most recent date it was trained (based on completed exercises).
+1. For **each** of the muscle groups in the list above, find the most recent date it was trained (based on completed exercises).
 2. Calculate 'daysAgo' as number of days since it was last trained compared to today.
-3. If a muscle group hasn't been trained in the last 7 days, use 'daysAgo' = 7.
-4. Assign an 'intensity' level ('low', 'medium', 'high') to each muscle group based on total volume (sets, reps, weights) in the most recent workout involving that group:
+3. If a muscle group hasn't been trained in the last 7 days or does not appear in the history, use 'daysAgo' = 7 and 'lastTrained' = "Never".
+4. Assign an 'intensity' level ('low', 'medium', 'high') based on total volume (sets, reps, weights) in the most recent workout for that group:
    - 'low' = very low volume (e.g., sets < 3 or very light weights)
    - 'medium' = moderate volume (sets 3–6, moderate weights)
    - 'high' = high volume (sets 7+, heavy weights)
@@ -95,7 +100,6 @@ Instructions:
 7. Your response MUST be only this JSON array. Do NOT include any explanations, greetings, or text outside the JSON.
 
 Example valid response:
-
 [
   {
     "muscleGroup": "Legs",
