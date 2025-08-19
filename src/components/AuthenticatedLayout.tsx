@@ -19,16 +19,23 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
 
   if (loading) {
     // Optional: Show a loading spinner or blank screen while checking auth state
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
+    return <div className="bg-black text-white flex items-center justify-center">Loading...</div>;
   }
 
   return (
     <>
       {/* Conditionally render Navbar only if authenticated */}
-      {user && <Navbar />}
+      {user &&
+
+        <><header className="fixed  top-0 left-0 right-0 z-50 flex justify-between items-center p-4 border-b bg-black border-gray-700 shadow-md text-white">
+          <h1 className="text-lg font-semibold">FitStreak</h1>
+          <div className="flex gap-4 items-center">
+            {/* Additional header content */}
+          </div>
+        </header><Navbar /></>}
 
       {/* Always render children */}
-      {children}
+      <main className={user ? "pt-16" : ""}>{children}</main>
     </>
   );
 }

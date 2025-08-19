@@ -36,28 +36,48 @@ export default function RootLayout({
       <head>
         {/* PWA meta tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
         <meta name="apple-mobile-web-app-title" content="FitStreak" />
 
         {/* Icons */}
-<link rel="apple-touch-icon" sizes="180x180" href="/icons/ios/AppIcon-180@2x.png" />
-<link rel="apple-touch-icon" sizes="167x167" href="/icons/ios/AppIcon-83.5@2x~ipad.png" />
-<link rel="apple-touch-icon" sizes="152x152" href="/icons/ios/AppIcon-76@2x~ipad.png" />
-<link rel="apple-touch-icon" sizes="120x120" href="/icons/ios/AppIcon-60@2x.png" />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/icons/ios/AppIcon-180@2x.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="167x167"
+          href="/icons/ios/AppIcon-83.5@2x~ipad.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="152x152"
+          href="/icons/ios/AppIcon-76@2x~ipad.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="120x120"
+          href="/icons/ios/AppIcon-60@2x.png"
+        />
 
-<link rel="manifest" href="/manifest.json" />
-
-        {/* Theme color for Android and Safari */}     
+        <link rel="manifest" href="/manifest.json" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black dark:bg-black text-black dark:text-white`}
       >
         {/* Always show header */}
-        <header className="top-0 z-50 flex justify-between items-center p-4 border-b bg-black border-gray-700 shadow-md text-white">
-          <h1 className="text-lg font-semibold">FitStreak</h1>
-          <div className="flex gap-4 items-center">{/* Additional header content */}</div>
-        </header>
 
+        <AuthenticatedLayout>
+
+        {/* Wrap all pages with AuthenticatedLayout */}
+          {children}
+        </AuthenticatedLayout>
+
+        {/* Global toaster notifications */}
         <Toaster
           richColors
           closeButton
@@ -71,10 +91,6 @@ export default function RootLayout({
             },
           }}
         />
-
-        <AuthenticatedLayout>
-          <main className="pt-0 sm:pt-16 pb-16 sm:pb-0">{children}</main>
-        </AuthenticatedLayout>
       </body>
     </html>
   );
