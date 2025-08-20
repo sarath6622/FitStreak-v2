@@ -70,8 +70,9 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Navbar */}
-      {/* Mobile Navbar */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50
+  bg-black border-t border-gray-700 shadow-inner text-white
+  pb-[calc(12px+env(safe-area-inset-bottom))]">
         <div className="bg-[#1b1b1d]/80 backdrop-blur-xl  p-2 shadow-lg">
           <ul className="flex justify-around items-center">
             {navItems.map(({ href, label, icon }) => (
