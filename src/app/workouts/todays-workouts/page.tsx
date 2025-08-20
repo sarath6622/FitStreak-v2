@@ -17,7 +17,6 @@ export default function TodaysWorkoutsPage() {
         >
           <ArrowLeft size={16} /> Back
         </button>
-        <h1 className="text-lg font-semibold text-white">Today's Workouts</h1>
       </header>
 
       {/* List of plans */}

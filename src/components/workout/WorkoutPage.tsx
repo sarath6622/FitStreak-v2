@@ -99,32 +99,28 @@ export default function WorkoutPage() {
         <div className="space-y-8">
           {/* Suggested Section */}
           {!selectedMuscle && (
-            <div className="bg-gray-900 rounded-xl shadow-md">
+            <><div className="bg-gray-900 rounded-xl shadow-md">
               <SuggestionSection
                 userId={auth.currentUser?.uid || ""}
                 onSelect={(m) => {
                   setSelectedMuscle(m);
                   fetchWorkoutData(); // <- this refetches data after save!
-                }}
-              />
+                } } />
 
             </div>
-          )}
-          {/* Today's Workouts */}
-          <Link href="/workouts/todays-workouts">
-            <section className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700 hover:shadow-xl hover:scale-[1.01] transition-all cursor-pointer backdrop-blur-md">
-              <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-                <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                Today's Workouts
-              </h2>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                View your logged plans for today and keep track of progress effortlessly.
-              </p>
-            </section>
-          </Link>
+              // {/* Today's Workouts */}
+              <Link href="/workouts/todays-workouts">
+                <section className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700 hover:shadow-xl hover:scale-[1.01] transition-all cursor-pointer backdrop-blur-md">
+                  <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    Today's Workouts
+                  </h2>
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    View your logged plans for today and keep track of progress effortlessly.
+                  </p>
+                </section>
+              </Link>
 
-          {/* All Muscle Groups */}
-          {!selectedMuscle && (
             <section className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700 backdrop-blur-md mt-6">
               <h2 className="text-lg font-semibold text-white mb-4 tracking-wide">
                 All Muscle Groups
@@ -143,6 +139,7 @@ export default function WorkoutPage() {
                 ))}
               </div>
             </section>
+            </>
           )}
 
           {/* Exercise List */}
