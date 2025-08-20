@@ -1,6 +1,6 @@
 // app/api/save-workout/route.ts
-import { db } from "@/firebase";
 import { NextResponse } from "next/server";
+import { db } from "@/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export async function POST(req: Request) {
@@ -8,31 +8,24 @@ export async function POST(req: Request) {
     const body = await req.json();
     console.log("[save-workout] Incoming payload:", JSON.stringify(body, null, 2));
 
-    const { userId, muscleGroup, workoutPlan } = body;
+    const { userId, muscleGroups, workoutPlan } = body;
 
-    if (!userId || !muscleGroup || !Array.isArray(workoutPlan)) {
+    if (!userId || !Array.isArray(muscleGroups) || muscleGroups.length === 0 || !Array.isArray(workoutPlan)) {
       console.error("[save-workout] Invalid payload:", body);
       return NextResponse.json(
-        { error: "Invalid request payload" },
+        { error: "Invalid request payload: expected { userId, muscleGroups: [], workoutPlan: [] }" },
         { status: 400 }
       );
     }
 
-    // Get today's date (YYYY-MM-DD)
+    // Today's date as YYYY-MM-DD
     const today = new Date();
     const dateStr = today.toISOString().split("T")[0];
 
     // Reference: users/{uid}/workouts/{date}/plans/{autoId}
-    const plansRef = collection(
-      db,
-      "users",
-      userId,
-      "workouts",
-      dateStr,
-      "plans"
-    );
+    const plansRef = collection(db, "users", userId, "workouts", dateStr, "plans");
 
-    // Map and log exercises
+    // Normalize workoutPlan into exercises
     const exercises = workoutPlan.map((ex: any, i: number) => {
       console.log(`[save-workout] Exercise ${i}:`, ex);
       return {
@@ -51,14 +44,14 @@ export async function POST(req: Request) {
 
     console.log("[save-workout] Final exercises object:", exercises);
 
+    // Save in Firestore
     await addDoc(plansRef, {
-      muscleGroup,
+      muscleGroups, // ✅ store as array
       exercises,
       createdAt: serverTimestamp(),
     });
 
     console.log("[save-workout] Saved successfully");
-
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("[save-workout] Error:", err);

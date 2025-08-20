@@ -9,6 +9,7 @@ import ExerciseList from "@/components/ExerciseList";
 import WorkoutLoggerModal from "@/components/WorkoutLogger/WorkoutLoggerModal";
 import SuggestionSection from "../SuggestionSection";
 import TodaysWorkouts from "../TodaysWorkouts";
+import Link from "next/link";
 
 export default function WorkoutPage() {
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
@@ -109,20 +110,33 @@ export default function WorkoutPage() {
 
             </div>
           )}
-          <TodaysWorkouts />
+          {/* Today's Workouts */}
+          <Link href="/workouts/todays-workouts">
+            <section className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700 hover:shadow-xl hover:scale-[1.01] transition-all cursor-pointer backdrop-blur-md">
+              <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                Today's Workouts
+              </h2>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                View your logged plans for today and keep track of progress effortlessly.
+              </p>
+            </section>
+          </Link>
 
           {/* All Muscle Groups */}
           {!selectedMuscle && (
-            <section className="bg-gray-900 rounded-xl p-5 shadow-md">
-              <h2 className="text-lg font-semibold text-white mb-4">
+            <section className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700 backdrop-blur-md mt-6">
+              <h2 className="text-lg font-semibold text-white mb-4 tracking-wide">
                 All Muscle Groups
               </h2>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 {muscleGroups.map((group) => (
                   <button
                     key={group}
                     onClick={() => setSelectedMuscle(group)}
-                    className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl py-5 text-sm font-semibold text-white shadow hover:scale-[1.02] hover:shadow-lg transition-transform"
+                    className="bg-white/10 hover:bg-white/20 text-gray-200 rounded-xl py-4 px-3 
+                     text-sm font-medium shadow-md transition-all border border-white/10
+                     hover:scale-[1.02] hover:shadow-lg backdrop-blur-sm"
                   >
                     {group}
                   </button>

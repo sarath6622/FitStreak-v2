@@ -57,14 +57,6 @@ export default function TodaysWorkouts() {
     );
   }
 
-  if (!plans.length) {
-    return (
-      <div className="text-gray-400 text-center py-4">
-        No workouts planned yet
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       {plans.map((plan) => (

@@ -59,7 +59,16 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
         </header><Navbar /></>}
 
       {/* Always render children */}
-      <main className={user ? "pt-16 pb-16 sm:pb-0 pt-[calc(56px+env(safe-area-inset-top))] pb-[calc(24px+env(safe-area-inset-bottom))]" : ""}>{children}</main>
+      <main
+        className={
+          user
+            ? "pt-[calc(56px+env(safe-area-inset-top))] pb-[calc(64px+env(safe-area-inset-bottom))]"
+            : ""
+        }
+
+      >
+        {children}
+      </main>
     </>
   );
 }
