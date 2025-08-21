@@ -1,5 +1,5 @@
 "use client";
-
+import React from "react"; 
 import { useState } from "react";
 import {
   addMonths,
@@ -35,8 +35,8 @@ export default function WorkoutCalendar({ workouts }: WorkoutCalendarProps) {
   const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }); // Monday
   const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
-  const rows: JSX.Element[] = [];
-  let days: JSX.Element[] = [];
+const rows: React.ReactNode[] = [];
+let days: React.ReactNode[] = [];
   let day = startDate;
 
   while (day <= endDate) {
