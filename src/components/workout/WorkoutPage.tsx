@@ -19,7 +19,7 @@ export default function WorkoutPage() {
   const [loading, setLoading] = useState(true);
 
   const muscleGroups = [
-    "Chest", "Legs", "Back", "Shoulders", "Biceps", "Triceps", "Core"
+    "Chest", "Legs", "Back", "Shoulders", "Biceps", "Triceps", "Core", "Glutes"
   ];
 
   const fetchWorkoutData = async () => {

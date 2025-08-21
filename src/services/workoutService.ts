@@ -18,24 +18,51 @@ export const getWorkoutForExercise = async (uid: string, date: string, exerciseN
   };
 };
 
-export const getCompletedExercisesForToday = async (uid: string, date: string) => {
-  const workoutDocRef = doc(db, "users", uid, "workouts", date);
-  const docSnap = await getDoc(workoutDocRef);
+export async function getCompletedExercisesForToday(
+  userId: string,
+  date: string
+) {
+  const workoutsRef = collection(db, "users", userId, "workouts");
+  const q = query(workoutsRef, where("date", "==", date));
+  const snapshot = await getDocs(q);
 
-  if (!docSnap.exists()) return {};
+  const completedExercises: Record<
+    string,
+    { setsDone: number; repsDone: number; totalSets: number }
+  > = {};
 
-  const data = docSnap.data();
-  const completed: Record<string, { setsDone: number; repsDone: number }> = {};
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    if (!data.exercises) return;
 
-  (data.exercises || []).forEach((ex: any) => {
-    completed[ex.name] = {
-      setsDone: ex.sets,
-      repsDone: ex.repsPerSet?.[0] || 0, // assuming uniform reps per set
-    };
+    data.exercises.forEach((exercise: any) => {
+      if (!exercise.name || !exercise.sets) return;
+
+      const totalSets = exercise.sets;
+      const repsArray = exercise.repsPerSet || [];
+      const weightArray = exercise.weight || [];
+
+      // ✅ Count only sets where weight != 0
+      let setsDone = 0;
+      let repsDone = 0;
+
+      for (let i = 0; i < totalSets; i++) {
+        if (weightArray[i] && weightArray[i] !== 0) {
+          setsDone++;
+          repsDone += repsArray[i] || 0;
+        }
+      }
+
+      completedExercises[exercise.name] = {
+        setsDone,
+        repsDone,
+        totalSets,
+      };
+    });
   });
 
-  return completed;
-};
+  return completedExercises;
+}
 
 export const upsertWorkout = async (uid: string, date: string, exercise: any, duration: number, rest: number) => {
   const workoutDocRef = doc(db, "users", uid, "workouts", date);

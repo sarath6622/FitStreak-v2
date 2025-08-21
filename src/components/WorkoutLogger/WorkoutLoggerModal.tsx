@@ -141,8 +141,12 @@ export default function WorkoutLoggerModal({
         return;
       }
 
+      const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 2);
+const formatted = yesterday.toISOString().split("T")[0];
+
       const today = new Date().toISOString().split("T")[0];
-      await upsertWorkout(user.uid, today, {
+      await upsertWorkout(user.uid, formatted, {
         exerciseId: uuidv4(),
         name: exerciseName,
         muscleGroup,

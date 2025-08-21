@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { auth } from "@/firebase";
+import { getCompletedExercisesForToday } from "@/services/workoutService";
 import { CheckCircle2 } from "lucide-react";
 import WorkoutModal from "./WorkoutModal";
 
@@ -20,6 +23,7 @@ interface Exercise {
 interface CompletedExercise {
   setsDone: number;
   repsDone: number;
+  totalSets: number;
 }
 
 interface WorkoutGroupProps {
@@ -28,7 +32,6 @@ interface WorkoutGroupProps {
     muscleGroup: string;
     exercises: Exercise[];
   };
-  completedExercises?: Record<string, CompletedExercise>;
 }
 
 function ExerciseCard({
@@ -43,74 +46,111 @@ function ExerciseCard({
   completedData?: CompletedExercise;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-label={`Select ${exercise.name} exercise`}
-      className={`
-        bg-gray-800 border rounded-xl p-4 text-white text-left transition-transform flex flex-col
-        ${selected ? "border-yellow-500 scale-105 shadow-lg" : "border-gray-700 hover:border-yellow-500"}
-        focus:outline-none focus:ring-2 focus:ring-yellow-500
-      `}
-    >
-      {/* Title + Completion */}
-      <div className="flex justify-between items-start">
-        <div className="font-semibold text-base">{exercise.name}</div>
-        {completedData && (
-          <CheckCircle2
-            size={20}
-            className="text-green-500"
-            aria-label="Completed today"
-          />
-        )}
-      </div>
+<button
+  type="button"
+  onClick={onSelect}
+  aria-label={`Select ${exercise.name} exercise`}
+  className={`
+    bg-gray-800 border rounded-2xl p-4 text-white text-left transition-transform
+    ${selected ? "border-yellow-500 scale-105 shadow-lg" : "border-gray-700 hover:border-yellow-500"}
+    focus:outline-none focus:ring-2 focus:ring-yellow-500 flex flex-col gap-3
+  `}
+>
+  {/* Title + Completed */}
+  <div className="flex justify-between items-center">
+    <span className="font-semibold text-base">{exercise.name}</span>
+    {completedData && (
+      <CheckCircle2 size={20} className="text-green-500" aria-label="Completed today" />
+    )}
+  </div>
 
-      {/* Sets & Reps Overview */}
-      <div className="text-sm text-yellow-400 mt-1 font-medium">
-        {exercise.sets} sets × {exercise.reps} reps
-      </div>
+  {/* Sets × Reps */}
+  <div className="inline-block px-2 py-1 text-yellow-400 bg-yellow-400/10 rounded-lg text-sm font-medium">
+    {exercise.sets} × {exercise.reps}
+  </div>
 
-      {/* Key details */}
-      <div className="text-sm text-gray-400 mt-1">
-        {exercise.muscleGroup} • {exercise.subGroup} • {exercise.movementType}
-      </div>
+  {/* Key info in one line */}
+  <div className="flex flex-wrap gap-2 text-xs text-gray-400">
+    <span>{exercise.muscleGroup}</span>
+    <span>• {exercise.subGroup}</span>
+    <span>• {exercise.movementType}</span>
+  </div>
 
-      <div className="text-xs text-gray-500">
-        Difficulty: {exercise.difficulty}
-      </div>
+  {/* Meta as badges */}
+  <div className="flex flex-wrap gap-2 mt-1">
+    <span className="px-2 py-0.5 rounded-full text-xs bg-gray-700 text-gray-300">
+      {exercise.difficulty}
+    </span>
+    {exercise.secondaryMuscleGroups?.length > 0 && (
+      <span className="px-2 py-0.5 rounded-full text-xs bg-gray-700 text-gray-300">
+        {exercise.secondaryMuscleGroups.join(", ")}
+      </span>
+    )}
+    {exercise.equipment?.length > 0 && (
+      <span className="px-2 py-0.5 rounded-full text-xs bg-gray-700 text-gray-300">
+        {exercise.equipment.join(", ")}
+      </span>
+    )}
+  </div>
 
-      {/* Secondary muscles */}
-      {exercise.secondaryMuscleGroups?.length > 0 && (
-        <div className="text-xs text-gray-500 mt-1">
-          Secondary: {exercise.secondaryMuscleGroups.join(", ")}
-        </div>
-      )}
-
-      {/* Equipment */}
-      {exercise.equipment?.length > 0 && (
-        <div className="text-xs text-gray-500 mt-1">
-          Equipment: {exercise.equipment.join(", ")}
-        </div>
-      )}
-
-      {/* Completed workout info */}
-      {completedData && (
-        <div className="mt-2 text-green-400 text-xs font-medium">
-          Done: {completedData.setsDone} sets × {completedData.repsDone} reps
-        </div>
-      )}
-    </button>
+  {/* Completion info */}
+  {completedData && (
+    <div className="text-green-400 text-xs font-medium">
+      Done: {completedData.setsDone} sets
+    </div>
+  )}
+</button>
   );
 }
 
-export default function WorkoutGroup({
-  plan,
-  completedExercises = {},
-}: WorkoutGroupProps) {
+export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
+  const [user, setUser] = useState<User | null>(null);
+  const [completedExercises, setCompletedExercises] = useState<
+    Record<string, CompletedExercise>
+  >({});
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
 
-  // 🔑 Use plan.exercises from Firestore
+  // 🔑 Subscribe to auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+
+      if (firebaseUser) {
+        const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+        const completed = await getCompletedExercisesForToday(
+          firebaseUser.uid,
+          today
+        );
+        setCompletedExercises(completed);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+    const refreshCompletedExercises = async () => {
+  if (!user) return;
+  const today = new Date().toISOString().split("T")[0];
+  const completed = await getCompletedExercisesForToday(user.uid, today);
+  setCompletedExercises(completed);
+};
+
+const handleWorkoutSaved = (
+  exerciseName: string,
+  data: { sets: { weight: number; reps: number; done: boolean }[] }
+) => {
+  setCompletedExercises(prev => ({
+    ...prev,
+    [exerciseName]: {
+      setsDone: data.sets.filter(s => s.done || s.weight > 0).length,
+      repsDone: data.sets.reduce((acc, s) => acc + ((s.done || s.weight > 0) ? s.reps : 0), 0),
+      totalSets: data.sets.length,
+    },
+  }));
+};
+
+  // 🔎 Filter by search
   const filteredExercises = useMemo(() => {
     return (plan.exercises as Exercise[]).filter((exercise) => {
       const exerciseName = exercise?.name ?? "";
@@ -152,12 +192,16 @@ export default function WorkoutGroup({
         </div>
       )}
 
-      {/* ✅ Show modal instead of inline logger */}
-      {selectedExercise && (
+      {/* ✅ Modal */}
+{selectedExercise && (
   <WorkoutModal
     isOpen={!!selectedExercise}
     onClose={() => setSelectedExercise(null)}
-    exercise={plan.exercises.find((ex) => ex.name === selectedExercise)} // pass full exercise object
+    exercise={plan.exercises.find((ex) => ex.name === selectedExercise)}
+    onWorkoutSaved={(data) =>
+      handleWorkoutSaved(selectedExercise, data)
+    }
+
   />
 )}
     </div>

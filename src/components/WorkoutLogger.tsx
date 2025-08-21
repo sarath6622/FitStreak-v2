@@ -2,8 +2,11 @@
 
 import { Save } from "lucide-react";
 import { useEffect, useState } from "react";
-import SetsControl from "@/components/WorkoutLogger/SetsControl"; // Adjust path if necessary
-import WeightRepsInput from "@/components/WorkoutLogger/WeightRepsInput"; // Adjust path if necessary
+import SetsControl from "@/components/WorkoutLogger/SetsControl";
+import WeightRepsInput from "@/components/WorkoutLogger/WeightRepsInput";
+import { upsertWorkout, getWorkoutForExercise } from "@/services/workoutService";
+import { auth } from "@/firebase";
+import { get } from "http";
 
 interface Exercise {
   name: string;
@@ -27,8 +30,49 @@ export default function WorkoutLogger({
   const [sets, setSets] = useState<{ weight: number; reps: number; done: boolean }[]>([]);
   const [rest, setRest] = useState(90);
   const [duration, setDuration] = useState(45);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Sync sets array length to setsCount
+  // Prefetch existing workout for this exercise
+  useEffect(() => {
+    const fetchExistingData = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const today = new Date().toISOString().split("T")[0];
+      const workoutData = await getWorkoutForExercise(user.uid, today, exercise.name);
+      console.log(workoutData);
+      
+      if (workoutData && workoutData.exercise) {
+        const ex = workoutData.exercise;
+        setSetsCount(ex.sets || exercise.sets);
+        setSets(
+          Array.from({ length: ex.sets || exercise.sets }, (_, i) => ({
+            weight: ex.weight?.[i] ?? exercise.defaultWeight ?? 0,
+            reps: ex.repsPerSet?.[i] ?? (parseInt(exercise.reps) || 0),
+            done: ex.doneFlags?.[i] ?? false,
+          }))
+        );
+        setDuration(workoutData.duration || 45);
+        setRest(workoutData.rest || 90);
+      } else {
+        // fallback: initialize from plan
+        setSets(
+          Array.from({ length: exercise.sets }, () => ({
+            weight: exercise.defaultWeight || 0,
+            reps: parseInt(exercise.reps) || 0,
+            done: false,
+          }))
+        );
+      }
+
+      setLoading(false);
+    };
+
+    fetchExistingData();
+  }, [exercise]);
+
+  // Sync sets array length if user changes count
   useEffect(() => {
     setSets((prev) => {
       const newSets = [...prev];
@@ -48,10 +92,9 @@ export default function WorkoutLogger({
     });
   }, [setsCount, exercise.defaultWeight, exercise.reps]);
 
-  // Handlers for the WeightRepsInput component
   const handleWeightChange = (index: number, value: string) => {
     const weightNum = value.trim() === "" ? 0 : parseFloat(value);
-    if (isNaN(weightNum) || weightNum < 0) return; // ignore invalid input
+    if (isNaN(weightNum) || weightNum < 0) return;
     const newSets = [...sets];
     newSets[index] = { ...newSets[index], weight: weightNum };
     setSets(newSets);
@@ -59,7 +102,7 @@ export default function WorkoutLogger({
 
   const handleRepsChange = (index: number, value: string) => {
     const repsNum = value.trim() === "" ? 0 : parseInt(value);
-    if (isNaN(repsNum) || repsNum < 0) return; // ignore invalid input
+    if (isNaN(repsNum) || repsNum < 0) return;
     const newSets = [...sets];
     newSets[index] = { ...newSets[index], reps: repsNum };
     setSets(newSets);
@@ -71,37 +114,53 @@ export default function WorkoutLogger({
     setSets(newSets);
   };
 
-  const handleSave = () => {
-    onWorkoutSaved({ sets });
-    onClose();
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const user = auth.currentUser;
+      if (!user) throw new Error("Not logged in");
+
+      const today = new Date().toISOString().split("T")[0];
+      
+      const exerciseData = {
+        name: exercise.name,
+        muscleGroup: exercise.muscleGroup,
+        sets: sets.length,
+        repsPerSet: sets.map((s) => s.reps),
+        weight: sets.map((s) => s.weight),
+        doneFlags: sets.map((s) => s.done),
+        notes: exercise.notes || "",
+      };
+
+      await upsertWorkout(user.uid, today, exerciseData, duration, rest);
+
+      onWorkoutSaved({ sets });
+      onClose();
+    } catch (err) {
+      console.error("Error saving workout:", err);
+      alert("Failed to save workout. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Prepare arrays for WeightRepsInput props
+  if (loading) {
+    return <p className="text-white text-sm">Loading workout data...</p>;
+  }
+
   const weights = sets.map((s) => s.weight);
   const repsPerSet = sets.map((s) => s.reps);
-
-  // Errors can be passed here if you want to validate inputs; keep empty now
   const errors: { [key: string]: string } = {};
-
-  // For reps input, since you want a simple input instead of picker, 
-  // we will substitute the picker part with a normal input in WeightRepsInput,
-  // so for now pass repOptions but it won't be used.
-
- const repOptions: number[] = [];
- // For compatibility, unused here
+  const repOptions: number[] = [];
 
   return (
     <div className="space-y-4 m-2 p-2">
-
-      {/* Target display */}
       <p className="text-xs text-gray-400 mb-4">
         Target: {setsCount} sets × {exercise.reps} reps
       </p>
 
-      {/* Sets count control */}
       <SetsControl sets={setsCount} setSets={setSetsCount} />
 
-      {/* Weight and reps input with check confirm */}
       <WeightRepsInput
         weights={weights}
         repsPerSet={repsPerSet}
@@ -110,10 +169,8 @@ export default function WorkoutLogger({
         errors={errors}
         repOptions={repOptions}
         disabled={false}
-        initialAutoConfirmFlags={sets.map(() => false)}
+        initialAutoConfirmFlags={sets.map((s) => s.done)}
       />
-
-      {/* Done toggle buttons are inside WeightRepsInput check marks, no need to duplicate */}
 
       {/* Rest Selection */}
       <div className="mt-4">
@@ -151,13 +208,13 @@ export default function WorkoutLogger({
         </div>
       </div>
 
-      {/* Save Button */}
       <button
         onClick={handleSave}
-        className="w-full mt-2 py-2 rounded-lg bg-yellow-500 text-black font-medium flex items-center justify-center gap-2"
+        disabled={saving}
+        className="w-full mt-2 py-2 rounded-lg bg-yellow-500 text-black font-medium flex items-center justify-center gap-2 disabled:opacity-50"
       >
         <Save size={18} />
-        Save Workout
+        {saving ? "Saving..." : "Save Workout"}
       </button>
     </div>
   );

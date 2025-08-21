@@ -32,6 +32,8 @@ export default function HistoryPage() {
         }));
 
         setWorkouts(fetchedWorkouts);
+        console.log("Fetched workouts:", fetchedWorkouts);
+        
         setPrs(calculatePRs(fetchedWorkouts));
       }
 

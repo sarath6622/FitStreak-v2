@@ -351,13 +351,40 @@
     "secondaryMuscleGroups": ["Upper Chest"]
   },
   {
-    "name": "Hip Thrust Machine",
-    "muscleGroup": "Glutes",
-    "subGroup": "Gluteus Maximus",
-    "equipment": ["Hip Thrust Machine"],
-    "movementType": "Compound",
+    "name": "Incline Dumbbell Hammer Curl",
+    "muscleGroup": "Biceps",
+    "subGroup": "Brachialis",
+    "equipment": ["Dumbbells", "Incline Bench"],
+    "movementType": "Isolation",
+    "difficulty": "Intermediate",
+    "secondaryMuscleGroups": ["Forearms"]
+  },
+  {
+    "name": "Single Arm Triceps Cable Extension",
+    "muscleGroup": "Triceps",
+    "subGroup": "Triceps Brachii",
+    "equipment": ["Cable Machine", "Single Handle Attachment"],
+    "movementType": "Isolation",
     "difficulty": "Beginner",
-    "secondaryMuscleGroups": ["Hamstrings", "Quadriceps"]
+    "secondaryMuscleGroups": ["Forearms"]
+  },
+  {
+    "name": "Single Plate Preacher Curls",
+    "muscleGroup": "Biceps",
+    "subGroup": "Biceps Brachii",
+    "equipment": ["Weight Plate", "Preacher Bench"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Forearms"]
+  },
+  {
+    "name": "Single Arm Tricep Push Down",
+    "muscleGroup": "Triceps",
+    "subGroup": "Triceps Brachii",
+    "equipment": ["Cable Machine", "Single Handle Attachment"],
+    "movementType": "Isolation",
+    "difficulty": "Beginner",
+    "secondaryMuscleGroups": ["Forearms"]
   },
   {
     "name": "Standing Multiflight Lateral Machine",
@@ -368,6 +395,15 @@
     "difficulty": "Beginner",
     "secondaryMuscleGroups": ["Upper Traps"]
   },
+  {
+  "name": "Hip Thrust Machine",
+  "muscleGroup": "Glutes",
+  "subGroup": "Gluteus Maximus",
+  "equipment": ["Hip Thrust Machine"],
+  "movementType": "Compound",
+  "difficulty": "Beginner",
+  "secondaryMuscleGroups": ["Hamstrings", "Quadriceps"]
+},
   {
     "name": "Rear Delt Fly",
     "muscleGroup": "Shoulders",
