@@ -64,11 +64,6 @@ export default function HistoryPage() {
       {/* Summary Cards */}
       <SummaryCards workouts={workouts} />
 
-      {/* PR Highlights */}
-      <div className="mt-6">
-        <PRHighlights prs={prs} />
-      </div>
-
       {/* Filters */}
       <div className="mt-6">
         <Filters workouts={workouts} onFilter={(filtered) => setWorkouts(filtered)} />

@@ -1,8 +1,6 @@
 // src/lib/historyUtils.ts
 import type { WorkoutSession } from "@/types";
 
-// src/lib/historyUtils.ts
-
 export function calculatePRs(workouts: WorkoutSession[]) {
   const prs: Record<string, number> = {};
 
