@@ -21,10 +21,12 @@ export default function WorkoutLogger({
   exercise,
   onClose,
   onWorkoutSaved,
+  completedData,
 }: {
   exercise: Exercise;
   onClose: () => void;
   onWorkoutSaved: (data: { sets: { weight: number; reps: number; done: boolean }[] }) => void;
+  completedData?: { setsDone: number; repsDone: number; totalSets: number };
 }) {
   const [setsCount, setSetsCount] = useState(exercise.sets);
   const [sets, setSets] = useState<{ weight: number; reps: number; done: boolean }[]>([]);
@@ -47,12 +49,17 @@ export default function WorkoutLogger({
         const ex = workoutData.exercise;
         setSetsCount(ex.sets || exercise.sets);
         setSets(
-          Array.from({ length: ex.sets || exercise.sets }, (_, i) => ({
-            weight: ex.weight?.[i] ?? exercise.defaultWeight ?? 0,
-            reps: ex.repsPerSet?.[i] ?? (parseInt(exercise.reps) || 0),
-            done: ex.doneFlags?.[i] ?? false,
-          }))
-        );
+  Array.from({ length: ex.sets || exercise.sets }, (_, i) => {
+    const weight = ex.weight?.[i] ?? exercise.defaultWeight ?? 0;
+    const reps = ex.repsPerSet?.[i] ?? (parseInt(exercise.reps) || 0);
+
+    return {
+      weight,
+      reps,
+      done: weight > 0 ? true : (ex.doneFlags?.[i] ?? false),
+    };
+  })
+);
         setDuration(workoutData.duration || 45);
         setRest(workoutData.rest || 90);
       } else {
@@ -160,6 +167,12 @@ export default function WorkoutLogger({
       </p>
 
       <SetsControl sets={setsCount} setSets={setSetsCount} />
+      {completedData && (
+  <p className="text-green-400 text-xs mb-2">
+    Progress: {completedData.setsDone}/{completedData.totalSets} sets done 
+    ({completedData.repsDone} reps)
+  </p>
+)}
 
       <WeightRepsInput
         weights={weights}

@@ -45,61 +45,76 @@ function ExerciseCard({
   onSelect: () => void;
   completedData?: CompletedExercise;
 }) {
+  // compute progress (0–100)
+  const progress =
+    completedData && completedData.totalSets > 0
+      ? Math.min(
+          100,
+          Math.round((completedData.setsDone / completedData.totalSets) * 100)
+        )
+      : 0;
+
   return (
-<button
-  type="button"
-  onClick={onSelect}
-  aria-label={`Select ${exercise.name} exercise`}
-  className={`
-    bg-gray-800 border rounded-2xl p-4 text-white text-left transition-transform
-    ${selected ? "border-yellow-500 scale-105 shadow-lg" : "border-gray-700 hover:border-yellow-500"}
-    focus:outline-none focus:ring-2 focus:ring-yellow-500 flex flex-col gap-3
-  `}
->
-  {/* Title + Completed */}
-  <div className="flex justify-between items-center">
-    <span className="font-semibold text-base">{exercise.name}</span>
-    {completedData && (
-      <CheckCircle2 size={20} className="text-green-500" aria-label="Completed today" />
-    )}
-  </div>
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-label={`Select ${exercise.name} exercise`}
+      className={`
+        bg-gray-800 border rounded-xl p-2 text-white text-left transition-transform
+        ${selected ? "border-yellow-500 scale-105 shadow-lg" : "border-gray-700 hover:border-yellow-500"}
+        focus:outline-none focus:ring-2 focus:ring-yellow-500 flex flex-col gap-2
+      `}
+    >
+      {/* Title + Sets/Reps + Completed */}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-sm">{exercise.name}</span>
+          <span className="px-2 py-0.5 text-yellow-400 bg-yellow-400/10 rounded-md text-xs font-medium">
+            {exercise.sets} × {exercise.reps}
+          </span>
+        </div>
+        {completedData && (
+          <CheckCircle2 size={16} className="text-green-500" aria-label="Completed today" />
+        )}
+      </div>
 
-  {/* Sets × Reps */}
-  <div className="inline-block px-2 py-1 text-yellow-400 bg-yellow-400/10 rounded-lg text-sm font-medium">
-    {exercise.sets} × {exercise.reps}
-  </div>
+      {/* Meta info */}
+      <div className="text-xs text-gray-400">
+        {exercise.muscleGroup} • {exercise.subGroup} • {exercise.movementType}
+      </div>
 
-  {/* Key info in one line */}
-  <div className="flex flex-wrap gap-2 text-xs text-gray-400">
-    <span>{exercise.muscleGroup}</span>
-    <span>• {exercise.subGroup}</span>
-    <span>• {exercise.movementType}</span>
-  </div>
+      {/* Badges */}
+      <div className="flex flex-wrap gap-1 text-[11px] mt-1">
+        <span className="px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">
+          {exercise.difficulty}
+        </span>
+        {exercise.secondaryMuscleGroups?.length > 0 && (
+          <span className="px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">
+            {exercise.secondaryMuscleGroups.join(", ")}
+          </span>
+        )}
+        {exercise.equipment?.length > 0 && (
+          <span className="px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">
+            {exercise.equipment.join(", ")}
+          </span>
+        )}
+      </div>
 
-  {/* Meta as badges */}
-  <div className="flex flex-wrap gap-2 mt-1">
-    <span className="px-2 py-0.5 rounded-full text-xs bg-gray-700 text-gray-300">
-      {exercise.difficulty}
-    </span>
-    {exercise.secondaryMuscleGroups?.length > 0 && (
-      <span className="px-2 py-0.5 rounded-full text-xs bg-gray-700 text-gray-300">
-        {exercise.secondaryMuscleGroups.join(", ")}
-      </span>
-    )}
-    {exercise.equipment?.length > 0 && (
-      <span className="px-2 py-0.5 rounded-full text-xs bg-gray-700 text-gray-300">
-        {exercise.equipment.join(", ")}
-      </span>
-    )}
-  </div>
-
-  {/* Completion info */}
-  {completedData && (
-    <div className="text-green-400 text-xs font-medium">
-      Done: {completedData.setsDone} sets
-    </div>
-  )}
-</button>
+      {/* Progress bar */}
+      {completedData && (
+        <div className="mt-2">
+          <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+            <div
+              className="bg-green-500 h-2 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="text-[11px] text-gray-400 mt-0.5">
+            {completedData.setsDone}/{completedData.totalSets} sets completed
+          </div>
+        </div>
+      )}
+    </button>
   );
 }
 
@@ -129,26 +144,26 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
     return () => unsubscribe();
   }, []);
 
-    const refreshCompletedExercises = async () => {
-  if (!user) return;
-  const today = new Date().toISOString().split("T")[0];
-  const completed = await getCompletedExercisesForToday(user.uid, today);
-  setCompletedExercises(completed);
-};
+  const refreshCompletedExercises = async () => {
+    if (!user) return;
+    const today = new Date().toISOString().split("T")[0];
+    const completed = await getCompletedExercisesForToday(user.uid, today);
+    setCompletedExercises(completed);
+  };
 
-const handleWorkoutSaved = (
-  exerciseName: string,
-  data: { sets: { weight: number; reps: number; done: boolean }[] }
-) => {
-  setCompletedExercises(prev => ({
-    ...prev,
-    [exerciseName]: {
-      setsDone: data.sets.filter(s => s.done || s.weight > 0).length,
-      repsDone: data.sets.reduce((acc, s) => acc + ((s.done || s.weight > 0) ? s.reps : 0), 0),
-      totalSets: data.sets.length,
-    },
-  }));
-};
+  const handleWorkoutSaved = (
+    exerciseName: string,
+    data: { sets: { weight: number; reps: number; done: boolean }[] }
+  ) => {
+    setCompletedExercises(prev => ({
+      ...prev,
+      [exerciseName]: {
+        setsDone: data.sets.filter(s => s.done || s.weight > 0).length,
+        repsDone: data.sets.reduce((acc, s) => acc + ((s.done || s.weight > 0) ? s.reps : 0), 0),
+        totalSets: data.sets.length,
+      },
+    }));
+  };
 
   // 🔎 Filter by search
   const filteredExercises = useMemo(() => {
@@ -193,17 +208,19 @@ const handleWorkoutSaved = (
       )}
 
       {/* ✅ Modal */}
-{selectedExercise && (
-  <WorkoutModal
-    isOpen={!!selectedExercise}
-    onClose={() => setSelectedExercise(null)}
-    exercise={plan.exercises.find((ex) => ex.name === selectedExercise)}
-    onWorkoutSaved={(data) =>
-      handleWorkoutSaved(selectedExercise, data)
-    }
+      {selectedExercise && (
+        <WorkoutModal
+          isOpen={!!selectedExercise}
+          onClose={() => setSelectedExercise(null)}
+          exercise={plan.exercises.find((ex) => ex.name === selectedExercise)}
+          onWorkoutSaved={(data) =>
+            handleWorkoutSaved(selectedExercise, data)
+          }
 
-  />
-)}
+          completedData={completedExercises[selectedExercise]} 
+
+        />
+      )}
     </div>
   );
 }

@@ -8,7 +8,12 @@ interface WorkoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   exercise: any;
-  onWorkoutSaved: (data: any) => void; // ✅ add this
+  onWorkoutSaved: (data: any) => void;
+  completedData?: {
+    setsDone: number;
+    repsDone: number;
+    totalSets: number;
+  }; // 👈 add this
 }
 
 export default function WorkoutModal({
@@ -16,6 +21,7 @@ export default function WorkoutModal({
   onClose,
   exercise,
   onWorkoutSaved, // ✅ forward this prop
+  completedData, // 
 }: WorkoutModalProps) {
   return (
     <AnimatePresence>
@@ -51,6 +57,7 @@ export default function WorkoutModal({
               exercise={exercise}
               onClose={onClose}
               onWorkoutSaved={onWorkoutSaved} // ✅ pass it down
+              completedData={completedData}
             />
           </motion.div>
         </motion.div>
