@@ -10,10 +10,12 @@ import Auth from "@/components/Auth";
 import { calculatePRs } from "@/lib/historyUtils";
 import type { WorkoutSession } from "@/types";
 import { Sparkles } from "lucide-react";
+import WorkoutCalendar from "@/components/WorkoutCalendar";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [prs, setPrs] = useState<Record<string, number>>({});
+  const [workouts, setWorkouts] = useState<WorkoutSession[]>([]); // ✅ added workouts state
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,17 +26,18 @@ export default function Home() {
         const workoutsRef = collection(db, "users", firebaseUser.uid, "workouts");
         const snapshot = await getDocs(workoutsRef);
 
-        const workouts: WorkoutSession[] = snapshot.docs.map(doc => {
+        const workoutData: WorkoutSession[] = snapshot.docs.map((doc) => {
           const data = doc.data();
           return {
             date: data.date || "",
             duration: data.duration || 0,
             notes: data.notes || "",
-            exercises: data.exercises || []
+            exercises: data.exercises || [],
           };
         });
 
-        setPrs(calculatePRs(workouts));
+        setWorkouts(workoutData); // ✅ store in state
+        setPrs(calculatePRs(workoutData)); // ✅ calculate PRs from same data
       }
 
       setLoading(false);
@@ -43,26 +46,26 @@ export default function Home() {
     return unsubscribe;
   }, []);
 
-if (loading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="flex items-center gap-2 text-gray-300 animate-pulse">
-        <Sparkles className="animate-spin w-5 h-5" />
-        <span>Loading...</span>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="flex items-center gap-2 text-gray-300 animate-pulse">
+          <Sparkles className="animate-spin w-5 h-5" />
+          <span>Loading...</span>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-if (!user) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      <div className="w-full max-w-md">
-        <Auth />
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="w-full max-w-md">
+          <Auth />
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div className="bg-black text-white flex flex-col min-h-screen">
@@ -88,6 +91,11 @@ if (!user) {
           >
             Start a Workout
           </Link>
+        </div>
+
+        {/* Workout Calendar */}
+        <div className="mt-6 w-full max-w-2xl">
+          <WorkoutCalendar workouts={workouts} />
         </div>
 
         {/* PR Section */}

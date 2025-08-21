@@ -96,7 +96,7 @@ export default function WorkoutPage() {
         </header>
 
         {/* Content */}
-        <div className="space-y-8">
+        <div className="space-y-1">
           {/* Suggested Section */}
           {!selectedMuscle && (
             <><div className="bg-gray-900 rounded-xl shadow-md">
