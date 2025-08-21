@@ -75,7 +75,7 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Navbar - Floating pill style */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 pb-[calc(12px+env(safe-area-inset-bottom))]">
         <div className=" rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl p-2">
           <ul className="flex justify-around items-center">
             {navItems.map(({ href, label, icon }) => (
