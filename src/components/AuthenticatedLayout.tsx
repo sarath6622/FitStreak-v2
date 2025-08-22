@@ -3,100 +3,97 @@
 import { useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/firebase";
-import Navbar from "@/components/Navbar";
 import Header from "@/components/Header";
+// import FooterBar from "@/components/FooterBar";
+import Navbar from "@/components/Navbar";
 import { Sparkles } from "lucide-react";
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingMessage, setLoadingMessage] = useState("");
+  const [msg, setMsg] = useState("");
 
   const headerRef = useRef<HTMLElement>(null);
   const footerRef = useRef<HTMLElement>(null);
 
-  const loadingMessages = [
-    "Summoning your workout wizard 🧙‍♂️",
-    "Assembling dumbbells…",
-    "Waking up the AI coach 🤖",
-    "Looking for unused muscle fibers 💪",
-    "Finding the perfect burn 🔥"
-  ];
-
-  // Random fun loading text
   useEffect(() => {
-    if (loading) {
-      setLoadingMessage(
-        loadingMessages[Math.floor(Math.random() * loadingMessages.length)]
-      );
-    }
+    const copy = [
+      "Summoning your workout wizard 🧙‍♂️",
+      "Assembling dumbbells…",
+      "Waking up the AI coach 🤖",
+      "Looking for unused muscle fibers 💪",
+      "Finding the perfect burn 🔥",
+    ];
+    if (loading) setMsg(copy[Math.floor(Math.random() * copy.length)]);
   }, [loading]);
 
-  // Track auth state
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    return onAuthStateChanged(auth, (u) => {
+      setUser(u);
       setLoading(false);
     });
-    return unsubscribe;
   }, []);
 
-  // Dynamically set --header-height / --footer-height
+  // Measure actual rendered heights (which include safe areas)
   useEffect(() => {
-    const updateHeights = () => {
+    const setVars = () => {
       if (headerRef.current) {
-        document.documentElement.style.setProperty(
-          "--header-height",
-          `${headerRef.current.offsetHeight}px`
-        );
+        const h = Math.ceil(headerRef.current.getBoundingClientRect().height);
+        document.documentElement.style.setProperty("--header-height", `${h}px`);
       }
 
       if (footerRef.current) {
-        document.documentElement.style.setProperty(
-          "--footer-height",
-          `${footerRef.current.offsetHeight}px`
-        );
+        const f = Math.ceil(footerRef.current.getBoundingClientRect().height);
+        document.documentElement.style.setProperty("--footer-height", `${f}px`);
       }
     };
 
-    const observer = new ResizeObserver(updateHeights);
-    if (headerRef.current) observer.observe(headerRef.current);
-    if (footerRef.current) observer.observe(footerRef.current);
+    const ro = new ResizeObserver(setVars);
+    if (headerRef.current) ro.observe(headerRef.current);
+    if (footerRef.current) ro.observe(footerRef.current);
 
-    updateHeights(); // run once
+    // run after layout settles (iOS sometimes updates env(...) a tick later)
+    requestAnimationFrame(setVars);
+    const t = setTimeout(setVars, 50);
 
-    return () => observer.disconnect();
-  }, []);
+    const onResize = () => setVars();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+
+    return () => {
+      ro.disconnect();
+      clearTimeout(t);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, [user]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
-        <Sparkles className="w-6 h-6 mb-3 animate-spin" />
-        <h1 className="text-3xl font-bold mb-1">FitStreak</h1>
-        <p className="text-sm text-gray-400 animate-pulse">{loadingMessage}</p>
+      <div className="min-h-[100svh] grid place-items-center bg-black text-white">
+        <div className="flex flex-col items-center">
+          <Sparkles className="w-8 h-8 mb-3 animate-spin text-blue-400" />
+          <h1 className="text-3xl font-bold">FitStreak</h1>
+          <p className="text-sm text-gray-400 mt-2">{msg}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <>
-      {user && (
-        <>
-          <Header ref={headerRef} />
-          <Navbar />
-        </>
-      )}
+    <div className="min-h-[100svh] bg-black text-white">
+      {user && <Header ref={headerRef} />}
 
-      <main
-        className={
-          user
-            ? "relative pt-[calc(env(safe-area-inset-top)+var(--header-height))] pb-[calc(env(safe-area-inset-bottom)+var(--footer-height))]"
-            : ""
-        }
-
-      >
+      {/* MAIN gets padded by measured heights ONLY (no extra env(...) here!) */}
+      <main className="px-4 pt-[var(--header-height)] pb-[var(--footer-height)]">
         {children}
       </main>
-    </>
+
+      {user && (
+        // <FooterBar ref={footerRef}>
+          <Navbar />
+        // </FooterBar>
+      )}
+    </div>
   );
 }
