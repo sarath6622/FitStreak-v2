@@ -3,12 +3,16 @@
 import React, { forwardRef } from "react";
 
 const Header = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
-  (props, ref) => {
+  ({ className = "", ...props }, ref) => {
     return (
       <header
         ref={ref}
         {...props}
-        className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4 border-b bg-black border-gray-700 shadow-md text-white pt-[env(safe-area-inset-top)]"
+        className={`fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 border-b bg-black border-gray-700 shadow-md text-white`}
+        style={{
+          paddingTop: "env(safe-area-inset-top)", // push content inside safe area
+          height: `calc(56px + env(safe-area-inset-top))`, // header height + notch
+        }}
       >
         <h1 className="text-lg font-semibold">FitStreak</h1>
         <div className="flex gap-4 items-center">
@@ -19,5 +23,5 @@ const Header = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
   }
 );
 
-Header.displayName = "Header"; // Required for forwardRef components
+Header.displayName = "Header";
 export default Header;
