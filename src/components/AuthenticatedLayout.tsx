@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/firebase";
 import Navbar from "@/components/Navbar";
@@ -12,27 +12,24 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
   const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("");
 
-  // Dynamic spacing
-  const headerRef = useRef<HTMLDivElement>(null);
-  const footerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const footerRef = useRef<HTMLElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [footerHeight, setFooterHeight] = useState(0);
 
-  const loadingMessages = [
-    "Summoning your workout wizard 🧙‍♂️",
-    "Assembling dumbbells…",
-    "Waking up the AI coach 🤖",
-    "Looking for unused muscle fibers 💪",
-    "Finding the perfect burn 🔥"
-  ];
-
+  // Pick loading message
   useEffect(() => {
-    if (loading) {
-      const randomMsg = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
-      setLoadingMessage(randomMsg);
-    }
-  }, [loading]);
+    const messages = [
+      "Summoning your workout wizard 🧙‍♂️",
+      "Assembling dumbbells…",
+      "Waking up the AI coach 🤖",
+      "Looking for unused muscle fibers 💪",
+      "Finding the perfect burn 🔥"
+    ];
+    setLoadingMessage(messages[Math.floor(Math.random() * messages.length)]);
+  }, []);
 
+  // Auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -41,16 +38,18 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
     return unsubscribe;
   }, []);
 
-  // Watch header & footer size dynamically
+  // Dynamically observe header/footer height
   useEffect(() => {
-    const resizeObserver = new ResizeObserver(() => {
-      if (headerRef.current) setHeaderHeight(headerRef.current.offsetHeight);
-      if (footerRef.current) setFooterHeight(footerRef.current.offsetHeight);
-    });
+    const updateHeights = () => {
+      setHeaderHeight(headerRef.current?.offsetHeight || 0);
+      setFooterHeight(footerRef.current?.offsetHeight || 0);
+    };
 
+    const resizeObserver = new ResizeObserver(updateHeights);
     if (headerRef.current) resizeObserver.observe(headerRef.current);
     if (footerRef.current) resizeObserver.observe(footerRef.current);
 
+    updateHeights();
     return () => resizeObserver.disconnect();
   }, []);
 
@@ -68,13 +67,8 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
     <>
       {user && (
         <>
-          {/* Attach refs so we can measure */}
-          <div ref={headerRef}>
-            <Header />
-          </div>
-          <div ref={footerRef}>
-            <Navbar />
-          </div>
+          <Header ref={headerRef} />
+          <Navbar />
         </>
       )}
 
