@@ -14,22 +14,25 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
 
   const headerRef = useRef<HTMLElement>(null);
   const footerRef = useRef<HTMLElement>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const [footerHeight, setFooterHeight] = useState(0);
 
-  // Pick loading message
+  const loadingMessages = [
+    "Summoning your workout wizard 🧙‍♂️",
+    "Assembling dumbbells…",
+    "Waking up the AI coach 🤖",
+    "Looking for unused muscle fibers 💪",
+    "Finding the perfect burn 🔥"
+  ];
+
+  // Random fun loading text
   useEffect(() => {
-    const messages = [
-      "Summoning your workout wizard 🧙‍♂️",
-      "Assembling dumbbells…",
-      "Waking up the AI coach 🤖",
-      "Looking for unused muscle fibers 💪",
-      "Finding the perfect burn 🔥"
-    ];
-    setLoadingMessage(messages[Math.floor(Math.random() * messages.length)]);
-  }, []);
+    if (loading) {
+      setLoadingMessage(
+        loadingMessages[Math.floor(Math.random() * loadingMessages.length)]
+      );
+    }
+  }, [loading]);
 
-  // Auth state
+  // Track auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -38,19 +41,31 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
     return unsubscribe;
   }, []);
 
-  // Dynamically observe header/footer height
+  // Dynamically set --header-height / --footer-height
   useEffect(() => {
     const updateHeights = () => {
-      setHeaderHeight(headerRef.current?.offsetHeight || 0);
-      setFooterHeight(footerRef.current?.offsetHeight || 0);
+      if (headerRef.current) {
+        document.documentElement.style.setProperty(
+          "--header-height",
+          `${headerRef.current.offsetHeight}px`
+        );
+      }
+
+      if (footerRef.current) {
+        document.documentElement.style.setProperty(
+          "--footer-height",
+          `${footerRef.current.offsetHeight}px`
+        );
+      }
     };
 
-    const resizeObserver = new ResizeObserver(updateHeights);
-    if (headerRef.current) resizeObserver.observe(headerRef.current);
-    if (footerRef.current) resizeObserver.observe(footerRef.current);
+    const observer = new ResizeObserver(updateHeights);
+    if (headerRef.current) observer.observe(headerRef.current);
+    if (footerRef.current) observer.observe(footerRef.current);
 
-    updateHeights();
-    return () => resizeObserver.disconnect();
+    updateHeights(); // run once
+
+    return () => observer.disconnect();
   }, []);
 
   if (loading) {
@@ -73,10 +88,12 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
       )}
 
       <main
-        style={{
-          paddingTop: `calc(${headerHeight}px + env(safe-area-inset-top))`,
-          paddingBottom: `calc(${footerHeight}px + env(safe-area-inset-bottom))`,
-        }}
+        className={
+          user
+            ? "relative pt-[calc(env(safe-area-inset-top)+var(--header-height))] pb-[calc(env(safe-area-inset-bottom)+var(--footer-height))]"
+            : ""
+        }
+
       >
         {children}
       </main>
