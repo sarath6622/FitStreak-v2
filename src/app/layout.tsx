@@ -5,6 +5,7 @@ import "../../public/css/picker.css";
 import { Toaster } from "sonner";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { ThemeProvider } from "next-themes";
+import PageTransition from "@/components/PageTransition";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -86,7 +87,9 @@ export default function RootLayout({
         >
           <Toaster />
           {/* Wrap the children with AuthenticatedLayout */}
-          <AuthenticatedLayout>{children}</AuthenticatedLayout>
+          <AuthenticatedLayout>
+            <PageTransition>{children}</PageTransition>
+          </AuthenticatedLayout>
         </ThemeProvider>
       </body>
     </html>
