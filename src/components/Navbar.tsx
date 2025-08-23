@@ -58,7 +58,7 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
           className="sm:hidden fixed bottom-0 left-0 right-0 z-50"
         >
           <div className="mx-3 rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl p-2">
-            <ul className="flex justify-around items-center">
+            <ul className="flex justify-around items-center pb-2 pt-1">
               {navItems.map(({ href, label, icon }) => {
                 const isActive = pathname === href;
                 return (

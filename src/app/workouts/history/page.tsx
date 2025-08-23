@@ -71,7 +71,6 @@ if (loading) {
 
   return (
     <div className="min-h-screen bg-black text-white px-4 py-6">
-      <h1 className="text-2xl font-bold mb-4">Workout History</h1>
 
       {/* Summary Cards */}
       <SummaryCards workouts={workouts} />

@@ -76,24 +76,6 @@ export default function WorkoutPage() {
   return (
     <>
       <div className="max-w-md mx-auto px-4 py-6 space-y-8 bg-black min-h-screen">
-        {/* Sticky Header */}
-        <header className="z-40 sticky top-0 bg-black px-3 py-2 backdrop-blur-md border-b border-gray-800 shadow-sm">
-          <div className="flex items-center justify-between">
-            {selectedMuscle ? (
-              <button
-                onClick={() =>
-                  selectedExercise ? setSelectedExercise(null) : setSelectedMuscle(null)
-                }
-
-                className="flex items-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800 px-3 py-1 rounded-full transition"
-              >
-                <ArrowLeft size={16} /> Back
-              </button>
-            ) : (
-              <h1 className="text-lg font-semibold text-white leading-none">Workouts</h1>
-            )}
-          </div>
-        </header>
 
         {/* Content */}
         <div className="space-y-1">
