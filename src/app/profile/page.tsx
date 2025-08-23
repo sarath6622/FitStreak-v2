@@ -8,6 +8,7 @@ import { signOut } from "firebase/auth";
 import ProfileCard from "@/components/Profile/ProfileCard";
 import { UserProfile } from "@/types/UserProfile";
 import { useRouter } from "next/navigation";
+import { Sparkles } from "lucide-react";
 
 const ProfilePage: React.FC = () => {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
@@ -85,7 +86,12 @@ const ProfilePage: React.FC = () => {
     setIsEditing(false);
   };
 
-  if (loading) return <div className="text-center mt-10">Loading profile...</div>;
+if (loading) {
+  return           <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
+    </div>
+}
+
   if (!firebaseUser) return <div className="text-center mt-10">Please log in to view your profile.</div>;
 
   return (

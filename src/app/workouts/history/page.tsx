@@ -11,17 +11,19 @@ import PRHighlights from "@/components/history/PRHighlights";
 import Filters from "@/components/history/Filters";
 import { WorkoutSession } from "@/types";
 import { calculatePRs } from "@/lib/historyUtils";
+import { Sparkles } from "lucide-react";
 
 export default function HistoryPage() {
   const [user, setUser] = useState<User | null>(null);
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [prs, setPrs] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
-
+      setAuthReady(true);
       if (firebaseUser) {
         const workoutsRef = collection(db, "users", firebaseUser.uid, "workouts");
         const q = query(workoutsRef, orderBy("date", "desc"));
@@ -33,7 +35,7 @@ export default function HistoryPage() {
 
         setWorkouts(fetchedWorkouts);
         console.log("Fetched workouts:", fetchedWorkouts);
-        
+
         setPrs(calculatePRs(fetchedWorkouts));
       }
 
@@ -43,19 +45,29 @@ export default function HistoryPage() {
     return unsub;
   }, []);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <div className="w-full max-w-md">
-          <Auth />
-        </div>
-      </div>
-    );
-  }
+if (!authReady) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
+    </div>
+  );
+}
 
-  if (loading) {
-    return <div className="text-white text-center mt-10">Loading...</div>;
-  }
+if (!user) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="w-full max-w-md">
+        <Auth />
+      </div>
+    </div>
+  );
+}
+
+if (loading) {
+  return           <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
+    </div>
+}
 
   return (
     <div className="min-h-screen bg-black text-white px-4 py-6">
