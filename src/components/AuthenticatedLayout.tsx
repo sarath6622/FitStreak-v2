@@ -85,9 +85,13 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
       {user && <Header ref={headerRef} />}
 
       {/* Scrollable region only between header + navbar */}
-      <main
-
-      >
+<main
+  className="flex-1 overflow-y-auto px-4"
+  style={{
+    paddingTop: "var(--header-height)",
+    paddingBottom: "var(--footer-height)",
+  }}
+>
         {children}
       </main>
 

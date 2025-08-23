@@ -19,14 +19,31 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
     const pathname = usePathname();
     const [user, setUser] = useState<FirebaseUser | null>(null);
 
+    // 🔧 dynamic safe-area bottom padding
+    const [safeBottom, setSafeBottom] = useState(0);
+
+    useEffect(() => {
+      const calc = () => {
+        const diff = window.innerHeight - document.documentElement.clientHeight;
+        setSafeBottom(diff > 0 ? diff : 0);
+      };
+      calc();
+      window.addEventListener("resize", calc);
+      window.addEventListener("orientationchange", calc);
+      return () => {
+        window.removeEventListener("resize", calc);
+        window.removeEventListener("orientationchange", calc);
+      };
+    }, []);
+
     useEffect(() => onAuthStateChanged(auth, setUser), []);
 
     return (
       <>
-        {/* Desktop top bar (not measured) */}
+        {/* Desktop top bar */}
         <nav
           aria-label="Top navigation"
-          className="hidden sm:flex fixed top-0 left-0 right-0 z-50 bg-black/70 backdrop-blur-lg border-b border-gray-700 shadow px-6 py-4 items-center justify-between pt-[env(safe-area-inset-top)]"
+          className="hidden sm:flex fixed top-0 left-0 right-0 z-50 bg-black/70 backdrop-blur-lg border-b border-gray-700 shadow px-6 py-4 items-center justify-between"
         >
           <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">
             FitStreak
@@ -68,17 +85,17 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
           </ul>
         </nav>
 
-        {/* Mobile bottom bar (this is what we MEASURE) */}
+        {/* Mobile bottom bar */}
         <nav
           aria-label="Bottom navigation"
-          ref={ref}                       // <-- forwardRef lands here
+          ref={ref}
           {...props}
-          className={clsx(
-            "sm:hidden fixed bottom-0 left-0 right-0 z-50",
-            className
-          )}
+          className={clsx("sm:hidden fixed bottom-0 left-0 right-0 z-50", className)}
         >
-          <div className="mx-3 pb-2rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl p-2">
+          <div
+            className="mx-3 rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl p-2"
+            style={{ paddingBottom: safeBottom || 8 }} // fallback to 8px if no safe area
+          >
             <ul className="flex justify-around items-center">
               {navItems.map(({ href, label, icon }) => (
                 <li key={href}>
