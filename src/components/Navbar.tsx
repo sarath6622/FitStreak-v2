@@ -73,11 +73,7 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
           aria-label="Bottom navigation"
           ref={ref}
           {...props}
-          className={clsx(
-            "sm:hidden fixed bottom-0 left-0 right-0 z-50",
-            "pb-[env(safe-area-inset-bottom)]",
-            className
-          )}
+          className= "sm:hidden fixed bottom-0 left-0 right-0 z-50"
         >
           <div className="mx-3 rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl p-2">
             <ul className="flex justify-around items-center">
