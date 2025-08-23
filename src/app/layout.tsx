@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "FitStreak",
   description: "Bunc Venture",
-  themeColor: "#FFD700",
+  themeColor: "black",
   manifest: "/manifest.json",
   icons: {
     apple: "/icons/ios/AppIcon-180@2x.png",
@@ -41,7 +41,7 @@ export default function RootLayout({
           content="black-translucent"
         />
         <meta name="apple-mobile-web-app-title" content="FitStreak" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1, viewport-fit=cover" />
 
         {/* Icons */}
         <link
