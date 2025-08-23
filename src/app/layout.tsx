@@ -20,12 +20,12 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  themeColor: "black",
 };
 
 export const metadata: Metadata = {
   title: "FitStreak",
   description: "Bunc Venture",
-  themeColor: "black",
   manifest: "/manifest.json",
   icons: {
     apple: "/icons/ios/AppIcon-180@2x.png",

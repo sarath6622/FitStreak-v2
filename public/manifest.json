@@ -34,7 +34,7 @@
       "type": "image/png"
     },
     {
-      "src": "/icons/android/res/play_store_512.png",
+      "src": "/icons/android/play_store_512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

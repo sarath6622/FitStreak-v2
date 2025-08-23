@@ -21,6 +21,24 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
 
     useEffect(() => onAuthStateChanged(auth, setUser), []);
 
+    // Combine static and dynamic nav items
+    const mobileNavItems = [
+      ...navItems,
+      {
+        href: user ? "/profile" : "/login",
+        label: user ? "Profile" : "Login",
+        icon: user ? (
+          <img
+            src={user.photoURL || "/default-avatar.png"}
+            alt="Profile"
+            className="w-6 h-6 rounded-full border border-gray-500"
+          />
+        ) : (
+          <User size={20} strokeWidth={1.5} />
+        ),
+      },
+    ];
+
     return (
       <>
         {/* Desktop top bar */}
@@ -31,7 +49,6 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
           <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">
             FitStreak
           </h1>
-
           <ul className="flex gap-6 items-center">
             {navItems.map(({ href, label }) => (
               <li key={href}>
@@ -73,11 +90,16 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
           aria-label="Bottom navigation"
           ref={ref}
           {...props}
-          className= "sm:hidden fixed bottom-0 left-0 right-0 z-50"
+          className={clsx(
+            "sm:hidden fixed bottom-0 left-0 right-0 z-50",
+            // The magic is here: using env() for safe area padding
+            "pb-[env(safe-area-inset-bottom)]",
+            className
+          )}
         >
-          <div className="mx-3 rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl p-2">
+          <div className="mx-3 rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl pb-4 pt-2">
             <ul className="flex justify-around items-center">
-              {navItems.map(({ href, label, icon }) => {
+              {mobileNavItems.map(({ href, label, icon }) => {
                 const isActive = pathname === href;
                 return (
                   <li key={href}>
@@ -95,9 +117,7 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
                       <span
                         className={clsx(
                           "ml-2 text-sm transition-all duration-300 overflow-hidden",
-                          isActive
-                            ? "opacity-100 max-w-[100px]"
-                            : "opacity-0 max-w-0"
+                          isActive ? "opacity-100 max-w-[100px]" : "opacity-0 max-w-0"
                         )}
                       >
                         {label}
@@ -106,44 +126,6 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
                   </li>
                 );
               })}
-
-              <li>
-                {(() => {
-                  const isProfile = pathname === (user ? "/profile" : "/login");
-                  return (
-                    <Link
-                      href={user ? "/profile" : "/login"}
-                      className={clsx(
-                        // Consistent padding applied here as well
-                        "flex items-center p-4 rounded-xl transition active:scale-90",
-                        isProfile
-                          ? "bg-gradient-to-r from-blue-500/30 to-indigo-500/30 text-blue-300 shadow-inner"
-                          : "text-gray-400 hover:text-gray-200"
-                      )}
-                    >
-                      {user ? (
-                        <img
-                          src={user.photoURL || "/default-avatar.png"}
-                          alt="Profile"
-                          className="w-6 h-6 rounded-full border border-gray-500"
-                        />
-                      ) : (
-                        <User size={20} strokeWidth={1.5} />
-                      )}
-                      <span
-                        className={clsx(
-                          "ml-2 text-sm transition-all duration-300 overflow-hidden",
-                          isProfile
-                            ? "opacity-100 max-w-[100px]"
-                            : "opacity-0 max-w-0"
-                        )}
-                      >
-                        {user ? "Profile" : "Login"}
-                      </span>
-                    </Link>
-                  );
-                })()}
-              </li>
             </ul>
           </div>
         </nav>

@@ -3,6 +3,9 @@
 import { Lightbulb } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
+import clsx from 'clsx';
+// import { sum } from "firebase/firestore"; // This import is not used
+
 interface SuggestionSectionProps {
   userId: string;
   onSelect: (muscle: string) => void;
@@ -16,12 +19,6 @@ interface MuscleSummary {
 
 interface WorkoutPlan {
   name: string;
-  muscleGroup: string;
-  subGroup: string;
-  equipment: string[];
-  movementType: string;
-  difficulty: string;
-  secondaryMuscleGroups: string[];
   sets: number;
   reps: string;
   notes?: string;
@@ -43,61 +40,61 @@ function getColorClass(daysAgo: number, selected: boolean) {
 
 export default function SuggestionSection({ userId, onSelect }: SuggestionSectionProps) {
   const [muscleSummaries, setMuscleSummaries] = useState<MuscleSummary[]>([]);
-  const [loading, setLoading] = useState(false);
   const [selectedMuscles, setSelectedMuscles] = useState<string[]>([]);
   const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan[] | null>(null);
   const [saving, setSaving] = useState(false);
-  const [hasGenerated, setHasGenerated] = useState(false);
-  const [analysisLoading, setAnalysisLoading] = useState(false);
-  const [generationLoading, setGenerationLoading] = useState(false);
-  const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
-  const availableDurations = [30, 45, 60, 90, 120]; // in minutes
+  const [selectedDuration, setSelectedDuration] = useState<number | null>(60); // Default to 60 minutes
+  const [status, setStatus] = useState<"idle" | "analyzing" | "generating" | "saving">("idle");
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const availableDurations = [30, 45, 60, 90, 120];
+
+  async function fetchMuscleAnalysis() {
     if (!userId) return;
+    setStatus("analyzing");
+    setError(null);
+    try {
+      const res = await fetch("/api/analyze-muscles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      if (!res.ok) throw new Error("Failed to fetch muscle summary");
+      const data = await res.json();
 
-    // Try to read from localStorage
-    const cached = localStorage.getItem("muscleSummary");
-    const cachedDate = localStorage.getItem("muscleSummaryDate");
-
-    // If we have a cached summary from TODAY → use it
-    const today = new Date().toDateString();
-    if (cached && cachedDate === today) {
-      setMuscleSummaries(JSON.parse(cached));
-      return;
-    }
-
-    async function fetchMuscleAnalysis() {
-      setAnalysisLoading(true);
-      try {
-        const res = await fetch("/api/analyze-muscles", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId }),
-        });
-        const data = await res.json();
-        let summaries: MuscleSummary[] = [];
-        try {
-          summaries = JSON.parse(data.summary);
-          console.log("Raw AI response:", data.summary);
-        } catch {
-          console.error("Failed to parse muscle summary from AI");
-        }
-
-        setMuscleSummaries(summaries);
-
-        // ✅ Cache result + date in localStorage
-        localStorage.setItem("muscleSummary", JSON.stringify(summaries));
-        localStorage.setItem("muscleSummaryDate", today);
-      } catch (err) {
-        console.error("Failed to fetch muscle summary", err);
-        setMuscleSummaries([]);
+      let summaries;
+      if (typeof data.summary === 'string') {
+        summaries = JSON.parse(data.summary);
+      } else {
+        summaries = data.summary;
       }
 
-      setAnalysisLoading(false);
-    }
+      setMuscleSummaries(summaries);
 
-    fetchMuscleAnalysis();
+      // Cache the result in localStorage
+      localStorage.setItem("muscleSummary", JSON.stringify(summaries));
+      localStorage.setItem("muscleSummaryDate", new Date().toDateString());
+    } catch (err: any) {
+      console.error("Failed to fetch muscle summary", err);
+      setError(err.message || "Failed to analyze workout history.");
+      setMuscleSummaries([]);
+    } finally {
+      setStatus("idle");
+    }
+  }
+
+  useEffect(() => {
+    // Try to read from localStorage first
+    const cached = localStorage.getItem("muscleSummary");
+    const cachedDate = localStorage.getItem("muscleSummaryDate");
+    const today = new Date().toDateString();
+
+    if (cached && cachedDate === today) {
+      setMuscleSummaries(JSON.parse(cached));
+    } else {
+      // If no valid cache, fetch from API
+      fetchMuscleAnalysis();
+    }
   }, [userId]);
 
   const toggleMuscle = (muscle: string) => {
@@ -105,18 +102,15 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
       const updated = prev.includes(muscle)
         ? prev.filter((m) => m !== muscle)
         : [...prev, muscle];
-
-      // Clear previous plan & reset flag when selection changes
-      setHasGenerated(false);
       setWorkoutPlan(null);
-
       return updated;
     });
   };
 
   const startWorkout = async () => {
-    if (!userId || !workoutPlan || selectedMuscles.length === 0) return;
-    setSaving(true);
+    if (!userId || !workoutPlan) return;
+    setStatus("saving");
+    setError(null);
     try {
       const res = await fetch("/api/save-workout", {
         method: "POST",
@@ -129,20 +123,19 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
       });
       if (!res.ok) throw new Error("Failed to save workout");
       onSelect(selectedMuscles.join(", "));
-    } catch (error) {
-      console.error("[Save Workout]", error);
+    } catch (err: any) {
+      console.error("[Save Workout]", err);
+      setError(err.message || "Failed to save workout.");
+    } finally {
+      setStatus("idle");
     }
-
-    setSaving(false);
   };
 
   const generateWorkout = async () => {
-    if (!userId) return;
-    setLoading(true);
+    if (selectedMuscles.length === 0) return;
+    setStatus("generating");
     setWorkoutPlan(null);
-    setHasGenerated(true);
-    setGenerationLoading(true);
-
+    setError(null);
     try {
       const res = await fetch("/api/recommend", {
         method: "POST",
@@ -150,62 +143,84 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
         body: JSON.stringify({
           userId,
           muscleGroups: selectedMuscles,
-          duration: selectedDuration || 60, // Default to 60 minutes if not set
+          duration: selectedDuration,
         }),
       });
+      if (!res.ok) throw new Error("Failed to generate workout plan.");
       const data = await res.json();
       const parsedPlan: WorkoutPlan[] = JSON.parse(data.recommendation);
       setWorkoutPlan(parsedPlan);
-    } catch (e) {
-      console.error(e);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to generate workout plan.");
+    } finally {
+      setStatus("idle");
     }
-
-    setLoading(false);
-    setGenerationLoading(false);
   };
+
+  const isGenerating = status === "generating";
+  const isAnalyzing = status === "analyzing";
+  const isSaving = status === "saving";
+  const canGenerate = selectedMuscles.length > 0 && !isGenerating && !isAnalyzing;
 
   return (
     <div className="max-w-md mx-auto p-5 bg-gray-900 rounded-xl shadow-lg border border-gray-700">
-      <h2 className="flex align-center text-blue-400 font-semibold text-lg mb-4">Suggested for You</h2>
+      <h2 className="flex items-center text-blue-400 font-semibold text-lg mb-4">
+        Suggested for You
+        {/* Re-Analyze Button (outside the pills) */}
+        <button
+          onClick={fetchMuscleAnalysis}
+          disabled={isAnalyzing}
+          className={clsx(
+            "ml-auto px-3 py-1 rounded-full text-sm font-medium transition-all",
+            "bg-gray-700 text-gray-300 hover:bg-gray-600",
+            { "opacity-50 cursor-not-allowed": isAnalyzing }
+          )}
+        >
+          {isAnalyzing ? "Analyzing..." : "Re-Analyze"}
+        </button>
+      </h2>
 
       {/* Muscle Group Pills */}
-      {/* ---- Muscle Group Selector ---- */}
       <div className="mb-5">
         <h4 className="text-sm font-semibold text-gray-300 mb-2 tracking-wide">
           Choose Muscle Groups
         </h4>
-
         <div className="flex flex-wrap gap-2 p-2 bg-gray-800 border border-gray-700 rounded-lg">
-          {muscleSummaries
-            .filter((m) => m.daysAgo !== 0)
-            .map((m) => {
-              const selected = selectedMuscles.includes(m.muscleGroup);
-              return (
-                <button
-                  key={m.muscleGroup}
-                  onClick={() => toggleMuscle(m.muscleGroup)}
-                  disabled={loading}
-                  className={`
-              px-3 py-1 rounded-full text-sm font-medium transition-all
-              ${selected
-                      ? "bg-blue-600 text-white ring-2 ring-blue-300 scale-105"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"}
-            `}
-                  title={`Last trained ${m.daysAgo} day${m.daysAgo === 1 ? "" : "s"} ago (${m.lastTrained})`}
-                >
-                  {m.muscleGroup}
-                  <span className="opacity-70 text-xs ml-1">– {m.daysAgo}d</span>
-                </button>
-              );
-            })}
+          {isAnalyzing ? (
+            <p className="text-blue-300 text-sm animate-pulse">Analyzing workout history...</p>
+          ) : (
+            muscleSummaries
+              .filter((m) => m.daysAgo !== 0)
+              .map((m) => {
+                const selected = selectedMuscles.includes(m.muscleGroup);
+                return (
+                  <button
+                    key={m.muscleGroup}
+                    onClick={() => toggleMuscle(m.muscleGroup)}
+                    disabled={isGenerating || isAnalyzing}
+                    className={clsx(
+                      "px-3 py-1 rounded-full text-sm font-medium transition-all",
+                      selected
+                        ? "bg-blue-600 text-white ring-2 ring-blue-300 scale-105"
+                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    )}
+                    title={`Last trained ${m.daysAgo} day${m.daysAgo === 1 ? "" : "s"} ago (${m.lastTrained})`}
+                  >
+                    {m.muscleGroup}
+                    <span className="opacity-70 text-xs ml-1">– {m.daysAgo}d</span>
+                  </button>
+                );
+              })
+          )}
         </div>
       </div>
+
       {/* Planned duration pills */}
       <div className="mb-5">
         <h4 className="text-sm font-semibold text-gray-300 mb-2 tracking-wide">
           Choose Duration
         </h4>
-
         <div className="flex flex-wrap gap-2 p-2 bg-gray-800 border border-gray-700 rounded-lg">
           {availableDurations.map((min) => {
             const selected = selectedDuration === min;
@@ -213,12 +228,12 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
               <button
                 key={min}
                 onClick={() => setSelectedDuration(min)}
-                className={`
-            px-3 py-1 rounded-full text-sm font-medium transition-all
-            ${selected
+                className={clsx(
+                  "px-3 py-1 rounded-full text-sm font-medium transition-all",
+                  selected
                     ? "bg-blue-600 text-white ring-2 ring-blue-300 scale-105"
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"}
-          `}
+                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                )}
                 title={`${min} minutes`}
               >
                 {min} min
@@ -227,24 +242,25 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
           })}
         </div>
       </div>
+
+      {/* Generate Button */}
       <button
         onClick={generateWorkout}
-        disabled={selectedMuscles.length === 0 || generationLoading || analysisLoading}
-        className={`
-    mt-2 mb-2 w-full py-2 rounded font-semibold flex items-center justify-center gap-1 transition-all
-    disabled:opacity-40
-    ${generationLoading
+        disabled={!canGenerate}
+        className={clsx(
+          "mt-2 mb-2 w-full py-2 rounded font-semibold flex items-center justify-center gap-1 transition-all",
+          "disabled:opacity-40",
+          isGenerating
             ? "bg-blue-500 text-white"
             : "bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl"
-          }`}
+        )}
       >
-        {generationLoading ? (
+        {isGenerating ? (
           <>
             <Sparkles className="w-4 h-4 animate-pulse" />
-            Generating workout for {selectedMuscles.length} muscle
-            {selectedMuscles.length > 1 ? "s" : ""}...
+            Generating workout for {selectedMuscles.length} muscle{selectedMuscles.length > 1 ? "s" : ""}...
           </>
-        ) : hasGenerated ? (
+        ) : workoutPlan ? (
           <>
             <Sparkles className="w-4 h-4" />
             Generate workout again
@@ -257,43 +273,23 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
         )}
       </button>
 
-      {/* Loading Indicator */}
-      {generationLoading && (
-        <p className="text-blue-300 text-sm text-center mb-4 animate-pulse">
-          Generating your workout plan...
-        </p>
-      )}
+      {/* Error Message */}
+      {error && <p className="text-red-500 text-sm text-center my-2">{error}</p>}
 
-      {/* Workout Plan */}
+      {/* Workout Plan Display */}
       {workoutPlan && (
         <div className="bg-gray-800 rounded-lg p-4 shadow text-gray-100 mb-3">
           <h3 className="text-blue-300 font-semibold text-base mb-2">
             Workout plan for {selectedMuscles.join(", ")}:
           </h3>
           <ul className="list-disc list-inside space-y-2 text-sm">
-            {workoutPlan.map(
-              (
-                {
-                  name,
-                  sets,
-                  reps,
-                  notes,
-                  subGroup,
-                  equipment,
-                  movementType,
-                  difficulty,
-                  secondaryMuscleGroups,
-                },
-                idx
-              ) => (
-                <li key={idx} className="space-y-1">
-                  <span className="font-semibold text-blue-200">{name}</span> –{" "}
-                  {sets} sets × {reps}
-                  {notes && <em className="ml-1 text-gray-400">({notes})</em>}
-
-                </li>
-              )
-            )}
+            {workoutPlan.map(({ name, sets, reps, notes }, idx) => (
+              <li key={idx} className="space-y-1">
+                <span className="font-semibold text-blue-200">{name}</span> –{" "}
+                {sets} sets × {reps}
+                {notes && <em className="ml-1 text-gray-400">({notes})</em>}
+              </li>
+            ))}
           </ul>
           <button
             onClick={startWorkout}
@@ -303,18 +299,6 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
             {saving ? "Starting workout..." : "Start Workout"}
           </button>
         </div>
-      )}
-
-      {/* No Plan Message */}
-      {analysisLoading && (
-        <p className="text-blue-300 text-sm text-center mb-4 animate-pulse">
-          Analyzing workout history...
-        </p>
-      )}
-      {hasGenerated && !loading && !workoutPlan && selectedMuscles.length > 0 && (
-        <p className="italic text-gray-400 text-sm text-center">
-          No workout plan available for {selectedMuscles.join(", ")}.
-        </p>
       )}
     </div>
   );

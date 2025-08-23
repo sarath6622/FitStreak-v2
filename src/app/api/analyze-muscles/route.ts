@@ -1,128 +1,108 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { getUserWorkoutHistory } from "@/services/workoutService";
-import { log } from "node:console";
+import { log } from "console";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+// Define the structure for the data we'll send to the AI
+interface ProcessedHistory {
+  muscleGroup: string;
+  lastTrained: string;
+  daysAgo: number;
+  totalVolume: number;
+}
 
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await req.json();
 
     if (!userId) {
-      return NextResponse.json({ error: "Missing userId in body" }, { status: 400 });
+      return NextResponse.json({ error: "Missing userId" }, { status: 400 });
     }
 
-    const workoutHistory = await getUserWorkoutHistory(userId, 10);
-    
-    // --- FIX STARTS HERE ---
-    // First, filter the flat array of exercises to remove low-volume sets
-    const filteredExercises = workoutHistory.filter(
-      (ex: any) => {
-        // Assume 'completed' is true if not specified
-        const isCompleted = ex.completed === undefined || ex.completed === true;
-        const hasSets = ex.sets > 0;
+    const rawHistory = await getUserWorkoutHistory(userId, 10);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-        if (isCompleted && hasSets) {
-          const avgReps = ex.repsPerSet.length > 0 ? ex.repsPerSet.reduce((a: number, b: number) => a + b, 0) / ex.repsPerSet.length : 0;
-          const avgWeight = ex.weight.length > 0 ? ex.weight.reduce((a: number, b: number) => a + b, 0) / ex.weight.length : 0;
-          const volume = ex.sets * avgReps * avgWeight;
-          
-          // Only keep exercises with a volume of 200 or more
-          return volume >= 200;
-        }
+    const majorMuscleGroups = ["Chest", "Back", "Legs", "Shoulders", "Biceps", "Triceps", "Abs", "Calves", "Glutes"];
 
-        return false;
-      }
-    );
+    // Process raw history to get the most recent workout for each muscle group
+    const processedHistory: { [key: string]: ProcessedHistory } = {};
 
-    // Now, group the filtered exercises by date to create the nested workout history
-    const finalProcessedHistory: any[] = [];
-    const workoutsByDate: { [date: string]: any } = {};
-
-    filteredExercises.forEach(ex => {
-      const date = ex.date;
-      if (!workoutsByDate[date]) {
-        workoutsByDate[date] = {
-          date: date,
-          duration: 0, // Duration is not available per exercise, so we'll leave it as 0 or sum it up later if needed
-          exercises: []
+    majorMuscleGroups.forEach(group => {
+        processedHistory[group] = {
+            muscleGroup: group,
+            lastTrained: "Never",
+            daysAgo: 7,
+            totalVolume: 0,
         };
-        finalProcessedHistory.push(workoutsByDate[date]);
-      }
-
-      workoutsByDate[date].exercises.push(ex);
     });
 
-    // --- FIX ENDS HERE ---
+    // Populate data for trained muscle groups
+    rawHistory.forEach(exercise => {
+      const { date, muscleGroup, repsPerSet, weight } = exercise;
 
-    // Use finalProcessedHistory in the prompt
-    const historyJson = JSON.stringify(finalProcessedHistory, null, 2);
-    
-const prompt = `
-You are a virtual fitness coach analyzing a user's workout history.
-Each workout entry includes:
-- 'date' (YYYY-MM-DD) of the workout
-- 'duration' (number, total workout time in minutes)
-- 'exercises': an array of objects, each with:
-    - 'name' (string)
-    - 'muscleGroup' (string)
-    - 'sets' (number)
-    - 'repsPerSet' (array of numbers)
-    - 'weight' (array of numbers)
-    - 'completed' (boolean)
+      if (majorMuscleGroups.includes(muscleGroup) && date) {
+        const workoutDate = new Date(date);
+        workoutDate.setHours(0, 0, 0, 0);
+        const daysAgo = Math.floor((today.getTime() - workoutDate.getTime()) / (1000 * 60 * 60 * 24));
 
-Workout history:
-${historyJson}
+        // Calculate total volume
+        const totalVolume = repsPerSet.reduce((sum, reps, i) => sum + reps * (weight[i] || 0), 0);
+        
+        // Update history if this is the most recent workout for the muscle group
+        if (daysAgo < processedHistory[muscleGroup].daysAgo) {
+          processedHistory[muscleGroup] = {
+            muscleGroup,
+            lastTrained: date,
+            daysAgo: Math.min(daysAgo, 7), // Cap daysAgo at 7
+            totalVolume,
+          };
+        }
+      }
+    });
 
-Here is the full list of major muscle groups that MUST be evaluated, even if missing from the history:
-["Chest","Back","Legs","Shoulders","Biceps","Triceps","Abs","Calves","Glutes"]
+    // Convert the processed object to an array for the AI prompt
+    const finalHistoryForAI = Object.values(processedHistory);
+    const historyJson = JSON.stringify(finalHistoryForAI, null, 2);
 
-Instructions:
+    const prompt = `
+      You are a virtual fitness coach. Analyze the following workout history to recommend undertrained muscle groups.
+      History contains a list of muscle groups, their last trained date, total days since training (max 7), and total volume.
 
-1. For **each** of the muscle groups in the list above, find the most recent date it was trained (based on completed exercises).
-2. Calculate 'daysAgo' as number of days since it was last trained compared to today.
-3. If a muscle group hasn't been trained in the last 7 days or does not appear in the history, use 'daysAgo' = 7 and 'lastTrained' = "Never".
-4. Assign an 'intensity' level ('low', 'medium', 'high') based on total volume (sets, reps, weights) in the most recent workout for that group:
-   - 'low' = very low volume (e.g., sets < 3 or very light weights)
-   - 'medium' = moderate volume (sets 3–6, moderate weights)
-   - 'high' = high volume (sets 7+, heavy weights)
+      Workout history:
+      ${historyJson}
 
-5. Return ONLY a JSON array listing undertrained muscle groups as objects with:
-   - "muscleGroup": string
-   - "lastTrained": string (YYYY-MM-DD or "Never")
-   - "daysAgo": integer (min 0, max 7)
-   - "intensity": string ("low", "medium", or "high")
-
-6. If there is no workout history, return all major muscle groups with "lastTrained": "Never", "daysAgo": 7 and "intensity": "low".
-
-7. Your response MUST be only this JSON array. Do NOT include any explanations, greetings, or text outside the JSON.
-
-Example valid response:
-[
-  {
-    "muscleGroup": "Legs",
-    "lastTrained": "2025-08-10",
-    "daysAgo": 5,
-    "intensity": "medium"
-  },
-  {
-    "muscleGroup": "Shoulders",
-    "lastTrained": "Never",
-    "daysAgo": 7,
-    "intensity": "low"
-  }
-]
-`;
+      Instructions:
+      1. Identify muscle groups that have been trained more than 3 days ago.
+      2. For each identified muscle group, evaluate its 'intensity' based on 'totalVolume'.
+         - 'low' = totalVolume < 500
+         - 'medium' = 500 <= totalVolume < 1500
+         - 'high' = totalVolume >= 1500
+      3. Return ONLY a JSON array of these undertrained muscle groups.
+      4. The response format MUST be:
+         [
+           {
+             "muscleGroup": string,
+             "lastTrained": string,
+             "daysAgo": number,
+             "intensity": "low" | "medium" | "high"
+           },
+           ...
+         ]
+      5. Do NOT include any text, explanations, or greetings outside the JSON array.
+    `;
 
     const completion = await groq.chat.completions.create({
       model: "llama3-70b-8192",
       messages: [{ role: "user", content: prompt }],
     });
-
+    
     const summary = completion.choices[0].message.content;
+    console.log("AI Summary:", summary);
 
-    return NextResponse.json({ summary });
+    return NextResponse.json({ summary: JSON.parse(summary!) });
   } catch (error) {
     console.error("Error in /api/analyze-muscles:", error);
     return NextResponse.json({ error: "Failed to analyze muscle groups" }, { status: 500 });
