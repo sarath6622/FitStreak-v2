@@ -1,7 +1,16 @@
 // src/components/ExerciseList.tsx
-import { useState, useMemo } from "react";
+"use client";
+
+import { useState, useMemo, useEffect } from "react";
 import { CheckCircle2 } from "lucide-react";
-import exercisesData from "@/data/exercises.json";
+import { db } from "@/firebase";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+} from "firebase/firestore";
 
 interface Exercise {
   name: string;
@@ -49,7 +58,11 @@ function ExerciseCard({
       <div className="flex justify-between items-start">
         <div className="font-semibold">{exercise.name}</div>
         {completedData && (
-          <CheckCircle2 size={20} className="text-green-500" aria-label="Completed today" />
+          <CheckCircle2
+            size={20}
+            className="text-green-500"
+            aria-label="Completed today"
+          />
         )}
       </div>
 
@@ -77,19 +90,53 @@ export default function ExerciseList({
 }: ExerciseListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 🔥 Fetch from Firestore when component mounts or muscleGroup changes
+  useEffect(() => {
+    const fetchExercises = async () => {
+      setLoading(true);
+      try {
+        const exercisesRef = collection(db, "exercises");
+        const q = query(
+          exercisesRef,
+          where("muscleGroup", "==", muscleGroup),
+          orderBy("name")
+        );
+
+        const snapshot = await getDocs(q);
+        const fetched: Exercise[] = snapshot.docs.map(
+          (doc) => doc.data() as Exercise
+        );
+
+        setExercises(fetched);
+      } catch (err) {
+        console.error("❌ Error fetching exercises:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (muscleGroup) {
+      fetchExercises();
+    }
+  }, [muscleGroup]);
 
   const filteredExercises = useMemo(() => {
-    return (exercisesData as Exercise[])
-      .filter((exercise) => exercise.muscleGroup === muscleGroup)
-      .filter((exercise) =>
-        exercise.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-  }, [muscleGroup, searchTerm]);
+    return exercises.filter((exercise) =>
+      exercise.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [exercises, searchTerm]);
 
   const handleSelect = (name: string) => {
     setSelectedExercise(name);
     onSelectExercise(name);
   };
+
+  if (loading) {
+    return <p className="text-gray-400">Loading exercises...</p>;
+  }
 
   return (
     <div className="space-y-4">
