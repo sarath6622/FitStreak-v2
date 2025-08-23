@@ -100,8 +100,8 @@ export default function SetupProfile() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-black text-white">
-      <div className="bg-gray-900 rounded-xl shadow-lg p-6 max-w-md w-full">
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 text-white">
+      <div className="rounded-xl shadow-lg p-6 max-w-md w-full">
         <h1 className="text-2xl font-bold mb-6 text-center">Set up your profile</h1>
 
         {error && (

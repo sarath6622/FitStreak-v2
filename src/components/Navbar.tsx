@@ -19,23 +19,6 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
     const pathname = usePathname();
     const [user, setUser] = useState<FirebaseUser | null>(null);
 
-    // 🔧 dynamic safe-area bottom padding
-    const [safeBottom, setSafeBottom] = useState(0);
-
-    useEffect(() => {
-      const calc = () => {
-        const diff = window.innerHeight - document.documentElement.clientHeight;
-        setSafeBottom(diff > 0 ? diff : 0);
-      };
-      calc();
-      window.addEventListener("resize", calc);
-      window.addEventListener("orientationchange", calc);
-      return () => {
-        window.removeEventListener("resize", calc);
-        window.removeEventListener("orientationchange", calc);
-      };
-    }, []);
-
     useEffect(() => onAuthStateChanged(auth, setUser), []);
 
     return (
@@ -90,67 +73,80 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
           aria-label="Bottom navigation"
           ref={ref}
           {...props}
-          className={clsx("sm:hidden fixed bottom-0 left-0 right-0 z-50", className)}
+          className={clsx(
+            "sm:hidden fixed bottom-0 left-0 right-0 z-50",
+            "pb-[env(safe-area-inset-bottom)]",
+            className
+          )}
         >
-          <div
-            className="mx-3 rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl p-2"
-            style={{ paddingBottom: safeBottom || 8 }} // fallback to 8px if no safe area
-          >
+          <div className="mx-3 rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl p-2">
             <ul className="flex justify-around items-center">
-              {navItems.map(({ href, label, icon }) => (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    className={clsx(
-                      "flex flex-col items-center text-xs px-4 py-2 rounded-xl transition active:scale-90",
-                      pathname === href
-                        ? "bg-gradient-to-r from-blue-500/30 to-indigo-500/30 text-blue-300 shadow-inner"
-                        : "text-gray-400 hover:text-gray-200"
-                    )}
-                  >
-                    {icon}
-                    <span
+              {navItems.map(({ href, label, icon }) => {
+                const isActive = pathname === href;
+                return (
+                  <li key={href}>
+                    <Link
+                      href={href}
                       className={clsx(
-                        "transition-all duration-200 overflow-hidden",
-                        pathname === href ? "opacity-100 max-h-4 mt-1" : "opacity-0 max-h-0 mt-0"
+                        // Consistent padding for all items
+                        "flex items-center p-4 rounded-xl transition active:scale-90",
+                        isActive
+                          ? "bg-gradient-to-r from-blue-500/30 to-indigo-500/30 text-blue-300 shadow-inner"
+                          : "text-gray-400 hover:text-gray-200"
                       )}
                     >
-                      {label}
-                    </span>
-                  </Link>
-                </li>
-              ))}
+                      {icon}
+                      <span
+                        className={clsx(
+                          "ml-2 text-sm transition-all duration-300 overflow-hidden",
+                          isActive
+                            ? "opacity-100 max-w-[100px]"
+                            : "opacity-0 max-w-0"
+                        )}
+                      >
+                        {label}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
 
               <li>
-                <Link
-                  href={user ? "/profile" : "/login"}
-                  className={clsx(
-                    "flex flex-col items-center text-xs px-4 py-2 rounded-xl transition active:scale-90",
-                    pathname === (user ? "/profile" : "/login")
-                      ? "bg-gradient-to-r from-blue-500/30 to-indigo-500/30 text-blue-300 shadow-inner"
-                      : "text-gray-400 hover:text-gray-200"
-                  )}
-                >
-                  {user ? (
-                    <img
-                      src={user.photoURL || "/default-avatar.png"}
-                      alt="Profile"
-                      className="w-6 h-6 rounded-full border border-gray-500"
-                    />
-                  ) : (
-                    <User size={20} strokeWidth={1.5} />
-                  )}
-                  <span
-                    className={clsx(
-                      "transition-all duration-200 overflow-hidden",
-                      pathname === (user ? "/profile" : "/login")
-                        ? "opacity-100 max-h-4 mt-1"
-                        : "opacity-0 max-h-0 mt-0"
-                    )}
-                  >
-                    {user ? "Profile" : "Login"}
-                  </span>
-                </Link>
+                {(() => {
+                  const isProfile = pathname === (user ? "/profile" : "/login");
+                  return (
+                    <Link
+                      href={user ? "/profile" : "/login"}
+                      className={clsx(
+                        // Consistent padding applied here as well
+                        "flex items-center p-4 rounded-xl transition active:scale-90",
+                        isProfile
+                          ? "bg-gradient-to-r from-blue-500/30 to-indigo-500/30 text-blue-300 shadow-inner"
+                          : "text-gray-400 hover:text-gray-200"
+                      )}
+                    >
+                      {user ? (
+                        <img
+                          src={user.photoURL || "/default-avatar.png"}
+                          alt="Profile"
+                          className="w-6 h-6 rounded-full border border-gray-500"
+                        />
+                      ) : (
+                        <User size={20} strokeWidth={1.5} />
+                      )}
+                      <span
+                        className={clsx(
+                          "ml-2 text-sm transition-all duration-300 overflow-hidden",
+                          isProfile
+                            ? "opacity-100 max-w-[100px]"
+                            : "opacity-0 max-w-0"
+                        )}
+                      >
+                        {user ? "Profile" : "Login"}
+                      </span>
+                    </Link>
+                  );
+                })()}
               </li>
             </ul>
           </div>

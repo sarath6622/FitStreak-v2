@@ -30,7 +30,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
   return (
     <div className="mx-auto mt-6 max-w-lg">
-      <div className="rounded-2xl border border-gray-800 bg-gray-900/70 backdrop-blur-md p-6 shadow-2xl">
+      <div className="rounded-2xl border border-gray-800 backdrop-blur-md p-6 shadow-2xl">
         {/* Avatar */}
         <div className="flex flex-col items-center mb-6">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-2xl font-bold shadow-lg">
