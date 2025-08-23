@@ -5,6 +5,7 @@ import "../../public/css/picker.css";
 import { Toaster } from "sonner";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { Viewport } from "next"
+import { ThemeProvider } from "next-themes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
   title: "FitStreak",
   description: "Bunc Venture",
   themeColor: "black",
-  manifest: "/manifest.json",
+  manifest: "../public/manifest.json",
   icons: {
     apple: "/icons/ios/AppIcon-180@2x.png",
     icon: "/icons/android/res/mipmap-xxxhdpi/ic_launcher.png",
@@ -42,7 +43,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="bg-black">
+    <html lang="en" className="bg-black overscroll-contain scroll-smooth"
+      suppressHydrationWarning>
       <head>
         {/* PWA meta tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -75,11 +77,21 @@ export default function RootLayout({
           href="/icons/ios/AppIcon-60@2x.png"
         />
 
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="manifest" href="../public/manifest.json" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black dark:bg-black text-black dark:text-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]`}
       >
+
+                <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+
         {/* Always show header */}
 
         <AuthenticatedLayout>
@@ -88,20 +100,8 @@ export default function RootLayout({
           {children}
         </AuthenticatedLayout>
 
-        {/* Global toaster notifications */}
-        <Toaster
-          richColors
-          closeButton
-          position="top-right"
-          toastOptions={{
-            style: {
-              backgroundColor: "#1f2937",
-              color: "white",
-              fontFamily: "var(--font-geist-sans)",
-              fontWeight: "600",
-            },
-          }}
-        />
+        </ThemeProvider>
+
       </body>
     </html>
   );
