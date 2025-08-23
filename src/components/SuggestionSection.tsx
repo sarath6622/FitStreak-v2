@@ -79,6 +79,7 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
         let summaries: MuscleSummary[] = [];
         try {
           summaries = JSON.parse(data.summary);
+          console.log("Raw AI response:", data.summary);
         } catch {
           console.error("Failed to parse muscle summary from AI");
         }

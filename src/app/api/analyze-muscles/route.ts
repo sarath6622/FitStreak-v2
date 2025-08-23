@@ -14,7 +14,6 @@ export async function POST(req: NextRequest) {
     }
 
     const workoutHistory = await getUserWorkoutHistory(userId, 10);
-    console.log("[Analyze Muscles] Fetched workout history:", workoutHistory);
     
     // --- FIX STARTS HERE ---
     // First, filter the flat array of exercises to remove low-volume sets

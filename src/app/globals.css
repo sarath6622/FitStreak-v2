@@ -76,34 +76,6 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-    padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-@layer components {
-  .navbar-top {
-    @apply fixed top-0 inset-x-0 z-50 flex items-center justify-between bg-background px-4 rounded-b-lg;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    height: calc(3.5rem + env(safe-area-inset-top));
-    padding-top: calc(env(safe-area-inset-top) + 0.5rem);
-  }
-
-  .navbar-bottom {
-    @apply fixed bottom-0 inset-x-0 z-50 flex items-center justify-around bg-background px-4;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-    height: calc(3.5rem + env(safe-area-inset-bottom));
-    padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
-  }
-}
-
-.navbar-top {
-  padding-top: calc(env(safe-area-inset-top) + 0.5rem); /* extra padding for spacing */
-}
-
-.navbar-bottom {
-  padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
 }
 
 .dark {
@@ -147,5 +119,31 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /*
+    Use 'inset-x-0' to fix the element to the left and right edges.
+    `height` now includes the safe area to push content down.
+    `padding-top` is used to create additional spacing.
+  */
+  .navbar-top {
+    @apply fixed top-0 inset-x-0 z-50 flex items-center justify-between bg-background px-4 rounded-b-lg;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    height: calc(3.5rem + env(safe-area-inset-top));
+    padding-top: calc(env(safe-area-inset-top) + 0.5rem);
+  }
+
+  /*
+    Same as the top navbar, but for the bottom.
+  */
+  .navbar-bottom {
+    @apply fixed bottom-0 inset-x-0 z-50 flex items-center justify-around bg-background px-4;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    height: calc(3.5rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
   }
 }
