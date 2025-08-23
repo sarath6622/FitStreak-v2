@@ -89,7 +89,6 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
           <Toaster />
 
           {/* Always show header */}
