@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/firebase";
 import Header from "@/components/Header";
@@ -11,9 +11,6 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
-
-  const headerRef = useRef<HTMLElement>(null);
-  const mobileNavRef = useRef<HTMLElement>(null); // bottom bar only
 
   useEffect(() => {
     const copy = [
@@ -27,46 +24,12 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
   }, [loading]);
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (u) => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
     });
+    return unsubscribe;
   }, []);
-
-  useEffect(() => {
-    const setVars = () => {
-      if (headerRef.current) {
-        const h = Math.ceil(headerRef.current.getBoundingClientRect().height);
-        document.documentElement.style.setProperty("--header-height", `${h}px`);
-      } else {
-        document.documentElement.style.setProperty("--header-height", `0px`);
-      }
-
-      if (mobileNavRef.current && getComputedStyle(mobileNavRef.current).display !== "none") {
-        const f = Math.ceil(mobileNavRef.current.getBoundingClientRect().height);
-        document.documentElement.style.setProperty("--footer-height", `${f}px`);
-      } else {
-        document.documentElement.style.setProperty("--footer-height", `0px`);
-      }
-    };
-
-    const ro = new ResizeObserver(setVars);
-    if (headerRef.current) ro.observe(headerRef.current);
-    if (mobileNavRef.current) ro.observe(mobileNavRef.current);
-
-    requestAnimationFrame(setVars);
-    const t = setTimeout(setVars, 50);
-
-    window.addEventListener("resize", setVars);
-    window.addEventListener("orientationchange", setVars);
-
-    return () => {
-      ro.disconnect();
-      clearTimeout(t);
-      window.removeEventListener("resize", setVars);
-      window.removeEventListener("orientationchange", setVars);
-    };
-  }, [user]);
 
   if (loading) {
     return (
@@ -81,21 +44,19 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
   }
 
   return (
-    <div className="min-h-[100svh] bg-black text-white flex flex-col">
-      {user && <Header ref={headerRef} />}
+    <div className="min-h-[100svh] bg-black text-white">
+      {user && <Header />}
 
-      {/* Scrollable region only between header + navbar */}
-<main
-  className="flex-1 overflow-y-auto px-4"
-  style={{
-    paddingTop: "var(--header-height)",
-    paddingBottom: "var(--footer-height)",
-  }}
->
+      {/*
+        The main content area now uses a simple CSS-based approach.
+        The padding is applied using `calc()` to combine a base height
+        with the dynamic safe area insets.
+      */}
+      <main className="px-4 pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
         {children}
       </main>
 
-      {user && <Navbar ref={mobileNavRef} />}
+      {user && <Navbar />}
     </div>
   );
 }

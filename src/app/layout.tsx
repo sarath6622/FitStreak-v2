@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   title: "FitStreak",
   description: "Bunc Venture",
   themeColor: "black",
-  manifest: "../public/manifest.json",
+  manifest: "/manifest.json",
   icons: {
     apple: "/icons/ios/AppIcon-180@2x.png",
     icon: "/icons/android/res/mipmap-xxxhdpi/ic_launcher.png",
@@ -77,10 +77,10 @@ export default function RootLayout({
           href="/icons/ios/AppIcon-60@2x.png"
         />
 
-        <link rel="manifest" href="../public/manifest.json" />
+        <link rel="manifest" href="/manifest.json" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black dark:bg-black text-black dark:text-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black dark:bg-black text-black dark:text-white`}
       >
 
         <ThemeProvider
