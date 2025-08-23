@@ -19,7 +19,8 @@ const geistMono = Geist_Mono({
 
 export const viewport: Viewport = {
   maximumScale: 1,
-  userScalable: false
+  userScalable: false,
+  viewportFit: "cover",
 }
 
 export const metadata: Metadata = {
@@ -53,7 +54,6 @@ export default function RootLayout({
           content="black-translucent"
         />
         <meta name="apple-mobile-web-app-title" content="FitStreak" />
-        <meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1, viewport-fit=cover" />
 
         {/* Icons */}
         <link
@@ -83,7 +83,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black dark:bg-black text-black dark:text-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]`}
       >
 
-                <ThemeProvider
+        <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
@@ -92,13 +92,13 @@ export default function RootLayout({
           {children}
           <Toaster />
 
-        {/* Always show header */}
+          {/* Always show header */}
 
-        <AuthenticatedLayout>
+          <AuthenticatedLayout>
 
-        {/* Wrap all pages with AuthenticatedLayout */}
-          {children}
-        </AuthenticatedLayout>
+            {/* Wrap all pages with AuthenticatedLayout */}
+            {children}
+          </AuthenticatedLayout>
 
         </ThemeProvider>
 
