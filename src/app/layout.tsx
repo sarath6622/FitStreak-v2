@@ -4,6 +4,7 @@ import "./globals.css";
 import "../../public/css/picker.css";
 import { Toaster } from "sonner";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { Viewport } from "next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,6 +16,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  maximumScale: 1,
+  userScalable: false
+}
+
 export const metadata: Metadata = {
   title: "FitStreak",
   description: "Bunc Venture",
@@ -24,6 +30,10 @@ export const metadata: Metadata = {
     apple: "/icons/ios/AppIcon-180@2x.png",
     icon: "/icons/android/res/mipmap-xxxhdpi/ic_launcher.png",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+  }
 };
 
 export default function RootLayout({
