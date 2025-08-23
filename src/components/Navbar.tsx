@@ -1,25 +1,21 @@
 "use client";
 
-import React, { useEffect, useState, forwardRef } from "react";
+import React, { forwardRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Dumbbell, History, User } from "lucide-react";
-import { auth } from "@/firebase";
-import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 import clsx from "clsx";
 
 const navItems = [
   { href: "/", label: "Home", icon: <Home size={20} strokeWidth={1.5} /> },
   { href: "/workouts", label: "Workouts", icon: <Dumbbell size={20} strokeWidth={1.5} /> },
   { href: "/workouts/history", label: "History", icon: <History size={20} strokeWidth={1.5} /> },
+  { href: "/profile", label: "Profile", icon: <User size={20} strokeWidth={1.5} /> },
 ];
 
 const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
   ({ className, ...props }, ref) => {
     const pathname = usePathname();
-    const [user, setUser] = useState<FirebaseUser | null>(null);
-
-    useEffect(() => onAuthStateChanged(auth, setUser), []);
 
     return (
       <>
@@ -39,7 +35,9 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
                   href={href}
                   className={clsx(
                     "relative text-sm font-medium transition",
-                    pathname === href ? "text-blue-400" : "text-gray-400 hover:text-blue-300"
+                    pathname === href
+                      ? "text-blue-400"
+                      : "text-gray-400 hover:text-blue-300"
                   )}
                 >
                   {label}
@@ -49,22 +47,6 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
                 </Link>
               </li>
             ))}
-            <li>
-              <Link href={user ? "/profile" : "/login"} className="flex items-center gap-2">
-                {user ? (
-                  <img
-                    src={user.photoURL || "/default-avatar.png"}
-                    alt="Profile"
-                    className="w-8 h-8 rounded-full border border-gray-500 hover:scale-105 transition"
-                  />
-                ) : (
-                  <>
-                    <User size={20} strokeWidth={1.5} />
-                    <span className="text-sm text-gray-400 hover:text-blue-300">Login</span>
-                  </>
-                )}
-              </Link>
-            </li>
           </ul>
         </nav>
 
@@ -73,7 +55,7 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
           aria-label="Bottom navigation"
           ref={ref}
           {...props}
-          className= "sm:hidden fixed bottom-0 left-0 right-0 z-50"
+          className="sm:hidden fixed bottom-0 left-0 right-0 z-50"
         >
           <div className="mx-3 rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl p-2">
             <ul className="flex justify-around items-center">
@@ -84,7 +66,6 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
                     <Link
                       href={href}
                       className={clsx(
-                        // Consistent padding for all items
                         "flex items-center p-4 rounded-xl transition active:scale-90",
                         isActive
                           ? "bg-gradient-to-r from-blue-500/30 to-indigo-500/30 text-blue-300 shadow-inner"
@@ -106,33 +87,6 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
                   </li>
                 );
               })}
-
-<li>
-  <Link
-    href={user ? "/profile" : "/login"}
-    className="flex items-center p-4 rounded-xl transition active:scale-90 bg-gradient-to-r from-blue-500/30 to-indigo-500/30 text-blue-300 shadow-inner"
-  >
-    {user ? (
-      <img
-        src={user.photoURL || "/default-avatar.png"}
-        alt="Profile"
-        className="w-6 h-6 rounded-full border border-gray-500"
-      />
-    ) : (
-      <User size={20} strokeWidth={1.5} />
-    )}
-    <span
-      className={clsx(
-        "ml-2 text-sm transition-all duration-300 overflow-hidden",
-        pathname === (user ? "/profile" : "/login")
-          ? "opacity-100 max-w-[100px]"
-          : "opacity-0 max-w-0"
-      )}
-    >
-      {user ? "Profile" : "Login"}
-    </span>
-  </Link>
-</li>
             </ul>
           </div>
         </nav>
