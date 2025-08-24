@@ -60,7 +60,27 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
           <div className="mx-3 rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl p-2">
             <ul className="flex justify-around items-center pb-2 pt-1">
               {navItems.map(({ href, label, icon }) => {
-                const isActive = pathname === href;
+const isActive = (() => {
+  if (href === "/") {
+    return pathname === "/";
+  }
+
+  if (href === "/workouts") {
+    // Active for workouts and nested routes, except history
+    return (
+      (pathname === "/workouts" || pathname.startsWith("/workouts/")) &&
+      !pathname.startsWith("/workouts/history")
+    );
+  }
+
+  if (href === "/workouts/history") {
+    // Active only for history routes
+    return pathname === "/workouts/history" || pathname.startsWith("/workouts/history");
+  }
+
+  // Default: exact or nested match
+  return pathname === href || pathname.startsWith(`${href}/`);
+})();
                 return (
                   <li key={href}>
                     <Link

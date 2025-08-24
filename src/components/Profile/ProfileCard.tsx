@@ -2,6 +2,7 @@
 import React from "react";
 import ProfileForm from "./ProfileForm";
 import { UserProfile } from "@/types/UserProfile";
+import { Edit3, LogOut, Save, X } from "lucide-react";
 
 interface ProfileCardProps {
   formData: UserProfile | null;
@@ -30,7 +31,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
   return (
     <div className="mx-auto mt-6 max-w-lg">
-      <div className="rounded-2xl border border-gray-800 backdrop-blur-md p-6 shadow-2xl">
+      <div className="rounded-2xl border border-gray-800backdrop-blur-md p-6 shadow-2xl">
         {/* Avatar */}
         <div className="flex flex-col items-center mb-6">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-2xl font-bold shadow-lg">
@@ -53,43 +54,59 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 <div className="mt-6 flex flex-col gap-3">
   {isEditing ? (
     <div className="flex gap-3">
+      {/* Save */}
       <button
         onClick={onSave}
-        className="flex-1 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 
-                   font-semibold text-white shadow-md hover:shadow-xl 
-                   hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+        className="flex-1 flex items-center justify-center gap-2 rounded-2xl 
+                   bg-gray-800/50 backdrop-blur-md px-4 py-2 text-sm font-semibold 
+                   text-gray-100 border border-gray-700 shadow-md
+                   hover:bg-gray-700/60 hover:shadow-lg hover:scale-[1.02] 
+                   active:scale-[0.97] transition-all duration-200"
       >
+        <Save className="w-4 h-4" />
         Save
       </button>
+
+      {/* Cancel */}
       <button
         onClick={onToggleEdit}
-        className="flex-1 rounded-2xl bg-gray-800/80 px-4 py-3 
-                   font-semibold text-gray-200 border border-gray-700 
-                   shadow-md hover:bg-gray-700 hover:shadow-xl 
-                   hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+        className="flex-1 flex items-center justify-center gap-2 rounded-2xl 
+                   bg-gray-800/50 backdrop-blur-md px-4 py-2 text-sm font-semibold 
+                   text-gray-300 border border-gray-700 shadow-md
+                   hover:bg-gray-700/60 hover:shadow-lg hover:scale-[1.02] 
+                   active:scale-[0.97] transition-all duration-200"
       >
+        <X className="w-4 h-4" />
         Cancel
       </button>
     </div>
   ) : (
+    // Edit Profile
     <button
       onClick={onToggleEdit}
-      className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3 
-                 font-semibold text-white shadow-md hover:shadow-xl 
-                 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+      className="w-full flex items-center justify-center gap-2 rounded-2xl 
+                 bg-gray-800/50 backdrop-blur-md px-4 py-2 text-sm font-semibold 
+                 text-gray-100 border border-gray-700 shadow-md
+                 hover:bg-gray-700/60 hover:shadow-lg hover:scale-[1.02] 
+                 active:scale-[0.97] transition-all duration-200"
     >
+      <Edit3 className="w-4 h-4" />
       Edit Profile
     </button>
   )}
 
   {profile && (
+    // Sign Out
     <button
       onClick={onSignOut}
-      className="w-full rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 px-4 py-3 
-                 font-semibold text-white shadow-md hover:shadow-xl 
-                 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+      className="w-full flex items-center justify-center gap-2 rounded-2xl 
+                 bg-gray-800/50 backdrop-blur-md px-4 py-2 text-sm font-semibold 
+                 text-gray-100 border border-gray-700 shadow-md
+                 hover:bg-gray-700/60 hover:shadow-lg hover:scale-[1.02] 
+                 active:scale-[0.97] transition-all duration-200"
       type="button"
     >
+      <LogOut className="w-4 h-4" />
       Sign Out
     </button>
   )}

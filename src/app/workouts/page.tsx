@@ -1,16 +1,35 @@
 "use client";
 
-import { auth } from "@/firebase";
+import { auth, db } from "@/firebase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import SuggestionSection from "@/components/SuggestionSection";
+import SuggestionSection from "@/components/SuggestionSection/index";
+import { useEffect, useState } from "react";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 
 export default function WorkoutPage() {
   const router = useRouter();
+  const [hasTodayPlan, setHasTodayPlan] = useState(false);
 
   const muscleGroups = [
     "Chest", "Legs", "Back", "Shoulders", "Biceps", "Triceps", "Core", "Glutes"
   ];
+
+  useEffect(() => {
+    const checkTodaysPlans = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const today = new Date().toISOString().split("T")[0];
+      const plansRef = collection(db, "users", user.uid, "workouts", today, "plans");
+      const q = query(plansRef, orderBy("createdAt", "asc"));
+      const snap = await getDocs(q);
+
+      setHasTodayPlan(!snap.empty);
+    };
+
+    checkTodaysPlans();
+  }, []);
 
   return (
     <div className="max-w-md mx-auto px-4 py-6 space-y-8 bg-black min-h-screen">
@@ -26,18 +45,20 @@ export default function WorkoutPage() {
           />
         </div>
 
-        {/* Today's Workouts */}
-        <Link href="/workouts/todays-workouts">
-          <section className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700 hover:shadow-xl hover:scale-[1.01] transition-all cursor-pointer backdrop-blur-md">
-            <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-              <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              Today's Workouts
-            </h2>
-            <p className="text-gray-300 text-sm leading-relaxed">
-              View your logged plans for today and keep track of progress effortlessly.
-            </p>
-          </section>
-        </Link>
+        {/* ✅ Only render "Today's Workouts" if plan exists */}
+        {hasTodayPlan && (
+          <Link href="/workouts/todays-workouts">
+            <section className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700 hover:shadow-xl hover:scale-[1.01] transition-all cursor-pointer backdrop-blur-md">
+              <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                Today's Workouts
+              </h2>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                View your logged plans for today and keep track of progress effortlessly.
+              </p>
+            </section>
+          </Link>
+        )}
 
         {/* All Muscle Groups */}
         <section className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700 backdrop-blur-md mt-6">

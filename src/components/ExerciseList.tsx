@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Sparkles } from "lucide-react";
 import { db } from "@/firebase";
 import {
   collection,
@@ -135,7 +135,9 @@ export default function ExerciseList({
   };
 
   if (loading) {
-    return <p className="text-gray-400">Loading exercises...</p>;
+    return <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
+    </div>
   }
 
   return (

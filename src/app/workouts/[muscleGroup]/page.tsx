@@ -7,6 +7,7 @@ import { auth } from "@/firebase";
 import { getCompletedExercisesForToday } from "@/services/workoutService";
 import ExerciseList from "@/components/ExerciseList";
 import WorkoutLoggerModal from "@/components/WorkoutLogger/WorkoutLoggerModal";
+import { Loader2, Sparkles } from "lucide-react";
 
 type CompletedMap = Record<string, { setsDone: number; repsDone: number }>;
 
@@ -50,10 +51,9 @@ export default function MuscleGroupPage() {
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center text-gray-400 space-y-2">
-            <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading Exercises...</span>
-          </div>
+          <div className="min-h-screen flex items-center justify-center bg-black text-white">
+                <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
+              </div>
         ) : (
           <ExerciseList
             muscleGroup={muscleGroup}
