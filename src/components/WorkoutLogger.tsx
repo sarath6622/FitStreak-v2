@@ -7,6 +7,7 @@ import WeightRepsInput from "@/components/WorkoutLogger/WeightRepsInput";
 import { upsertWorkout, getWorkoutForExercise } from "@/services/workoutService";
 import { auth } from "@/firebase";
 import { get } from "http";
+import { toast } from "sonner";
 
 interface Exercise {
   name: string;
@@ -44,22 +45,22 @@ export default function WorkoutLogger({
       const today = new Date().toISOString().split("T")[0];
       const workoutData = await getWorkoutForExercise(user.uid, today, exercise.name);
       console.log(workoutData);
-      
+
       if (workoutData && workoutData.exercise) {
         const ex = workoutData.exercise;
         setSetsCount(ex.sets || exercise.sets);
         setSets(
-  Array.from({ length: ex.sets || exercise.sets }, (_, i) => {
-    const weight = ex.weight?.[i] ?? exercise.defaultWeight ?? 0;
-    const reps = ex.repsPerSet?.[i] ?? (parseInt(exercise.reps) || 0);
+          Array.from({ length: ex.sets || exercise.sets }, (_, i) => {
+            const weight = ex.weight?.[i] ?? exercise.defaultWeight ?? 0;
+            const reps = ex.repsPerSet?.[i] ?? (parseInt(exercise.reps) || 0);
 
-    return {
-      weight,
-      reps,
-      done: weight > 0 ? true : (ex.doneFlags?.[i] ?? false),
-    };
-  })
-);
+            return {
+              weight,
+              reps,
+              done: weight > 0 ? true : (ex.doneFlags?.[i] ?? false),
+            };
+          })
+        );
         setDuration(workoutData.duration || 45);
         setRest(workoutData.rest || 90);
       } else {
@@ -121,36 +122,37 @@ export default function WorkoutLogger({
     setSets(newSets);
   };
 
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-      const user = auth.currentUser;
-      if (!user) throw new Error("Not logged in");
+const handleSave = async () => {
+  try {
+    setSaving(true);
+    const user = auth.currentUser;
+    if (!user) throw new Error("Not logged in");
 
-      const today = new Date().toISOString().split("T")[0];
-      
-      const exerciseData = {
-        name: exercise.name,
-        muscleGroup: exercise.muscleGroup,
-        sets: sets.length,
-        repsPerSet: sets.map((s) => s.reps),
-        weight: sets.map((s) => s.weight),
-        doneFlags: sets.map((s) => s.done),
-        notes: exercise.notes || "",
-      };
+    const today = new Date().toISOString().split("T")[0];
 
-      await upsertWorkout(user.uid, today, exerciseData, duration, rest);
+    const exerciseData = {
+      name: exercise.name,
+      muscleGroup: exercise.muscleGroup,
+      sets: sets.length,
+      repsPerSet: sets.map((s) => s.reps),
+      weight: sets.map((s) => s.weight),
+      doneFlags: sets.map((s) => s.done),
+      notes: exercise.notes || "",
+    };
 
-      onWorkoutSaved({ sets });
-      onClose();
-    } catch (err) {
-      console.error("Error saving workout:", err);
-      alert("Failed to save workout. Please try again.");
-    } finally {
-      setSaving(false);
-    }
-  };
+    await upsertWorkout(user.uid, today, exerciseData, duration, rest);
 
+    toast.success("Workout saved successfully! ⚡️");
+
+    onWorkoutSaved({ sets });
+    onClose();
+  } catch (err) {
+    console.error("Error saving workout:", err);
+    toast.error("Failed to save workout ❌");
+  } finally {
+    setSaving(false);
+  }
+};
   if (loading) {
     return <p className="text-white text-sm">Loading workout data...</p>;
   }
@@ -168,11 +170,11 @@ export default function WorkoutLogger({
 
       <SetsControl sets={setsCount} setSets={setSetsCount} />
       {completedData && (
-  <p className="text-green-400 text-xs mb-2">
-    Progress: {completedData.setsDone}/{completedData.totalSets} sets done 
-    ({completedData.repsDone} reps)
-  </p>
-)}
+        <p className="text-green-400 text-xs mb-2">
+          Progress: {completedData.setsDone}/{completedData.totalSets} sets done
+          ({completedData.repsDone} reps)
+        </p>
+      )}
 
       <WeightRepsInput
         weights={weights}
@@ -193,9 +195,8 @@ export default function WorkoutLogger({
             <button
               key={r}
               onClick={() => setRest(r)}
-              className={`px-3 py-1 text-xs rounded text-white ${
-                rest === r ? "bg-yellow-500 text-black" : "bg-gray-700"
-              }`}
+              className={`px-3 py-1 text-xs rounded text-white ${rest === r ? "bg-yellow-500 text-black" : "bg-gray-700"
+                }`}
             >
               {r}s
             </button>
@@ -211,9 +212,8 @@ export default function WorkoutLogger({
             <button
               key={d}
               onClick={() => setDuration(d)}
-              className={`px-3 py-1 text-xs rounded text-white ${
-                duration === d ? "bg-yellow-500 text-black" : "bg-gray-700"
-              }`}
+              className={`px-3 py-1 text-xs rounded text-white ${duration === d ? "bg-yellow-500 text-black" : "bg-gray-700"
+                }`}
             >
               {d}m
             </button>

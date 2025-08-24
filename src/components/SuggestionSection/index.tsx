@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";   // <-- import router
 import MuscleGroupSelector from "./MuscleGroupSelector";
 import DurationSelector from "./DurationSelector";
 import WorkoutPlanDisplay from "./WorkoutPlanDisplay";
@@ -34,13 +35,15 @@ interface MuscleSummary {
 export default function SuggestionSection({ userId, onSelect }: SuggestionSectionProps) {
   const [muscleSummaries, setMuscleSummaries] = useState<MuscleSummary[]>([]);
   const [muscleGroup, setMuscleGroup] = useState<string[]>([]);
-  const [duration, setDuration] = useState<string>("60 min"); // default "60 min"
+  const [duration, setDuration] = useState<string>("60 min");
   const [workoutPlan, setWorkoutPlan] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 🔹 1. Fetch muscle analysis (with caching like your first version)
+  const router = useRouter(); // ✅ initialize router
+
+  // fetch muscle analysis (cached)
   async function fetchMuscleAnalysis() {
     if (!userId) return;
     setLoading(true);
@@ -58,7 +61,6 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
         typeof data.summary === "string" ? JSON.parse(data.summary) : data.summary;
 
       setMuscleSummaries(summaries);
-
       localStorage.setItem("muscleSummary", JSON.stringify(summaries));
       localStorage.setItem("muscleSummaryDate", new Date().toDateString());
     } catch (err: any) {
@@ -81,7 +83,7 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
     }
   }, [userId]);
 
-  // 🔹 2. Generate workout
+  // generate workout
   const handleGenerate = async () => {
     if (muscleGroup.length === 0 || !duration) return;
     setLoading(true);
@@ -97,9 +99,10 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
       if (!res.ok) throw new Error("Failed to generate workout plan.");
 
       const data = await res.json();
-      const parsed = typeof data.recommendation === "string"
-        ? JSON.parse(data.recommendation)
-        : data.recommendation;
+      const parsed =
+        typeof data.recommendation === "string"
+          ? JSON.parse(data.recommendation)
+          : data.recommendation;
 
       setWorkoutPlan(parsed || []);
     } catch (err: any) {
@@ -109,7 +112,7 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
     }
   };
 
-  // 🔹 3. Save workout
+  // save + navigate
   const handleStartWorkout = async () => {
     if (!userId || workoutPlan.length === 0) return;
     setSaving(true);
@@ -120,6 +123,9 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
         body: JSON.stringify({ userId, muscleGroups: muscleGroup, workoutPlan }),
       });
       if (!res.ok) throw new Error("Failed to save workout");
+
+      // ✅ navigate after save
+      router.push("/workouts/todays-workouts");
     } catch (err: any) {
       setError(err.message || "Failed to save workout.");
     } finally {
@@ -127,7 +133,7 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
     }
   };
 
-return (
+  return (
     <div className="max-w-xl mx-auto p-6 bg-gray-900 rounded-2xl shadow-lg border border-gray-700">
       <h2 className="text-md font-bold text-blue-400 mb-4 flex items-center gap-2">
         <Sparkles className="w-5 h-5 text-blue-300" />
@@ -141,12 +147,10 @@ return (
         </button>
       </h2>
 
-      {/* Muscle Group Selector */}
       <MuscleGroupSelector
         value={muscleGroup}
         onChange={(groups) => {
           setMuscleGroup(groups);
-          // 🔹 If user clicked a single group and onSelect exists, fire it
           if (onSelect && groups.length === 1) {
             onSelect(groups[0]);
           }
@@ -154,16 +158,11 @@ return (
         summaries={muscleSummaries}
       />
 
-      {/* Duration Selector */}
       <DurationSelector value={duration} onChange={setDuration} />
-
-      {/* Generate Button */}
       <GenerateButton onClick={handleGenerate} loading={loading} />
 
-      {/* Error */}
       {error && <p className="text-red-500 text-sm text-center mt-3">{error}</p>}
 
-      {/* Workout Plan Display */}
       {workoutPlan.length > 0 && (
         <div className="mt-6">
           <WorkoutPlanDisplay plan={workoutPlan} />

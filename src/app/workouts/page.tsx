@@ -40,7 +40,7 @@ export default function WorkoutPage() {
             userId={auth.currentUser?.uid || ""}
             onSelect={(m) => {
               // navigate to /workouts/[muscleGroup]
-              router.push(`/workouts/${encodeURIComponent(m)}`);
+              // router.push(`/workouts/${encodeURIComponent(m)}`);
             }}
           />
         </div>
