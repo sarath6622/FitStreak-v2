@@ -6,14 +6,13 @@ import SetsControl from "@/components/WorkoutLogger/SetsControl";
 import WeightRepsInput from "@/components/WorkoutLogger/WeightRepsInput";
 import { upsertWorkout, getWorkoutForExercise } from "@/services/workoutService";
 import { auth } from "@/firebase";
-import { get } from "http";
 import { toast } from "sonner";
 
 interface Exercise {
   name: string;
   muscleGroup: string;
-  sets: number;
-  reps: string; // from plan
+  sets?: number; // 👈 optional now
+  reps?: string; // 👈 optional now (from plan)
   defaultWeight?: number;
   notes?: string;
 }
@@ -27,9 +26,13 @@ export default function WorkoutLogger({
   exercise: Exercise;
   onClose: () => void;
   onWorkoutSaved: (data: { sets: { weight: number; reps: number; done: boolean }[] }) => void;
-  completedData?: { setsDone: number; repsDone: number; totalSets: number };
+  completedData?: {
+    setsDone?: number;
+    repsDone?: number;
+    totalSets?: number;
+  };
 }) {
-  const [setsCount, setSetsCount] = useState(exercise.sets);
+  const [setsCount, setSetsCount] = useState(exercise.sets ?? 1); // 👈 fallback 1
   const [sets, setSets] = useState<{ weight: number; reps: number; done: boolean }[]>([]);
   const [rest, setRest] = useState(90);
   const [duration, setDuration] = useState(45);
@@ -44,15 +47,14 @@ export default function WorkoutLogger({
 
       const today = new Date().toISOString().split("T")[0];
       const workoutData = await getWorkoutForExercise(user.uid, today, exercise.name);
-      console.log(workoutData);
 
       if (workoutData && workoutData.exercise) {
         const ex = workoutData.exercise;
-        setSetsCount(ex.sets || exercise.sets);
+        setSetsCount(ex.sets || exercise.sets || 1); // 👈 safe fallback
         setSets(
-          Array.from({ length: ex.sets || exercise.sets }, (_, i) => {
+          Array.from({ length: ex.sets || exercise.sets || 1 }, (_, i) => {
             const weight = ex.weight?.[i] ?? exercise.defaultWeight ?? 0;
-            const reps = ex.repsPerSet?.[i] ?? (parseInt(exercise.reps) || 0);
+            const reps = ex.repsPerSet?.[i] ?? (exercise.reps ? parseInt(exercise.reps) : 0);
 
             return {
               weight,
@@ -64,11 +66,11 @@ export default function WorkoutLogger({
         setDuration(workoutData.duration || 45);
         setRest(workoutData.rest || 90);
       } else {
-        // fallback: initialize from plan
+        // fallback: initialize from plan or default
         setSets(
-          Array.from({ length: exercise.sets }, () => ({
+          Array.from({ length: exercise.sets ?? 1 }, () => ({
             weight: exercise.defaultWeight || 0,
-            reps: parseInt(exercise.reps) || 0,
+            reps: exercise.reps ? parseInt(exercise.reps) : 0,
             done: false,
           }))
         );
@@ -88,7 +90,7 @@ export default function WorkoutLogger({
         for (let i = prev.length; i < setsCount; i++) {
           newSets.push({
             weight: exercise.defaultWeight || 0,
-            reps: parseInt(exercise.reps) || 0,
+            reps: exercise.reps ? parseInt(exercise.reps) : 0,
             done: false,
           });
         }
@@ -122,39 +124,40 @@ export default function WorkoutLogger({
     setSets(newSets);
   };
 
-const handleSave = async () => {
-  try {
-    setSaving(true);
-    const user = auth.currentUser;
-    if (!user) throw new Error("Not logged in");
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const user = auth.currentUser;
+      if (!user) throw new Error("Not logged in");
 
-    const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toISOString().split("T")[0];
 
-    const exerciseData = {
-      name: exercise.name,
-      muscleGroup: exercise.muscleGroup,
-      sets: sets.length,
-      repsPerSet: sets.map((s) => s.reps),
-      weight: sets.map((s) => s.weight),
-      doneFlags: sets.map((s) => s.done),
-      notes: exercise.notes || "",
-    };
+      const exerciseData = {
+        name: exercise.name,
+        muscleGroup: exercise.muscleGroup,
+        sets: sets.length,
+        repsPerSet: sets.map((s) => s.reps),
+        weight: sets.map((s) => s.weight),
+        doneFlags: sets.map((s) => s.done),
+        notes: exercise.notes || "",
+      };
 
-    await upsertWorkout(user.uid, today, exerciseData, duration, rest);
+      await upsertWorkout(user.uid, today, exerciseData, duration, rest);
 
-    toast.success("Workout saved successfully!", {
-  icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
-});
+      toast.success("Workout saved successfully!", {
+        icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
+      });
 
-    onWorkoutSaved({ sets });
-    onClose();
-  } catch (err) {
-    console.error("Error saving workout:", err);
-    toast.error("Failed to save workout ❌");
-  } finally {
-    setSaving(false);
-  }
-};
+      onWorkoutSaved({ sets });
+      onClose();
+    } catch (err) {
+      console.error("Error saving workout:", err);
+      toast.error("Failed to save workout ❌");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return <p className="text-white text-sm">Loading workout data...</p>;
   }
@@ -166,15 +169,23 @@ const handleSave = async () => {
 
   return (
     <div className="space-y-4 m-2 p-2">
-      <p className="text-xs text-gray-400 mb-4">
-        Target: {setsCount} sets × {exercise.reps} reps
-      </p>
+      {/* Show target only if both values exist */}
+      {exercise.sets && exercise.reps && (
+        <p className="text-xs text-gray-400 mb-4">
+          Target: {setsCount} sets × {exercise.reps} reps
+        </p>
+      )}
 
       <SetsControl sets={setsCount} setSets={setSetsCount} />
+
       {completedData && (
         <p className="text-green-400 text-xs mb-2">
-          Progress: {completedData.setsDone}/{completedData.totalSets} sets done
-          ({completedData.repsDone} reps)
+          {completedData.setsDone !== undefined && completedData.totalSets !== undefined
+            ? `Progress: ${completedData.setsDone}/${completedData.totalSets} sets`
+            : null}
+          {completedData.repsDone !== undefined
+            ? ` (${completedData.repsDone} reps)`
+            : null}
         </p>
       )}
 
@@ -197,8 +208,9 @@ const handleSave = async () => {
             <button
               key={r}
               onClick={() => setRest(r)}
-              className={`px-3 py-1 text-xs rounded text-white ${rest === r ? "bg-yellow-500 text-black" : "bg-gray-700"
-                }`}
+              className={`px-3 py-1 text-xs rounded text-white ${
+                rest === r ? "bg-yellow-500 text-black" : "bg-gray-700"
+              }`}
             >
               {r}s
             </button>
@@ -214,8 +226,9 @@ const handleSave = async () => {
             <button
               key={d}
               onClick={() => setDuration(d)}
-              className={`px-3 py-1 text-xs rounded text-white ${duration === d ? "bg-yellow-500 text-black" : "bg-gray-700"
-                }`}
+              className={`px-3 py-1 text-xs rounded text-white ${
+                duration === d ? "bg-yellow-500 text-black" : "bg-gray-700"
+              }`}
             >
               {d}m
             </button>

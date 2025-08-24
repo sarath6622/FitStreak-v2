@@ -6,8 +6,8 @@ import Link from "next/link";
 import { auth } from "@/firebase";
 import { getCompletedExercisesForToday } from "@/services/workoutService";
 import ExerciseList from "@/components/ExerciseList";
-import WorkoutLoggerModal from "@/components/WorkoutLogger/WorkoutLoggerModal";
 import { Loader2, Sparkles } from "lucide-react";
+import WorkoutModal from "@/components/WorkoutModal";
 
 type CompletedMap = Record<string, { setsDone: number; repsDone: number }>;
 
@@ -52,8 +52,8 @@ export default function MuscleGroupPage() {
 
         {loading ? (
           <div className="min-h-screen flex items-center justify-center bg-black text-white">
-                <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
-              </div>
+            <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
+          </div>
         ) : (
           <ExerciseList
             muscleGroup={muscleGroup}
@@ -64,11 +64,22 @@ export default function MuscleGroupPage() {
       </div>
 
       {selectedExercise && (
-        <WorkoutLoggerModal
-          muscleGroup={muscleGroup}
-          exerciseName={selectedExercise}
+        <WorkoutModal
+          isOpen={!!selectedExercise}
           onClose={() => setSelectedExercise(null)}
+          exercise={{ name: selectedExercise, muscleGroup }} // pass object since WorkoutModal expects exercise
           onWorkoutSaved={fetchCompletedForToday}
+          completedData={
+            completed[selectedExercise]
+              ? {
+                setsDone: completed[selectedExercise].setsDone,
+                repsDone: completed[selectedExercise].repsDone,
+                totalSets: 0, // 🔹 adjust if you store total sets somewhere
+              }
+
+              : undefined
+          }
+
         />
       )}
     </>
