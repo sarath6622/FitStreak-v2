@@ -1,18 +1,19 @@
 "use client";
 
 import { CheckCircle2, Save } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SetsControl from "@/components/WorkoutLogger/SetsControl";
 import WeightRepsInput from "@/components/WorkoutLogger/WeightRepsInput";
 import { upsertWorkout, getWorkoutForExercise } from "@/services/workoutService";
 import { auth } from "@/firebase";
 import { toast } from "sonner";
+import clsx from 'clsx';
 
 interface Exercise {
   name: string;
   muscleGroup: string;
-  sets?: number; // 👈 optional now
-  reps?: string; // 👈 optional now (from plan)
+  sets?: number;
+  reps?: string;
   defaultWeight?: number;
   notes?: string;
 }
@@ -32,41 +33,46 @@ export default function WorkoutLogger({
     totalSets?: number;
   };
 }) {
-  const [setsCount, setSetsCount] = useState(exercise.sets ?? 1); // 👈 fallback 1
+  const [setsCount, setSetsCount] = useState(exercise.sets ?? 1);
   const [sets, setSets] = useState<{ weight: number; reps: number; done: boolean }[]>([]);
   const [rest, setRest] = useState(90);
   const [duration, setDuration] = useState(45);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Reference to the modal's container to detect outside clicks
+  const modalRef = useRef<HTMLDivElement>(null);
+
   // Prefetch existing workout for this exercise
   useEffect(() => {
     const fetchExistingData = async () => {
       const user = auth.currentUser;
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       const today = new Date().toISOString().split("T")[0];
       const workoutData = await getWorkoutForExercise(user.uid, today, exercise.name);
 
       if (workoutData && workoutData.exercise) {
         const ex = workoutData.exercise;
-        setSetsCount(ex.sets || exercise.sets || 1); // 👈 safe fallback
+        const initialSetsCount = ex.sets || exercise.sets || 1;
+        setSetsCount(initialSetsCount);
         setSets(
-          Array.from({ length: ex.sets || exercise.sets || 1 }, (_, i) => {
+          Array.from({ length: initialSetsCount }, (_, i) => {
             const weight = ex.weight?.[i] ?? exercise.defaultWeight ?? 0;
             const reps = ex.repsPerSet?.[i] ?? (exercise.reps ? parseInt(exercise.reps) : 0);
-
             return {
               weight,
               reps,
-              done: weight > 0 ? true : (ex.doneFlags?.[i] ?? false),
+              done: weight > 0 || (ex.doneFlags?.[i] ?? false),
             };
           })
         );
         setDuration(workoutData.duration || 45);
         setRest(workoutData.rest || 90);
       } else {
-        // fallback: initialize from plan or default
         setSets(
           Array.from({ length: exercise.sets ?? 1 }, () => ({
             weight: exercise.defaultWeight || 0,
@@ -80,7 +86,7 @@ export default function WorkoutLogger({
     };
 
     fetchExistingData();
-  }, [exercise]);
+  }, [exercise, exercise.defaultWeight, exercise.reps, exercise.sets]);
 
   // Sync sets array length if user changes count
   useEffect(() => {
@@ -100,7 +106,20 @@ export default function WorkoutLogger({
 
       return newSets;
     });
-  }, [setsCount, exercise.defaultWeight, exercise.reps]);
+  }, [setsCount, exercise.defaultWeight, exercise.reps, exercise.sets]);
+
+  // Handle clicks outside the modal
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+    window.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      window.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [onClose]);
 
   const handleWeightChange = (index: number, value: string) => {
     const weightNum = value.trim() === "" ? 0 : parseFloat(value);
@@ -167,8 +186,15 @@ export default function WorkoutLogger({
   const errors: { [key: string]: string } = {};
   const repOptions: number[] = [];
 
+  const baseButtonClasses = "px-3 py-1 text-sm rounded transition-colors duration-200 text-white";
+
   return (
-    <div className="space-y-4 m-2 p-2">
+    <div
+      ref={modalRef}
+      className="w-full max-w-sm mx-auto p-5 bg-gray-900 rounded-xl shadow-lg border border-gray-700 space-y-4"
+    >
+      <SetsControl sets={setsCount} setSets={setSetsCount} />
+
       {/* Show target only if both values exist */}
       {exercise.sets && exercise.reps && (
         <p className="text-xs text-gray-400 mb-4">
@@ -176,17 +202,13 @@ export default function WorkoutLogger({
         </p>
       )}
 
-      <SetsControl sets={setsCount} setSets={setSetsCount} />
-
-      {completedData && (
-        <p className="text-green-400 text-xs mb-2">
-          {completedData.setsDone !== undefined && completedData.totalSets !== undefined
-            ? `Progress: ${completedData.setsDone}/${completedData.totalSets} sets`
-            : null}
-          {completedData.repsDone !== undefined
-            ? ` (${completedData.repsDone} reps)`
-            : null}
-        </p>
+      {completedData && completedData.totalSets !== undefined && completedData.totalSets > 0 && (
+          <p className="text-green-400 text-xs mb-2">
+            {`Progress: ${completedData.setsDone ?? 0}/${completedData.totalSets} sets`}
+            {completedData.repsDone !== undefined
+              ? ` (${completedData.repsDone} reps)`
+              : ""}
+          </p>
       )}
 
       <WeightRepsInput
@@ -201,16 +223,17 @@ export default function WorkoutLogger({
       />
 
       {/* Rest Selection */}
-      <div className="mt-4">
-        <p className="text-xs text-white mb-2">Rest</p>
-        <div className="flex gap-2">
+      <div>
+        <p className="text-sm text-white mb-2 font-semibold">Rest</p>
+        <div className="flex flex-wrap gap-2">
           {[30, 60, 90, 120].map((r) => (
             <button
               key={r}
               onClick={() => setRest(r)}
-              className={`px-3 py-1 text-xs rounded text-white ${
-                rest === r ? "bg-yellow-500 text-black" : "bg-gray-700"
-              }`}
+              className={clsx(baseButtonClasses, {
+                "bg-yellow-500 text-black shadow-md hover:bg-yellow-600": rest === r,
+                "bg-gray-700 hover:bg-gray-600": rest !== r,
+              })}
             >
               {r}s
             </button>
@@ -219,16 +242,17 @@ export default function WorkoutLogger({
       </div>
 
       {/* Duration Selection */}
-      <div className="mt-4">
-        <p className="text-xs text-gray-400 mb-2">Duration</p>
-        <div className="flex gap-2">
+      <div>
+        <p className="text-sm text-gray-400 mb-2 font-semibold">Duration</p>
+        <div className="flex flex-wrap gap-2">
           {[15, 30, 45, 60].map((d) => (
             <button
               key={d}
               onClick={() => setDuration(d)}
-              className={`px-3 py-1 text-xs rounded text-white ${
-                duration === d ? "bg-yellow-500 text-black" : "bg-gray-700"
-              }`}
+              className={clsx(baseButtonClasses, {
+                "bg-yellow-500 text-black shadow-md hover:bg-yellow-600": duration === d,
+                "bg-gray-700 hover:bg-gray-600": duration !== d,
+              })}
             >
               {d}m
             </button>
@@ -239,7 +263,7 @@ export default function WorkoutLogger({
       <button
         onClick={handleSave}
         disabled={saving}
-        className="w-full mt-2 py-2 rounded-lg bg-yellow-500 text-black font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+        className="w-full py-3 rounded-lg bg-yellow-500 text-black font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:bg-yellow-600 disabled:opacity-50"
       >
         <Save size={18} />
         {saving ? "Saving..." : "Save Workout"}
