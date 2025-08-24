@@ -20,13 +20,18 @@ interface Exercise {
   notes: string;
 }
 
+interface SuggestionSectionProps {
+  userId: string;
+  onSelect?: (muscle: string) => void; // optional callback
+}
+
 interface MuscleSummary {
   muscleGroup: string;
   lastTrained: string;
   daysAgo: number;
 }
 
-export default function SuggestionSection({ userId }: { userId: string }) {
+export default function SuggestionSection({ userId, onSelect }: SuggestionSectionProps) {
   const [muscleSummaries, setMuscleSummaries] = useState<MuscleSummary[]>([]);
   const [muscleGroup, setMuscleGroup] = useState<string[]>([]);
   const [duration, setDuration] = useState<string>("60 min"); // default "60 min"
@@ -122,7 +127,7 @@ export default function SuggestionSection({ userId }: { userId: string }) {
     }
   };
 
-  return (
+return (
     <div className="max-w-xl mx-auto p-6 bg-gray-900 rounded-2xl shadow-lg border border-gray-700">
       <h2 className="text-md font-bold text-blue-400 mb-4 flex items-center gap-2">
         <Sparkles className="w-5 h-5 text-blue-300" />
@@ -136,8 +141,18 @@ export default function SuggestionSection({ userId }: { userId: string }) {
         </button>
       </h2>
 
-      {/* Muscle Group Selector (driven by summaries if available) */}
-      <MuscleGroupSelector value={muscleGroup} onChange={setMuscleGroup} summaries={muscleSummaries} />
+      {/* Muscle Group Selector */}
+      <MuscleGroupSelector
+        value={muscleGroup}
+        onChange={(groups) => {
+          setMuscleGroup(groups);
+          // 🔹 If user clicked a single group and onSelect exists, fire it
+          if (onSelect && groups.length === 1) {
+            onSelect(groups[0]);
+          }
+        }}
+        summaries={muscleSummaries}
+      />
 
       {/* Duration Selector */}
       <DurationSelector value={duration} onChange={setDuration} />
