@@ -11,6 +11,8 @@ interface WeightRepsInputProps {
   onRowConfirm?: (index: number) => void;
   initialAutoConfirmFlags?: boolean[];
   repOptions?: number[];
+    placeholderWeights?: number[];
+  placeholderReps?: number[];
 }
 
 export default function WeightRepsInput({
@@ -22,6 +24,8 @@ export default function WeightRepsInput({
   disabled,
   onRowConfirm,
   initialAutoConfirmFlags,
+  placeholderWeights,   // ⬅️ include here
+  placeholderReps,      // ⬅️ include here
 }: WeightRepsInputProps) {
   const [confirmedRows, setConfirmedRows] = useState<boolean[]>([]);
   const [autoConfirmFlags, setAutoConfirmFlags] = useState<boolean[]>(
@@ -111,31 +115,34 @@ return (
               {showPicker ? (
                 <>
                   {/* Weight */}
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.5"
-                    min="0"
-                    placeholder="0"
-                    className="w-full bg-gray-800 border border-gray-600 rounded 
-                               text-center text-white py-0.5 text-sm"
-                    value={weight === 0 ? "" : weight}
-                    onChange={(e) => onWeightChange(idx, e.target.value)}
-                    disabled={disabled}
-                  />
+<input
+  type="number"
+  inputMode="decimal"
+  step="0.5"
+  min="0"
+  placeholder={String(
+    (placeholderWeights && placeholderWeights[idx]) ?? 0
+  )}
+  className="w-full bg-gray-800 border border-gray-600 rounded 
+             text-center text-white py-0.5 text-sm"
+  value={weight === 0 ? "" : weight}
+  onChange={(e) => onWeightChange(idx, e.target.value)}
+  disabled={disabled}
+/>
 
-                  {/* Reps */}
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    min="0"
-                    placeholder="0"
-                    className="w-full bg-gray-800 border border-gray-600 rounded 
-                               text-center text-white py-0.5 text-sm"
-                    value={repsPerSet[idx] === 0 ? "" : repsPerSet[idx]}
-                    onChange={(e) => onRepsChange(idx, e.target.value)}
-                    disabled={disabled}
-                  />
+<input
+  type="number"
+  inputMode="numeric"
+  min="0"
+  placeholder={String(
+    (placeholderReps && placeholderReps[idx]) ?? 0
+  )}
+  className="w-full bg-gray-800 border border-gray-600 rounded 
+             text-center text-white py-0.5 text-sm"
+  value={repsPerSet[idx] === 0 ? "" : repsPerSet[idx]}
+  onChange={(e) => onRepsChange(idx, e.target.value)}
+  disabled={disabled}
+/>
 
                   {/* Confirm */}
                   <button

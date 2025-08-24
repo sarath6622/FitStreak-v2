@@ -4,7 +4,7 @@ import { CheckCircle2, Save } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import SetsControl from "@/components/WorkoutLogger/SetsControl";
 import WeightRepsInput from "@/components/WorkoutLogger/WeightRepsInput";
-import { upsertWorkout, getWorkoutForExercise } from "@/services/workoutService";
+import { upsertWorkout, getWorkoutForExercise, getLastWorkoutForExercise } from "@/services/workoutService";
 import { auth } from "@/firebase";
 import { toast } from "sonner";
 import clsx from 'clsx';
@@ -44,35 +44,68 @@ export default function WorkoutLogger({
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Prefetch existing workout for this exercise
-  useEffect(() => {
-    const fetchExistingData = async () => {
-      const user = auth.currentUser;
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+useEffect(() => {
+  const fetchExistingData = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-      const today = new Date().toISOString().split("T")[0];
-      const workoutData = await getWorkoutForExercise(user.uid, today, exercise.name);
+    const today = new Date().toISOString().split("T")[0];
 
-      if (workoutData && workoutData.exercise) {
-        const ex = workoutData.exercise;
-        const initialSetsCount = ex.sets || exercise.sets || 1;
+    // 1. Try today's workout
+    const workoutData = await getWorkoutForExercise(user.uid, today, exercise.name);
+
+    if (workoutData && workoutData.exercise) {
+      // ✅ Preserve today’s saved workout
+      const ex = workoutData.exercise;
+      const initialSetsCount = ex.sets || exercise.sets || 1;
+      setSetsCount(initialSetsCount);
+      setSets(
+        Array.from({ length: initialSetsCount }, (_, i) => {
+          const weight = ex.weight?.[i] ?? exercise.defaultWeight ?? 0;
+          const reps =
+            ex.repsPerSet?.[i] ?? (exercise.reps ? parseInt(exercise.reps) : 0);
+          return {
+            weight,
+            reps,
+            done: weight > 0 || (ex.doneFlags?.[i] ?? false),
+          };
+        })
+      );
+      setDuration(workoutData.duration || 45);
+      setRest(workoutData.rest || 90);
+    } else {
+      // 2. No workout for today → fetch last workout
+      const lastWorkoutData = await getLastWorkoutForExercise(user.uid, exercise.name);
+
+      if (lastWorkoutData && lastWorkoutData.exercise) {
+        const ex = lastWorkoutData.exercise;
+        const initialSetsCount = exercise.sets || ex.sets || 1;
         setSetsCount(initialSetsCount);
+
         setSets(
           Array.from({ length: initialSetsCount }, (_, i) => {
-            const weight = ex.weight?.[i] ?? exercise.defaultWeight ?? 0;
-            const reps = ex.repsPerSet?.[i] ?? (exercise.reps ? parseInt(exercise.reps) : 0);
+            const placeholderWeight =
+              ex.weight?.[i] ?? exercise.defaultWeight ?? 0;
+            const placeholderReps =
+              ex.repsPerSet?.[i] ??
+              (exercise.reps ? parseInt(exercise.reps) : 0);
+
             return {
-              weight,
-              reps,
-              done: weight > 0 || (ex.doneFlags?.[i] ?? false),
+              // Editable for today
+              weight: exercise.defaultWeight || 0,
+              reps: exercise.reps ? parseInt(exercise.reps) : 0,
+              done: false,
+              // Placeholders from last workout
+              placeholderWeight,
+              placeholderReps,
             };
           })
         );
-        setDuration(workoutData.duration || 45);
-        setRest(workoutData.rest || 90);
       } else {
+        // 3. Fallback to defaults
         setSets(
           Array.from({ length: exercise.sets ?? 1 }, () => ({
             weight: exercise.defaultWeight || 0,
@@ -81,12 +114,13 @@ export default function WorkoutLogger({
           }))
         );
       }
+    }
 
-      setLoading(false);
-    };
+    setLoading(false);
+  };
 
-    fetchExistingData();
-  }, [exercise, exercise.defaultWeight, exercise.reps, exercise.sets]);
+  fetchExistingData();
+}, [exercise, exercise.defaultWeight, exercise.reps, exercise.sets]);
 
   // Sync sets array length if user changes count
   useEffect(() => {
@@ -203,12 +237,12 @@ export default function WorkoutLogger({
       )}
 
       {completedData && completedData.totalSets !== undefined && completedData.totalSets > 0 && (
-          <p className="text-green-400 text-xs mb-2">
-            {`Progress: ${completedData.setsDone ?? 0}/${completedData.totalSets} sets`}
-            {completedData.repsDone !== undefined
-              ? ` (${completedData.repsDone} reps)`
-              : ""}
-          </p>
+        <p className="text-green-400 text-xs mb-2">
+          {`Progress: ${completedData.setsDone ?? 0}/${completedData.totalSets} sets`}
+          {completedData.repsDone !== undefined
+            ? ` (${completedData.repsDone} reps)`
+            : ""}
+        </p>
       )}
 
       <WeightRepsInput
@@ -220,6 +254,8 @@ export default function WorkoutLogger({
         repOptions={repOptions}
         disabled={false}
         initialAutoConfirmFlags={sets.map((s) => s.done)}
+        placeholderWeights={sets.map((s: any) => s.placeholderWeight ?? 0)}
+        placeholderReps={sets.map((s: any) => s.placeholderReps ?? 0)}
       />
 
       {/* Rest Selection */}

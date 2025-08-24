@@ -11,11 +11,34 @@ export const getWorkoutForExercise = async (uid: string, date: string, exerciseN
   const data = docSnap.data();
   const exercise = data.exercises.find((ex: any) => ex.name === exerciseName);
 
+  console.log("Fetched workout data:", data);
+  
   return {
     duration: data.duration,
     rest: data.rest,
     exercise
   };
+};
+
+export const getLastWorkoutForExercise = async (uid: string, exerciseName: string) => {
+  const workoutsRef = collection(db, "users", uid, "workouts");
+  const q = query(workoutsRef, orderBy("date", "desc"));
+  const snapshot = await getDocs(q);
+
+  for (const docSnap of snapshot.docs) {
+    const data = docSnap.data();
+    const exercise = data.exercises.find((ex: any) => ex.name === exerciseName);
+    if (exercise) {
+      return {
+        date: docSnap.id,
+        duration: data.duration,
+        rest: data.rest,
+        exercise
+      };
+    }
+  }
+
+  return null;
 };
 
 export async function getCompletedExercisesForToday(
