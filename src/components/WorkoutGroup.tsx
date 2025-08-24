@@ -218,7 +218,6 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
           }
 
           completedData={completedExercises[selectedExercise]} 
-
         />
       )}
     </div>

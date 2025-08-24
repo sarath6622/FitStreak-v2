@@ -9,7 +9,7 @@ import { collection, getDocs, orderBy, query } from "firebase/firestore";
 
 export default function WorkoutPage() {
   const router = useRouter();
-  const [hasTodayPlan, setHasTodayPlan] = useState(false);
+  const [todayMuscleGroups, setTodayMuscleGroups] = useState<string[]>([]);
 
   const muscleGroups = [
     "Chest", "Legs", "Back", "Shoulders", "Biceps", "Triceps", "Core", "Glutes"
@@ -25,7 +25,23 @@ export default function WorkoutPage() {
       const q = query(plansRef, orderBy("createdAt", "asc"));
       const snap = await getDocs(q);
 
-      setHasTodayPlan(!snap.empty);
+      if (!snap.empty) {
+        // Collect muscle groups from today's exercises
+        const groups = new Set<string>();
+        snap.forEach((doc) => {
+          const data = doc.data();
+          if (data.muscleGroup) {
+            groups.add(data.muscleGroup);
+          }
+
+          // if you stored multiple groups in an array:
+          if (Array.isArray(data.muscleGroups)) {
+            data.muscleGroups.forEach((g: string) => groups.add(g));
+          }
+        });
+
+        setTodayMuscleGroups(Array.from(groups));
+      }
     };
 
     checkTodaysPlans();
@@ -36,17 +52,11 @@ export default function WorkoutPage() {
       <div className="space-y-1">
         {/* Suggested Section */}
         <div className="bg-gray-900 rounded-xl shadow-md mb-6">
-          <SuggestionSection
-            userId={auth.currentUser?.uid || ""}
-            onSelect={(m) => {
-              // navigate to /workouts/[muscleGroup]
-              // router.push(`/workouts/${encodeURIComponent(m)}`);
-            }}
-          />
+          <SuggestionSection userId={auth.currentUser?.uid || ""} />
         </div>
 
-        {/* ✅ Only render "Today's Workouts" if plan exists */}
-        {hasTodayPlan && (
+        {/* ✅ Show Today's Workouts */}
+        {todayMuscleGroups.length > 0 && (
           <Link href="/workouts/todays-workouts">
             <section className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700 hover:shadow-xl hover:scale-[1.01] transition-all cursor-pointer backdrop-blur-md">
               <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
@@ -54,7 +64,11 @@ export default function WorkoutPage() {
                 Today's Workouts
               </h2>
               <p className="text-gray-300 text-sm leading-relaxed">
-                View your logged plans for today and keep track of progress effortlessly.
+                You’ll be training{" "}
+                <span className="font-semibold text-blue-400">
+                  {todayMuscleGroups.join(", ")}
+                </span>{" "}
+                today. Click to view details.
               </p>
             </section>
           </Link>

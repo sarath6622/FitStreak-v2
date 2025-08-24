@@ -1,6 +1,6 @@
 "use client";
 
-import { Save } from "lucide-react";
+import { CheckCircle2, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import SetsControl from "@/components/WorkoutLogger/SetsControl";
 import WeightRepsInput from "@/components/WorkoutLogger/WeightRepsInput";
@@ -142,7 +142,9 @@ const handleSave = async () => {
 
     await upsertWorkout(user.uid, today, exerciseData, duration, rest);
 
-    toast.success("Workout saved successfully! ⚡️");
+    toast.success("Workout saved successfully!", {
+  icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
+});
 
     onWorkoutSaved({ sets });
     onClose();
