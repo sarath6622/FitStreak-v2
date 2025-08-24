@@ -9,26 +9,48 @@ interface SetsControlProps {
 
 export default function SetsControl({ sets, setSets, error, disabled }: SetsControlProps) {
   return (
-    <div className="flex flex-col mb-4 text-gray-300">
-      <label className="flex items-center justify-between mb-1">
-        <span>Sets</span>
-        <span className="text-sm text-red-400">{error}</span>
+    <div className="flex flex-col items-start gap-1">
+      {/* Label */}
+      <label className="text-xs text-gray-400">
+        Sets {error && <span className="ml-2 text-red-400">{error}</span>}
       </label>
-      <div className="flex items-center gap-3">
+
+      {/* Counter */}
+      <div
+        className={`flex items-center gap-2 ${
+          error ? "text-red-400" : "text-gray-300"
+        }`}
+      >
+        {/* Decrement button */}
         <button
+          type="button"
+          aria-label="Decrease sets"
           onClick={() => setSets(Math.max(1, sets - 1))}
-          className="bg-gray-800 p-2 rounded-full"
+          className="bg-gray-800 p-1.5 rounded-full hover:bg-gray-700 active:scale-95 
+                     disabled:opacity-40 disabled:cursor-not-allowed transition"
           disabled={disabled}
         >
-          <Minus size={16} />
+          <Minus size={14} />
         </button>
-        <span className="font-bold">{sets}</span>
+
+        {/* Pill */}
+        <span
+          className="w-10 text-center text-sm font-medium text-white bg-gray-900 
+                     rounded-full py-0.5 border border-gray-700"
+        >
+          {sets}
+        </span>
+
+        {/* Increment button */}
         <button
+          type="button"
+          aria-label="Increase sets"
           onClick={() => setSets(sets + 1)}
-          className="bg-gray-800 p-2 rounded-full"
+          className="bg-gray-800 p-1.5 rounded-full hover:bg-gray-700 active:scale-95 
+                     disabled:opacity-40 disabled:cursor-not-allowed transition"
           disabled={disabled}
         >
-          <Plus size={16} />
+          <Plus size={14} />
         </button>
       </div>
     </div>

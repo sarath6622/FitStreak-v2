@@ -79,103 +79,94 @@ export default function WeightRepsInput({
     if (onRowConfirm) onRowConfirm(idx);
   };
 
-  return (
-    <div className="mb-4">
-      <label className="block mb-2 font-medium text-white">
-        Weight and Reps per set
-      </label>
-
-      <div className="grid grid-cols-[40px_1fr_1fr_32px] gap-2 text-xs font-medium text-gray-400 mb-2">
-        <span className="text-center">Set</span>
-        <span className="text-center">Weight</span>
-        <span className="text-center">Reps</span>
-        <span className="text-center">✓</span>
-      </div>
-
-      {/* Scrollable area */}
-      <div className="max-h-56 overflow-y-auto pr-1 space-y-2">
-{weights.map((weight, idx) => {
-  const isConfirmed = confirmedRows[idx];
-  const showPicker = !isConfirmed;
-
-  return (
-    <div
-      key={idx}
-      className={`rounded-lg p-1 ${
-        isConfirmed
-          ? "bg-green-900/20 border border-green-700"
-          : "border border-yellow-400/50"
-      }`}
-    >
-      <div className="grid grid-cols-[40px_1fr_1fr_32px] gap-2 items-center">
-        {/* Set Number */}
-        <span className="text-center text-white text-sm">{idx + 1}</span>
-
-        {showPicker ? (
-<>
-  {/* Weight input */}
-  <div className="flex items-center justify-center gap-1">
-    <input
-      type="number"
-      inputMode="decimal"
-      step="0.5"
-      min="0"
-      placeholder="0"
-      className="w-16 bg-gray-800 border border-gray-600 rounded-md text-center text-white py-1"
-      value={weight === 0 ? "" : weight}
-      onChange={(e) => onWeightChange(idx, e.target.value)}
-      disabled={disabled}
-    />
-  </div>
-
-  {/* Reps input */}
-  <div className="flex items-center justify-center">
-    <input
-      type="number"
-      inputMode="numeric"
-      min="0"
-      placeholder="0"
-      className="w-14 bg-gray-800 border border-gray-600 rounded-md text-center py-1 text-white"
-      value={repsPerSet[idx] === 0 ? "" : repsPerSet[idx]}
-      onChange={(e) => onRepsChange(idx, e.target.value)}
-      disabled={disabled}
-    />
-  </div>
-
-  {/* Confirm button */}
-  <div className="flex items-center justify-center">
-    <button
-      type="button"
-      onClick={() => toggleConfirm(idx)}
-      className="w-7 h-7 rounded-full flex items-center justify-center bg-gray-700 text-gray-300"
-    >
-      <Check size={12} strokeWidth={3} />
-    </button>
-  </div>
-</>
-        ) : (
-          <>
-            {/* Compact confirmed view aligned with columns */}
-            <span className="text-center text-white text-xs col-span-1">
-              {weight}
-            </span>
-            <span className="text-center text-white text-xs col-span-1">
-              {repsPerSet[idx]} reps
-            </span>
-            <button
-              type="button"
-              onClick={() => toggleConfirm(idx)}
-              className="text-blue-400 hover:text-blue-300 flex items-center justify-center"
-            >
-              <Pencil size={12} />
-            </button>
-          </>
-        )}
-      </div>
+return (
+  <div className="mb-2">
+    {/* Header */}
+    <div className="grid grid-cols-4 gap-2 text-sm font-medium text-gray-400 mb-1 text-center">
+      <span className="w-full">Set</span>
+      <span className="w-full">Weight</span>
+      <span className="w-full">Reps</span>
+      <span className="w-full">✓</span>
     </div>
-  );
-})}
-      </div>
+
+    {/* Rows */}
+    <div className="max-h-48 overflow-y-auto space-y-1">
+      {weights.map((weight, idx) => {
+        const isConfirmed = confirmedRows[idx];
+        const showPicker = !isConfirmed;
+
+        return (
+          <div
+            key={idx}
+            className={`rounded-md p-0.5 text-center ${
+              isConfirmed
+                ? "bg-green-900/20 border border-green-700"
+                : "border border-yellow-400/50"
+            }`}
+          >
+            <div className="grid grid-cols-4 gap-2 items-center">
+              {/* Set Number */}
+              <span className="text-white text-sm w-full">{idx + 1}</span>
+
+              {showPicker ? (
+                <>
+                  {/* Weight */}
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.5"
+                    min="0"
+                    placeholder="0"
+                    className="w-full bg-gray-800 border border-gray-600 rounded 
+                               text-center text-white py-0.5 text-sm"
+                    value={weight === 0 ? "" : weight}
+                    onChange={(e) => onWeightChange(idx, e.target.value)}
+                    disabled={disabled}
+                  />
+
+                  {/* Reps */}
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    placeholder="0"
+                    className="w-full bg-gray-800 border border-gray-600 rounded 
+                               text-center text-white py-0.5 text-sm"
+                    value={repsPerSet[idx] === 0 ? "" : repsPerSet[idx]}
+                    onChange={(e) => onRepsChange(idx, e.target.value)}
+                    disabled={disabled}
+                  />
+
+                  {/* Confirm */}
+                  <button
+                    type="button"
+                    onClick={() => toggleConfirm(idx)}
+                    className="w-full h-6 rounded flex items-center justify-center 
+                               bg-gray-700 text-gray-300"
+                  >
+                    <Check size={11} strokeWidth={2.5} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-white text-sm w-full">{weight}</span>
+                  <span className="text-white text-sm w-full">
+                    {repsPerSet[idx]}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => toggleConfirm(idx)}
+                    className="w-full text-blue-400 hover:text-blue-300 flex items-center justify-center"
+                  >
+                    <Pencil size={11} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
-  );
+  </div>
+);
 }
