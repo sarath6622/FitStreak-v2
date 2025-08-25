@@ -243,3 +243,4 @@ export async function getExerciseNamesByMuscleGroup(
   });
 
   return Array.from(exerciseNames).sort();
+}
