@@ -21,13 +21,22 @@ export const getWorkoutForExercise = async (uid: string, date: string, exerciseN
 };
 
 export const getLastWorkoutForExercise = async (uid: string, exerciseName: string) => {
+  const today = new Date().toISOString().split("T")[0];
+
   const workoutsRef = collection(db, "users", uid, "workouts");
-  const q = query(workoutsRef, orderBy("date", "desc"));
+  const q = query(
+    workoutsRef,
+    where("date", "<", today),   // 👈 skip today
+    orderBy("date", "desc")
+  );
+
   const snapshot = await getDocs(q);
 
   for (const docSnap of snapshot.docs) {
     const data = docSnap.data();
     const exercise = data.exercises.find((ex: any) => ex.name === exerciseName);
+    console.log("Checking workout on date:", docSnap.id, "for exercise:", exerciseName, exercise);
+    
     if (exercise) {
       return {
         date: docSnap.id,
@@ -83,7 +92,7 @@ export async function getCompletedExercisesForToday(
       };
     });
   });
-
+  
   return completedExercises;
 }
 

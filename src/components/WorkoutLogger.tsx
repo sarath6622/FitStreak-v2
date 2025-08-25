@@ -1,22 +1,34 @@
 "use client";
 
 import { CheckCircle2, Save } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import SetsControl from "@/components/WorkoutLogger/SetsControl";
 import WeightRepsInput from "@/components/WorkoutLogger/WeightRepsInput";
-import { upsertWorkout, getWorkoutForExercise, getLastWorkoutForExercise } from "@/services/workoutService";
+import {
+  upsertWorkout,
+  getWorkoutForExercise,
+  getLastWorkoutForExercise,
+} from "@/services/workoutService";
 import { auth } from "@/firebase";
 import { toast } from "sonner";
-import clsx from 'clsx';
+import clsx from "clsx";
 
 interface Exercise {
   name: string;
   muscleGroup: string;
   sets?: number;
-  reps?: string;
-  defaultWeight?: number;
+  reps?: string;           // might be "8-12" etc.
+  defaultWeight?: number;  // AI suggestion
   notes?: string;
 }
+
+type SetEntry = {
+  weight: number; // actual value (0 means empty)
+  reps: number;   // actual value (0 means empty)
+  done: boolean;
+  placeholderWeight?: number;
+  placeholderReps?: number;
+};
 
 export default function WorkoutLogger({
   exercise,
@@ -33,116 +45,27 @@ export default function WorkoutLogger({
     totalSets?: number;
   };
 }) {
-  const [setsCount, setSetsCount] = useState(exercise.sets ?? 1);
-  const [sets, setSets] = useState<{ weight: number; reps: number; done: boolean }[]>([]);
+  // ---------- helpers ----------
+  const parseReps = (val?: string): number => {
+    if (!val) return 0;
+    // accept strictly numeric; ignore ranges like "8-12" -> 0 (so placeholder shows instead)
+    const trimmed = String(val).trim();
+    return /^\d+$/.test(trimmed) ? parseInt(trimmed, 10) : 0;
+  };
+
+  // ---------- state ----------
+  const [setsCount, setSetsCount] = useState<number>(exercise.sets ?? 1);
+  const [sets, setSets] = useState<SetEntry[]>([]);
   const [rest, setRest] = useState(90);
   const [duration, setDuration] = useState(45);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Reference to the modal's container to detect outside clicks
+  // keep placeholders for resize logic
+  const placeholdersRef = useRef<{ weight: number[]; reps: number[] }>({ weight: [], reps: [] });
+
+  // modal close on outside click
   const modalRef = useRef<HTMLDivElement>(null);
-
-  // Prefetch existing workout for this exercise
-useEffect(() => {
-  const fetchExistingData = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    const today = new Date().toISOString().split("T")[0];
-
-    // 1. Try today's workout
-    const workoutData = await getWorkoutForExercise(user.uid, today, exercise.name);
-
-    if (workoutData && workoutData.exercise) {
-      // ✅ Preserve today’s saved workout
-      const ex = workoutData.exercise;
-      const initialSetsCount = ex.sets || exercise.sets || 1;
-      setSetsCount(initialSetsCount);
-      setSets(
-        Array.from({ length: initialSetsCount }, (_, i) => {
-          const weight = ex.weight?.[i] ?? exercise.defaultWeight ?? 0;
-          const reps =
-            ex.repsPerSet?.[i] ?? (exercise.reps ? parseInt(exercise.reps) : 0);
-          return {
-            weight,
-            reps,
-            done: weight > 0 || (ex.doneFlags?.[i] ?? false),
-          };
-        })
-      );
-      setDuration(workoutData.duration || 45);
-      setRest(workoutData.rest || 90);
-    } else {
-      // 2. No workout for today → fetch last workout
-      const lastWorkoutData = await getLastWorkoutForExercise(user.uid, exercise.name);
-
-      if (lastWorkoutData && lastWorkoutData.exercise) {
-        const ex = lastWorkoutData.exercise;
-        const initialSetsCount = exercise.sets || ex.sets || 1;
-        setSetsCount(initialSetsCount);
-
-        setSets(
-          Array.from({ length: initialSetsCount }, (_, i) => {
-            const placeholderWeight =
-              ex.weight?.[i] ?? exercise.defaultWeight ?? 0;
-            const placeholderReps =
-              ex.repsPerSet?.[i] ??
-              (exercise.reps ? parseInt(exercise.reps) : 0);
-
-            return {
-              // Editable for today
-              weight: exercise.defaultWeight || 0,
-              reps: exercise.reps ? parseInt(exercise.reps) : 0,
-              done: false,
-              // Placeholders from last workout
-              placeholderWeight,
-              placeholderReps,
-            };
-          })
-        );
-      } else {
-        // 3. Fallback to defaults
-        setSets(
-          Array.from({ length: exercise.sets ?? 1 }, () => ({
-            weight: exercise.defaultWeight || 0,
-            reps: exercise.reps ? parseInt(exercise.reps) : 0,
-            done: false,
-          }))
-        );
-      }
-    }
-
-    setLoading(false);
-  };
-
-  fetchExistingData();
-}, [exercise, exercise.defaultWeight, exercise.reps, exercise.sets]);
-
-  // Sync sets array length if user changes count
-  useEffect(() => {
-    setSets((prev) => {
-      const newSets = [...prev];
-      if (setsCount > prev.length) {
-        for (let i = prev.length; i < setsCount; i++) {
-          newSets.push({
-            weight: exercise.defaultWeight || 0,
-            reps: exercise.reps ? parseInt(exercise.reps) : 0,
-            done: false,
-          });
-        }
-      } else if (setsCount < prev.length) {
-        newSets.splice(setsCount);
-      }
-
-      return newSets;
-    });
-  }, [setsCount, exercise.defaultWeight, exercise.reps, exercise.sets]);
-
-  // Handle clicks outside the modal
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
@@ -150,31 +73,148 @@ useEffect(() => {
       }
     };
     window.addEventListener("mousedown", handleOutsideClick);
-    return () => {
-      window.removeEventListener("mousedown", handleOutsideClick);
-    };
+    return () => window.removeEventListener("mousedown", handleOutsideClick);
   }, [onClose]);
 
+  // ---------- fetch/init ----------
+  useEffect(() => {
+    const fetchExistingData = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      const today = new Date().toISOString().split("T")[0];
+
+      const [todayData, lastData] = await Promise.all([
+        getWorkoutForExercise(user.uid, today, exercise.name),
+        getLastWorkoutForExercise(user.uid, exercise.name),
+      ]);
+
+      const exToday = todayData?.exercise; // may be undefined
+      const exLast = lastData?.exercise;   // may be undefined
+
+      // decide length
+      const initialCount = Math.max(
+        exToday?.sets ?? 0,
+        exercise.sets ?? 0,
+        exLast?.sets ?? 0,
+        1
+      );
+
+      const aiWeight = exercise.defaultWeight ?? 0;
+      const aiReps = parseReps(exercise.reps);
+
+      // Build placeholder arrays with priority: AI > last > 0
+      const placeholderWeightArr: number[] = [];
+      const placeholderRepsArr: number[] = [];
+
+      for (let i = 0; i < initialCount; i++) {
+        const lastW = exLast?.weight?.[i] ?? 0;
+        const lastR = exLast?.repsPerSet?.[i] ?? 0;
+
+        placeholderWeightArr[i] = aiWeight || lastW || 0;
+        placeholderRepsArr[i] = aiReps || lastR || 0;
+      }
+
+      placeholdersRef.current = {
+        weight: placeholderWeightArr,
+        reps: placeholderRepsArr,
+      };
+
+      // Build the working set values:
+      // Value priority when re-opening:
+      // 1) today's logged values (if exist)
+      // 2) otherwise EMPTY (0) so placeholder is visible
+      const nextSets: SetEntry[] = [];
+      for (let i = 0; i < initialCount; i++) {
+        const loggedW = exToday?.weight?.[i];
+        const loggedR = exToday?.repsPerSet?.[i];
+        const loggedDone = exToday?.doneFlags?.[i] ?? false;
+
+        nextSets.push({
+          weight: (typeof loggedW === "number" && loggedW > 0) ? loggedW : 0, // empty → show placeholder
+          reps: (typeof loggedR === "number" && loggedR > 0) ? loggedR : 0,
+          done: !!loggedDone,
+          placeholderWeight: placeholderWeightArr[i],
+          placeholderReps: placeholderRepsArr[i],
+        });
+      }
+
+      setSetsCount(initialCount);
+      setSets(nextSets);
+      setDuration(todayData?.duration || 45);
+      setRest(todayData?.rest || 90);
+      setLoading(false);
+    };
+
+    fetchExistingData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exercise.name, exercise.defaultWeight, exercise.reps, exercise.sets]);
+
+  // ---------- keep arrays in sync when user changes sets count ----------
+  useEffect(() => {
+    setSets((prev) => {
+      const arr = [...prev];
+
+      // grow
+      if (setsCount > arr.length) {
+        for (let i = arr.length; i < setsCount; i++) {
+          const phW = placeholdersRef.current.weight[i] ?? (exercise.defaultWeight ?? 0);
+          const phR = placeholdersRef.current.reps[i] ?? parseReps(exercise.reps);
+
+          // ensure placeholders arrays stay long enough
+          placeholdersRef.current.weight[i] = phW;
+          placeholdersRef.current.reps[i] = phR;
+
+          arr.push({
+            weight: 0, // empty so placeholder shows
+            reps: 0,
+            done: false,
+            placeholderWeight: phW,
+            placeholderReps: phR,
+          });
+        }
+      }
+
+      // shrink
+      if (setsCount < arr.length) {
+        arr.splice(setsCount);
+      }
+
+      return arr;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setsCount]);
+
+  // ---------- handlers ----------
   const handleWeightChange = (index: number, value: string) => {
     const weightNum = value.trim() === "" ? 0 : parseFloat(value);
     if (isNaN(weightNum) || weightNum < 0) return;
-    const newSets = [...sets];
-    newSets[index] = { ...newSets[index], weight: weightNum };
-    setSets(newSets);
+    setSets((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], weight: weightNum };
+      return next;
+    });
   };
 
   const handleRepsChange = (index: number, value: string) => {
-    const repsNum = value.trim() === "" ? 0 : parseInt(value);
+    const repsNum = value.trim() === "" ? 0 : parseInt(value, 10);
     if (isNaN(repsNum) || repsNum < 0) return;
-    const newSets = [...sets];
-    newSets[index] = { ...newSets[index], reps: repsNum };
-    setSets(newSets);
+    setSets((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], reps: repsNum };
+      return next;
+    });
   };
 
   const toggleDone = (setIndex: number) => {
-    const newSets = [...sets];
-    newSets[setIndex].done = !newSets[setIndex].done;
-    setSets(newSets);
+    setSets((prev) => {
+      const next = [...prev];
+      next[setIndex] = { ...next[setIndex], done: !next[setIndex].done };
+      return next;
+    });
   };
 
   const handleSave = async () => {
@@ -185,13 +225,49 @@ useEffect(() => {
 
       const today = new Date().toISOString().split("T")[0];
 
+      // pull today's existing (to keep data for untouched sets)
+      const todayData = await getWorkoutForExercise(user.uid, today, exercise.name);
+      const exToday = todayData?.exercise;
+
+      const existingWeight: number[] = exToday?.weight ?? [];
+      const existingReps: number[] = exToday?.repsPerSet ?? [];
+      const existingDone: boolean[] = exToday?.doneFlags ?? [];
+      const existingSetsCount = exToday?.sets ?? 0;
+
+      // ✅ ensure we don’t lose past sets
+      const finalLength = Math.max(sets.length, existingSetsCount);
+
+      const mergedWeight: number[] = [];
+      const mergedReps: number[] = [];
+      const mergedDone: boolean[] = [];
+
+      for (let i = 0; i < finalLength; i++) {
+        const userW = sets[i]?.weight ?? 0;
+        const userR = sets[i]?.reps ?? 0;
+        const userD = sets[i]?.done ?? false;
+
+        const prevW = existingWeight[i] ?? 0;
+        const prevR = existingReps[i] ?? 0;
+        const prevD = existingDone[i] ?? false;
+
+        mergedWeight[i] = userW > 0 ? userW : prevW;
+        mergedReps[i] = userR > 0 ? userR : prevR;
+        mergedDone[i] = userD || prevD; // keep it done if either says so
+      }
+
+      // ✅ trim trailing rows only if completely empty
+      const trimmedLength = Math.max(
+        mergedWeight.findLastIndex((w, i) => w > 0 && mergedReps[i] > 0) + 1,
+        0
+      );
+
       const exerciseData = {
         name: exercise.name,
         muscleGroup: exercise.muscleGroup,
-        sets: sets.length,
-        repsPerSet: sets.map((s) => s.reps),
-        weight: sets.map((s) => s.weight),
-        doneFlags: sets.map((s) => s.done),
+        sets: trimmedLength,
+        repsPerSet: mergedReps.slice(0, trimmedLength),
+        weight: mergedWeight.slice(0, trimmedLength),
+        doneFlags: mergedDone.slice(0, trimmedLength),
         notes: exercise.notes || "",
       };
 
@@ -201,7 +277,14 @@ useEffect(() => {
         icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
       });
 
-      onWorkoutSaved({ sets });
+      onWorkoutSaved({
+        sets: exerciseData.weight.map((w, i) => ({
+          weight: w,
+          reps: exerciseData.repsPerSet[i],
+          done: exerciseData.doneFlags[i],
+        })),
+      });
+
       onClose();
     } catch (err) {
       console.error("Error saving workout:", err);
@@ -211,16 +294,15 @@ useEffect(() => {
     }
   };
 
+  // ---------- render ----------
   if (loading) {
     return <p className="text-white text-sm">Loading workout data...</p>;
   }
 
-  const weights = sets.map((s) => s.weight);
-  const repsPerSet = sets.map((s) => s.reps);
-  const errors: { [key: string]: string } = {};
+  const errors: Record<string, string> = {};
   const repOptions: number[] = [];
-
-  const baseButtonClasses = "px-3 py-1 text-sm rounded transition-colors duration-200 text-white";
+  const baseButtonClasses =
+    "px-3 py-1 text-sm rounded transition-colors duration-200 text-white";
 
   return (
     <div
@@ -229,36 +311,41 @@ useEffect(() => {
     >
       <SetsControl sets={setsCount} setSets={setSetsCount} />
 
-      {/* Show target only if both values exist */}
       {exercise.sets && exercise.reps && (
         <p className="text-xs text-gray-400 mb-4">
-          Target: {setsCount} sets × {exercise.reps} reps
+          Target: {setsCount} sets × {exercise.reps}
         </p>
       )}
 
       {completedData && completedData.totalSets !== undefined && completedData.totalSets > 0 && (
         <p className="text-green-400 text-xs mb-2">
           {`Progress: ${completedData.setsDone ?? 0}/${completedData.totalSets} sets`}
-          {completedData.repsDone !== undefined
-            ? ` (${completedData.repsDone} reps)`
-            : ""}
+          {completedData.repsDone !== undefined ? ` (${completedData.repsDone} reps)` : ""}
         </p>
       )}
 
       <WeightRepsInput
-        weights={weights}
-        repsPerSet={repsPerSet}
+        weights={sets.map((s) => s.weight)}
+        repsPerSet={sets.map((s) => s.reps)}
         onWeightChange={handleWeightChange}
         onRepsChange={handleRepsChange}
         errors={errors}
         repOptions={repOptions}
         disabled={false}
         initialAutoConfirmFlags={sets.map((s) => s.done)}
-        placeholderWeights={sets.map((s: any) => s.placeholderWeight ?? 0)}
-        placeholderReps={sets.map((s: any) => s.placeholderReps ?? 0)}
+        placeholderWeights={sets.map((s) => s.placeholderWeight ?? 0)}
+        placeholderReps={sets.map((s) => s.placeholderReps ?? 0)}
+        onRowConfirm={(idx) => {
+          // keep your existing toggle logic
+          setSets((prev) => {
+            const next = [...prev];
+            next[idx] = { ...next[idx], done: !next[idx].done };
+            return next;
+          });
+        }}
       />
 
-      {/* Rest Selection */}
+      {/* Rest */}
       <div>
         <p className="text-sm text-white mb-2 font-semibold">Rest</p>
         <div className="flex flex-wrap gap-2">
@@ -277,7 +364,7 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Duration Selection */}
+      {/* Duration */}
       <div>
         <p className="text-sm text-gray-400 mb-2 font-semibold">Duration</p>
         <div className="flex flex-wrap gap-2">
