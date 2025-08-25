@@ -46,13 +46,14 @@ function ExerciseCard({
   completedData?: CompletedExercise;
 }) {
   // compute progress (0–100)
-  const progress =
-    completedData && completedData.totalSets > 0
-      ? Math.min(
-          100,
-          Math.round((completedData.setsDone / completedData.totalSets) * 100)
-        )
-      : 0;
+// progress = how many sets user finished compared to target sets
+const progress =
+  completedData && exercise.sets > 0
+    ? Math.min(
+        100,
+        Math.round((completedData.setsDone / exercise.sets) * 100)
+      )
+    : 0;
 
   return (
     <button
@@ -73,9 +74,9 @@ function ExerciseCard({
             {exercise.sets} × {exercise.reps}
           </span>
         </div>
-        {completedData && (
-          <CheckCircle2 size={16} className="text-green-500" aria-label="Completed today" />
-        )}
+        {progress === 100 && (
+  <CheckCircle2 size={16} className="text-green-500" aria-label="Completed today" />
+)}
       </div>
 
       {/* Meta info */}
@@ -110,7 +111,7 @@ function ExerciseCard({
             />
           </div>
           <div className="text-[11px] text-gray-400 mt-0.5">
-            {completedData.setsDone}/{completedData.totalSets} sets completed
+            {completedData.setsDone}/{exercise.sets} sets completed
           </div>
         </div>
       )}

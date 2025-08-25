@@ -217,82 +217,86 @@ export default function WorkoutLogger({
     });
   };
 
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-      const user = auth.currentUser;
-      if (!user) throw new Error("Not logged in");
+const handleSave = async () => {
+  try {
+    setSaving(true);
+    const user = auth.currentUser;
+    if (!user) throw new Error("Not logged in");
 
-      const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
 
-      // pull today's existing (to keep data for untouched sets)
-      const todayData = await getWorkoutForExercise(user.uid, today, exercise.name);
-      const exToday = todayData?.exercise;
+    const todayData = await getWorkoutForExercise(user.uid, today, exercise.name);
+    const exToday = todayData?.exercise;
 
-      const existingWeight: number[] = exToday?.weight ?? [];
-      const existingReps: number[] = exToday?.repsPerSet ?? [];
-      const existingDone: boolean[] = exToday?.doneFlags ?? [];
-      const existingSetsCount = exToday?.sets ?? 0;
+    const existingWeight: number[] = exToday?.weight ?? [];
+    const existingReps: number[] = exToday?.repsPerSet ?? [];
+    const existingDone: boolean[] = exToday?.doneFlags ?? [];
+    const existingSetsCount = exToday?.sets ?? 0;
 
-      // ✅ ensure we don’t lose past sets
-      const finalLength = Math.max(sets.length, existingSetsCount);
+    const finalLength = Math.max(sets.length, existingSetsCount);
 
-      const mergedWeight: number[] = [];
-      const mergedReps: number[] = [];
-      const mergedDone: boolean[] = [];
+    const mergedWeight: number[] = [];
+    const mergedReps: number[] = [];
+    const mergedDone: boolean[] = [];
 
-      for (let i = 0; i < finalLength; i++) {
-        const userW = sets[i]?.weight ?? 0;
-        const userR = sets[i]?.reps ?? 0;
-        const userD = sets[i]?.done ?? false;
+    for (let i = 0; i < finalLength; i++) {
+      const userW = sets[i]?.weight ?? 0;
+      const userR = sets[i]?.reps ?? 0;
+      const userD = sets[i]?.done ?? false;
 
-        const prevW = existingWeight[i] ?? 0;
-        const prevR = existingReps[i] ?? 0;
-        const prevD = existingDone[i] ?? false;
+      const prevW = existingWeight[i] ?? 0;
+      const prevR = existingReps[i] ?? 0;
+      const prevD = existingDone[i] ?? false;
 
-        mergedWeight[i] = userW > 0 ? userW : prevW;
-        mergedReps[i] = userR > 0 ? userR : prevR;
-        mergedDone[i] = userD || prevD; // keep it done if either says so
-      }
-
-      // ✅ trim trailing rows only if completely empty
-      const trimmedLength = Math.max(
-        mergedWeight.findLastIndex((w, i) => w > 0 && mergedReps[i] > 0) + 1,
-        0
-      );
-
-      const exerciseData = {
-        name: exercise.name,
-        muscleGroup: exercise.muscleGroup,
-        sets: trimmedLength,
-        repsPerSet: mergedReps.slice(0, trimmedLength),
-        weight: mergedWeight.slice(0, trimmedLength),
-        doneFlags: mergedDone.slice(0, trimmedLength),
-        notes: exercise.notes || "",
-      };
-
-      await upsertWorkout(user.uid, today, exerciseData, duration, rest);
-
-      toast.success("Workout saved successfully!", {
-        icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
-      });
-
-      onWorkoutSaved({
-        sets: exerciseData.weight.map((w, i) => ({
-          weight: w,
-          reps: exerciseData.repsPerSet[i],
-          done: exerciseData.doneFlags[i],
-        })),
-      });
-
-      onClose();
-    } catch (err) {
-      console.error("Error saving workout:", err);
-      toast.error("Failed to save workout ❌");
-    } finally {
-      setSaving(false);
+      mergedWeight[i] = userW > 0 ? userW : prevW;
+      mergedReps[i] = userR > 0 ? userR : prevR;
+      mergedDone[i] = userD || prevD;
     }
-  };
+
+    // ✅ Trim trailing rows only if completely empty
+    const trimmedLength = Math.max(
+      mergedWeight.findLastIndex((w, i) => w > 0 && mergedReps[i] > 0) + 1,
+      0
+    );
+
+    // 🚨 Stop if literally nothing to save
+    if (trimmedLength === 0) {
+      toast.error("Please enter at least one set before saving ❌");
+      return;
+    }
+
+    const exerciseData = {
+      name: exercise.name,
+      muscleGroup: exercise.muscleGroup,
+      sets: trimmedLength,
+      repsPerSet: mergedReps.slice(0, trimmedLength),
+      weight: mergedWeight.slice(0, trimmedLength),
+      doneFlags: mergedDone.slice(0, trimmedLength),
+      notes: exercise.notes || "",
+    };
+
+    await upsertWorkout(user.uid, today, exerciseData, duration, rest);
+
+    toast.success("Workout saved successfully!", {
+      icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
+    });
+
+    onWorkoutSaved({
+      sets: exerciseData.weight.map((w, i) => ({
+        weight: w,
+        reps: exerciseData.repsPerSet[i],
+        done: exerciseData.doneFlags[i],
+      })),
+    });
+
+    onClose();
+  } catch (err) {
+    console.error("Error saving workout:", err);
+    toast.error("Failed to save workout ❌");
+  } finally {
+    setSaving(false);
+  }
+};
 
   // ---------- render ----------
   if (loading) {
