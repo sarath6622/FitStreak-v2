@@ -1,40 +1,60 @@
 import { WorkoutSession } from "@/types";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Props {
-  workouts: WorkoutSession[];
+  allWorkouts: WorkoutSession[];
   onFilter: (filtered: WorkoutSession[]) => void;
 }
 
-export default function Filters({ workouts, onFilter }: Props) {
-  const [muscle, setMuscle] = useState("");
+export default function Filters({ allWorkouts, onFilter }: Props) {
+  const [muscle, setMuscle] = useState("all");
 
-  const handleFilter = () => {
-    if (!muscle) {
-      onFilter(workouts);
+  // Build muscle group list from *all workouts*
+  const muscleGroups = useMemo(() => {
+    const groups = new Set<string>();
+    allWorkouts.forEach((w) =>
+      w.exercises.forEach((e) => groups.add(e.muscleGroup))
+    );
+    return Array.from(groups).sort();
+  }, [allWorkouts]);
+
+  const handleFilter = (value: string) => {
+    setMuscle(value);
+    if (value === "all") {
+      onFilter(allWorkouts);
     } else {
       onFilter(
-        workouts.filter((w) =>
-          w.exercises.some((e) => e.muscleGroup.toLowerCase() === muscle.toLowerCase())
+        allWorkouts.filter((w) =>
+          w.exercises.some(
+            (e) => e.muscleGroup.toLowerCase() === value.toLowerCase()
+          )
         )
       );
     }
   };
 
   return (
-    <div className="flex gap-2">
-      <input
-        value={muscle}
-        onChange={(e) => setMuscle(e.target.value)}
-        placeholder="Filter by muscle group"
-        className="bg-gray-800 border border-gray-700 p-2 rounded-lg flex-1"
-      />
-      <button
-        onClick={handleFilter}
-        className="bg-blue-600 px-4 rounded-lg hover:bg-blue-700"
-      >
-        Apply
-      </button>
+    <div className="flex gap-2 items-center w-full">
+<Select value={muscle} onValueChange={handleFilter}>
+  <SelectTrigger className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg">
+    <SelectValue placeholder="Filter by muscle group" />
+  </SelectTrigger>
+  <SelectContent className="bg-gray-900 border border-gray-700 text-white">
+    <SelectItem value="all">All muscle groups</SelectItem>
+    {muscleGroups.map((g) => (
+      <SelectItem key={g} value={g}>
+        {g}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
     </div>
   );
 }

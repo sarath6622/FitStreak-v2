@@ -15,7 +15,8 @@ import { Sparkles } from "lucide-react";
 
 export default function HistoryPage() {
   const [user, setUser] = useState<User | null>(null);
-  const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
+  const [allWorkouts, setAllWorkouts] = useState<WorkoutSession[]>([]);
+  const [filteredWorkouts, setFilteredWorkouts] = useState<WorkoutSession[]>([]);
   const [prs, setPrs] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
@@ -33,7 +34,8 @@ export default function HistoryPage() {
           ...(doc.data() as WorkoutSession),
         }));
 
-        setWorkouts(fetchedWorkouts);
+        setAllWorkouts(fetchedWorkouts);   // ✅ store full set
+        setFilteredWorkouts(fetchedWorkouts); // ✅ also show initially
         console.log("Fetched workouts:", fetchedWorkouts);
 
         setPrs(calculatePRs(fetchedWorkouts));
@@ -45,44 +47,45 @@ export default function HistoryPage() {
     return unsub;
   }, []);
 
-if (!authReady) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
-    </div>
-  );
-}
-
-if (!user) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      <div className="w-full max-w-md">
-        <Auth />
+  if (!authReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-if (loading) {
-  return           <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
-    </div>
-}
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="w-full max-w-md">
+          <Auth />
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white px-4 py-6">
-
       {/* Summary Cards */}
-      <SummaryCards workouts={workouts} />
+      <SummaryCards workouts={filteredWorkouts} />
 
       {/* Filters */}
       <div className="mt-6">
-        <Filters workouts={workouts} onFilter={(filtered) => setWorkouts(filtered)} />
+        <Filters allWorkouts={allWorkouts} onFilter={setFilteredWorkouts} />
       </div>
 
       {/* Workout Timeline */}
       <div className="mt-6">
-        <WorkoutTimeline workouts={workouts} />
+        <WorkoutTimeline workouts={filteredWorkouts} />
       </div>
     </div>
   );
