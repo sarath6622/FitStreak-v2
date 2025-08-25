@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
-import { getWorkoutsForUser } from "@/services/workoutService";
+import {
+  getWorkoutsForUser,
+  getExerciseNamesByMuscleGroup,
+} from "@/services/workoutService";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -17,6 +20,10 @@ export async function POST(req: NextRequest) {
 
     // Fetch last 7 workouts (may be used for context)
     const previousWorkouts = await getWorkoutsForUser(userId, { limit: 7 });
+    const exerciseList = await getExerciseNamesByMuscleGroup(muscleGroups);
+    console.log(muscleGroups);
+    
+    console.log("Exercises found:", exerciseList);
 
     // Build workout summary for context
     const workoutSummary = previousWorkouts
@@ -38,8 +45,10 @@ Here are the user's last 7 workouts:
 ${workoutSummary}
 
 Task:
-Suggest a personalized workout plan for TODAY focused ONLY on the muscle group(s): "${muscleGroups.join(", ")}".  
-The workout must last for AT LEAST ${duration} minutes in total.
+Suggest a personalized workout plan for TODAY focused ONLY on the muscle group(s): "${muscleGroups.join(
+          ", "
+        )}".  
+The workout must last for AT LEAST ${duration} minutes in total and the suggestions of the wokrouts should only be from this list ${exerciseList}.
 
 ---
 

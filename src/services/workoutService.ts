@@ -217,3 +217,29 @@ export async function getUserWorkoutHistory(
 
   return exercisesHistory;
 }
+
+/**
+ * Fetches all unique exercise names for a user within a specific muscle group.
+ * @param userId The ID of the user.
+ * @param muscleGroup The muscle group to filter by (e.g., "Chest", "Legs").
+ * @returns Array of unique exercise names for that muscle group.
+ */
+export async function getExerciseNamesByMuscleGroup(
+  muscleGroups: string[]
+): Promise<string[]> {
+  const exercisesRef = collection(db, "exercises"); // <-- FIXED
+  const snapshot = await getDocs(exercisesRef);
+
+  const exerciseNames: Set<string> = new Set();
+
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    if (
+      data?.name &&
+      muscleGroups.map((g) => g.toLowerCase()).includes(data?.muscleGroup?.toLowerCase())
+    ) {
+      exerciseNames.add(data.name);
+    }
+  });
+
+  return Array.from(exerciseNames).sort();
