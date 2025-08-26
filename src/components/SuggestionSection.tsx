@@ -70,7 +70,8 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
       }
 
       setMuscleSummaries(summaries);
-
+      console.log(summaries);
+      
       // Cache the result in localStorage
       localStorage.setItem("muscleSummary", JSON.stringify(summaries));
       localStorage.setItem("muscleSummaryDate", new Date().toDateString());

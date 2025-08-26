@@ -46,9 +46,9 @@ export default function WorkoutCalendar({ workouts }: WorkoutCalendarProps) {
       days.push(
         <div
           key={day.toString()}
-          className={`flex items-center justify-center w-10 h-10 rounded-full cursor-pointer transition
+          className={`flex items-center justify-center w-8 h-8 rounded-full cursor-pointer transition text-sm
             ${!isSameMonth(day, monthStart) ? "text-gray-600" : "text-gray-200"}
-            ${isToday ? "border-2 border-purple-500" : ""}
+            ${isToday ? "border border-purple-500" : ""}
             ${hasWorkout ? "bg-green-500 text-white hover:bg-green-600" : "hover:bg-gray-800"}
           `}
         >
@@ -60,7 +60,7 @@ export default function WorkoutCalendar({ workouts }: WorkoutCalendarProps) {
     }
 
     rows.push(
-      <div key={day.toString()} className="grid grid-cols-7 gap-2">
+      <div key={day.toString()} className="grid grid-cols-7 gap-1">
         {days}
       </div>
     );
@@ -68,28 +68,28 @@ export default function WorkoutCalendar({ workouts }: WorkoutCalendarProps) {
   }
 
   return (
-    <div className="bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] text-white p-5 rounded-2xl shadow-lg border border-gray-700 w-full max-w-md">
+    <div className="bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] text-white p-3 rounded-2xl shadow-lg border border-gray-700 w-full max-w-sm">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-2">
         <button
           onClick={prevMonth}
-          className="p-2 rounded-full hover:bg-gray-800 transition"
+          className="p-1 rounded-full hover:bg-gray-800 transition"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={18} />
         </button>
-        <h2 className="text-lg font-semibold tracking-wide">
+        <h2 className="text-base font-semibold tracking-wide">
           {format(currentMonth, "MMMM yyyy")}
         </h2>
         <button
           onClick={nextMonth}
-          className="p-2 rounded-full hover:bg-gray-800 transition"
+          className="p-1 rounded-full hover:bg-gray-800 transition"
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={18} />
         </button>
       </div>
 
       {/* Weekdays */}
-      <div className="grid grid-cols-7 text-xs font-medium text-gray-400 mb-2">
+      <div className="grid grid-cols-7 text-[11px] font-medium text-gray-400 mb-1">
         <div className="text-center">M</div>
         <div className="text-center">T</div>
         <div className="text-center">W</div>
@@ -100,16 +100,16 @@ export default function WorkoutCalendar({ workouts }: WorkoutCalendarProps) {
       </div>
 
       {/* Days */}
-      <div className="space-y-2">{rows}</div>
+      <div className="space-y-1">{rows}</div>
 
       {/* Legend */}
-      <div className="flex justify-center gap-4 text-xs text-gray-400 mt-4">
+      <div className="flex justify-center gap-2 text-[11px] text-gray-400 mt-2">
         <div className="flex items-center gap-1">
-          <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+          <span className="w-2.5 h-2.5 bg-green-500 rounded-full"></span>
           Workout
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-3 h-3 border-2 border-purple-500 rounded-full"></span>
+          <span className="w-2.5 h-2.5 border border-purple-500 rounded-full"></span>
           Today
         </div>
       </div>

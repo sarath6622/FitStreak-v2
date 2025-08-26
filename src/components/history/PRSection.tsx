@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, ChevronDown, ChevronRight } from "lucide-react";
+import { Trophy, ChevronDown, ChevronRight, Dumbbell } from "lucide-react";
 import { useState } from "react";
 import { getMuscleGroup } from "@/lib/exerciseCategories";
 
@@ -12,7 +12,7 @@ export default function PRSection({ prs }: PRSectionProps) {
   const hasPRs = Object.keys(prs).length > 0;
   const [openCategory, setOpenCategory] = useState<string | null>(null);
 
-  // Group PRs by category using getMuscleGroup
+  // Group PRs by category
   const grouped = Object.entries(prs).reduce<
     Record<string, { exercise: string; weight: number }[]>
   >((acc, [exercise, weight]) => {
@@ -29,57 +29,69 @@ export default function PRSection({ prs }: PRSectionProps) {
   };
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+    <div className="bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] border border-gray-700 rounded-2xl p-5 shadow-lg">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-4">
-        <Trophy className="text-yellow-400" size={20} />
-        <h2 className="font-semibold text-white text-lg">Personal Records</h2>
+      <div className="flex items-center gap-2 mb-6">
+        <Trophy className="text-yellow-400 drop-shadow" size={22} />
+        <h2 className="font-semibold text-white text-xl tracking-wide">
+          Personal Records
+        </h2>
       </div>
 
-      {/* PR accordion */}
+      {/* Accordion */}
       {hasPRs ? (
-        <div className="space-y-3">
-          {categories.map((category) => (
-            <div
-              key={category}
-              className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700"
-            >
-              {/* Category header */}
-              <button
-                onClick={() => toggleCategory(category)}
-                className="flex justify-between items-center w-full px-3 py-2 text-left"
+        <div className="space-y-2">
+          {categories.map((category) => {
+            const isOpen = openCategory === category;
+            return (
+              <div
+                key={category}
+                className="rounded-xl border border-gray-700 overflow-hidden bg-gradient-to-r from-gray-800/60 to-gray-900/60 backdrop-blur-md"
               >
-                <span className="text-gray-200 font-medium">{category}</span>
-                {openCategory === category ? (
-                  <ChevronDown className="text-gray-400" size={18} />
-                ) : (
-                  <ChevronRight className="text-gray-400" size={18} />
-                )}
-              </button>
+                {/* Category header */}
+                <button
+                  onClick={() => toggleCategory(category)}
+                  className="flex justify-between items-center w-full px-4 py-3 text-left"
+                >
+                  <span className="text-gray-100 font-medium flex items-center gap-2">
+                    <Dumbbell size={16} className="text-purple-400" />
+                    {category}
+                  </span>
+                  {isOpen ? (
+                    <ChevronDown className="text-gray-400 transition-transform" size={18} />
+                  ) : (
+                    <ChevronRight className="text-gray-400 transition-transform" size={18} />
+                  )}
+                </button>
 
-              {/* Exercises inside category */}
-              {openCategory === category && (
-                <div className="px-3 pb-3 space-y-2 animate-fadeIn">
-                  {grouped[category].map(({ exercise, weight }) => (
-                    <div
-                      key={exercise}
-                      className="flex justify-between items-center bg-gray-700 px-3 py-2 rounded-md"
-                    >
-                      <span className="text-white text-sm truncate">
-                        {exercise}
-                      </span>
-                      <span className="text-yellow-400 font-bold">
-                        {weight} kg
-                      </span>
-                    </div>
-                  ))}
+                {/* Exercises */}
+                <div
+                  className={`transition-all duration-300 ease-in-out ${
+                    isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                  } overflow-hidden`}
+                >
+                  <div className="px-4 pb-3 space-y-2">
+                    {grouped[category].map(({ exercise, weight }) => (
+                      <div
+                        key={exercise}
+                        className="flex justify-between items-center bg-gray-700/50 px-3 py-2 rounded-lg"
+                      >
+                        <span className="text-white text-sm font-medium truncate">
+                          {exercise}
+                        </span>
+                        <span className="text-yellow-300 font-semibold text-sm bg-gray-800 px-2 py-0.5 rounded-md">
+                          {weight} kg
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       ) : (
-        <p className="text-gray-400 text-sm">
+        <p className="text-gray-400 text-sm italic">
           No PRs recorded yet. Start logging workouts!
         </p>
       )}

@@ -61,6 +61,8 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
         typeof data.summary === "string" ? JSON.parse(data.summary) : data.summary;
 
       setMuscleSummaries(summaries);
+      console.log("Summaries",summaries);
+      
       localStorage.setItem("muscleSummary", JSON.stringify(summaries));
       localStorage.setItem("muscleSummaryDate", new Date().toDateString());
     } catch (err: any) {

@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     const prompt = `
       You are a virtual fitness coach. Analyze the following workout history to recommend undertrained muscle groups.
       History contains a list of muscle groups, their last trained date, total days since training (max 7), and total volume.
-
+      These are the major muscle groups : ["Chest", "Back", "Legs", "Shoulders", "Biceps", "Triceps", "Abs", "Calves", "Glutes"]
       Workout history:
       ${historyJson}
 
