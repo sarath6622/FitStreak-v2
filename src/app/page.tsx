@@ -3,19 +3,22 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth, db } from "@/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import Link from "next/link";
 import PRSection from "@/components/history/PRSection";
 import Auth from "@/components/Auth";
 import { calculatePRs } from "@/lib/historyUtils";
 import type { WorkoutSession } from "@/types";
+import type { UserProfile } from "@/types/UserProfile";
 import { Sparkles } from "lucide-react";
 import WorkoutCalendar from "@/components/WorkoutCalendar";
+import StreakTracker from "@/components/StreakTracker";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [prs, setPrs] = useState<Record<string, number>>({});
-  const [workouts, setWorkouts] = useState<WorkoutSession[]>([]); // ✅ added workouts state
+  const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
+  const [weeklyFrequency, setWeeklyFrequency] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,6 +26,7 @@ export default function Home() {
       setUser(firebaseUser);
 
       if (firebaseUser) {
+        // ✅ Fetch workouts
         const workoutsRef = collection(db, "users", firebaseUser.uid, "workouts");
         const snapshot = await getDocs(workoutsRef);
 
@@ -36,8 +40,16 @@ export default function Home() {
           };
         });
 
-        setWorkouts(workoutData); // ✅ store in state
-        setPrs(calculatePRs(workoutData)); // ✅ calculate PRs from same data
+        setWorkouts(workoutData);
+        setPrs(calculatePRs(workoutData));
+
+        // ✅ Fetch profile (for weeklyFrequency)
+        const userRef = doc(db, "users", firebaseUser.uid);
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          const profile = userDoc.data() as UserProfile;
+          setWeeklyFrequency(profile.weeklyFrequency ?? null);
+        }
       }
 
       setLoading(false);
@@ -69,28 +81,36 @@ export default function Home() {
 
   return (
     <div className="bg-black text-white flex flex-col min-h-screen">
-      <main className="flex-grow flex flex-col items-center px-4 pt-6 pb-16">
+      <main className="flex-grow flex flex-col items-center px-4 pt-6 pb-8">
         {/* Welcome card */}
-        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-md w-full max-w-sm p-4 flex flex-col items-center">
-          <h2 className="text-base font-semibold mb-2 flex items-center">
-            {user.photoURL && (
-              <img
-                src={user.photoURL}
-                alt={user.displayName || "Profile"}
-                className="inline-block w-7 h-7 rounded-full border border-gray-600 mr-2"
-              />
-            )}
-            Welcome back{user.displayName ? `, ${user.displayName}` : ""}!
-          </h2>
-          <p className="text-gray-300 mb-3 text-xs text-center leading-relaxed">
-            Track your workouts, view your progress, and achieve your goals!
-          </p>
-          <Link
-            href="/workouts"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium text-xs shadow transition"
-          >
-            Start a Workout
-          </Link>
+{/* Compact Welcome card */}
+<div className="bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] border border-gray-800 rounded-xl shadow-md w-full max-w-sm p-3 flex flex-col items-center text-center space-y-2">
+  {/* Avatar */}
+  {user.photoURL && (
+    <img
+      src={user.photoURL}
+      alt={user.displayName || "Profile"}
+      className="w-10 h-10 rounded-full ring-1 ring-purple-500/70 shadow"
+    />
+  )}
+
+  {/* Title */}
+  <h2 className="text-sm font-medium text-white">
+    Welcome{user.displayName ? `, ${user.displayName}` : ""}!
+  </h2>
+
+  {/* CTA */}
+  <Link
+    href="/workouts"
+    className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:opacity-90 text-white px-3 py-1.5 rounded-lg text-xs shadow transition-all"
+  >
+    Start Workout
+  </Link>
+</div>
+
+        {/* Streak Tracker */}
+        <div className="mt-6 w-full max-w-2xl">
+          <StreakTracker />
         </div>
 
         {/* Workout Calendar */}

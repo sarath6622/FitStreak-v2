@@ -1,6 +1,5 @@
 "use client";
-import React from "react"; 
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   addMonths,
   subMonths,
@@ -27,31 +26,30 @@ export default function WorkoutCalendar({ workouts }: WorkoutCalendarProps) {
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
 
-  // Workout dates (ISO strings -> Date)
   const workoutDates = workouts.map((w) => parseISO(w.date));
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }); // Monday
+  const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
   const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
-const rows: React.ReactNode[] = [];
-let days: React.ReactNode[] = [];
+  const rows: React.ReactNode[] = [];
+  let days: React.ReactNode[] = [];
   let day = startDate;
 
   while (day <= endDate) {
     for (let i = 0; i < 7; i++) {
       const cloneDay = day;
-
       const hasWorkout = workoutDates.some((d) => isSameDay(d, cloneDay));
+      const isToday = isSameDay(cloneDay, new Date());
 
       days.push(
         <div
           key={day.toString()}
-          className={`flex items-center justify-center text-sm rounded-full w-9 h-9
-            ${!isSameMonth(day, monthStart) ? "text-gray-600" : ""}
-            ${isSameDay(day, new Date()) ? "border border-white text-white" : ""}
-            ${hasWorkout ? "bg-green-600 text-white" : ""}
+          className={`flex items-center justify-center w-10 h-10 rounded-full cursor-pointer transition
+            ${!isSameMonth(day, monthStart) ? "text-gray-600" : "text-gray-200"}
+            ${isToday ? "border-2 border-purple-500" : ""}
+            ${hasWorkout ? "bg-green-500 text-white hover:bg-green-600" : "hover:bg-gray-800"}
           `}
         >
           {format(day, "d")}
@@ -62,7 +60,7 @@ let days: React.ReactNode[] = [];
     }
 
     rows.push(
-      <div key={day.toString()} className="grid grid-cols-7 gap-1">
+      <div key={day.toString()} className="grid grid-cols-7 gap-2">
         {days}
       </div>
     );
@@ -70,28 +68,28 @@ let days: React.ReactNode[] = [];
   }
 
   return (
-    <div className="bg-gray-900 text-white p-4 rounded-xl border border-gray-700 w-full">
+    <div className="bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] text-white p-5 rounded-2xl shadow-lg border border-gray-700 w-full max-w-md">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <button
           onClick={prevMonth}
-          className="p-2 rounded-full hover:bg-gray-800"
+          className="p-2 rounded-full hover:bg-gray-800 transition"
         >
           <ChevronLeft size={20} />
         </button>
-        <h2 className="text-lg font-semibold">
-          {format(currentMonth, "MMMM")}
+        <h2 className="text-lg font-semibold tracking-wide">
+          {format(currentMonth, "MMMM yyyy")}
         </h2>
         <button
           onClick={nextMonth}
-          className="p-2 rounded-full hover:bg-gray-800"
+          className="p-2 rounded-full hover:bg-gray-800 transition"
         >
           <ChevronRight size={20} />
         </button>
       </div>
 
       {/* Weekdays */}
-      <div className="grid grid-cols-7 text-xs text-gray-400 mb-2">
+      <div className="grid grid-cols-7 text-xs font-medium text-gray-400 mb-2">
         <div className="text-center">M</div>
         <div className="text-center">T</div>
         <div className="text-center">W</div>
@@ -102,7 +100,19 @@ let days: React.ReactNode[] = [];
       </div>
 
       {/* Days */}
-      {rows}
+      <div className="space-y-2">{rows}</div>
+
+      {/* Legend */}
+      <div className="flex justify-center gap-4 text-xs text-gray-400 mt-4">
+        <div className="flex items-center gap-1">
+          <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+          Workout
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="w-3 h-3 border-2 border-purple-500 rounded-full"></span>
+          Today
+        </div>
+      </div>
     </div>
   );
 }

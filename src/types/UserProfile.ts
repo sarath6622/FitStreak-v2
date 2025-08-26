@@ -9,4 +9,5 @@ export interface UserProfile {
   goal?: string | null;
   createdAt?: any; // Firestore timestamp
   lastLogin?: any; // Firestore timestamp
+  weeklyFrequency?: number; 
 }

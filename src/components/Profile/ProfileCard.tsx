@@ -51,66 +51,66 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         />
 
         {/* Buttons */}
-<div className="mt-6 flex flex-col gap-3">
-  {isEditing ? (
-    <div className="flex gap-3">
-      {/* Save */}
-      <button
-        onClick={onSave}
-        className="flex-1 flex items-center justify-center gap-2 rounded-2xl 
+        <div className="mt-6 flex flex-col gap-3">
+          {isEditing ? (
+            <div className="flex gap-3">
+              {/* Save */}
+              <button
+                onClick={onSave}
+                className="flex-1 flex items-center justify-center gap-2 rounded-2xl 
                    bg-gray-800/50 backdrop-blur-md px-4 py-2 text-sm font-semibold 
                    text-gray-100 border border-gray-700 shadow-md
                    hover:bg-gray-700/60 hover:shadow-lg hover:scale-[1.02] 
                    active:scale-[0.97] transition-all duration-200"
-      >
-        <Save className="w-4 h-4" />
-        Save
-      </button>
+              >
+                <Save className="w-4 h-4" />
+                Save
+              </button>
 
-      {/* Cancel */}
-      <button
-        onClick={onToggleEdit}
-        className="flex-1 flex items-center justify-center gap-2 rounded-2xl 
+              {/* Cancel */}
+              <button
+                onClick={onToggleEdit}
+                className="flex-1 flex items-center justify-center gap-2 rounded-2xl 
                    bg-gray-800/50 backdrop-blur-md px-4 py-2 text-sm font-semibold 
                    text-gray-300 border border-gray-700 shadow-md
                    hover:bg-gray-700/60 hover:shadow-lg hover:scale-[1.02] 
                    active:scale-[0.97] transition-all duration-200"
-      >
-        <X className="w-4 h-4" />
-        Cancel
-      </button>
-    </div>
-  ) : (
-    // Edit Profile
-    <button
-      onClick={onToggleEdit}
-      className="w-full flex items-center justify-center gap-2 rounded-2xl 
+              >
+                <X className="w-4 h-4" />
+                Cancel
+              </button>
+            </div>
+          ) : (
+            // Edit Profile
+            <button
+              onClick={onToggleEdit}
+              className="w-full flex items-center justify-center gap-2 rounded-2xl 
                  bg-gray-800/50 backdrop-blur-md px-4 py-2 text-sm font-semibold 
                  text-gray-100 border border-gray-700 shadow-md
                  hover:bg-gray-700/60 hover:shadow-lg hover:scale-[1.02] 
                  active:scale-[0.97] transition-all duration-200"
-    >
-      <Edit3 className="w-4 h-4" />
-      Edit Profile
-    </button>
-  )}
+            >
+              <Edit3 className="w-4 h-4" />
+              Edit Profile
+            </button>
+          )}
 
-  {profile && (
-    // Sign Out
-    <button
-      onClick={onSignOut}
-      className="w-full flex items-center justify-center gap-2 rounded-2xl 
+          {profile && (
+            // Sign Out
+            <button
+              onClick={onSignOut}
+              className="w-full flex items-center justify-center gap-2 rounded-2xl 
                  bg-gray-800/50 backdrop-blur-md px-4 py-2 text-sm font-semibold 
                  text-gray-100 border border-gray-700 shadow-md
                  hover:bg-gray-700/60 hover:shadow-lg hover:scale-[1.02] 
                  active:scale-[0.97] transition-all duration-200"
-      type="button"
-    >
-      <LogOut className="w-4 h-4" />
-      Sign Out
-    </button>
-  )}
-</div>
+              type="button"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

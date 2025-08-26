@@ -244,3 +244,105 @@ export async function getExerciseNamesByMuscleGroup(
 
   return Array.from(exerciseNames).sort();
 }
+
+import { auth } from "@/firebase";
+
+/**
+ * ✅ Calculate streak based on weekly frequency.
+ *
+ * - Groups dates by ISO week
+ * - A week is "active" if workouts >= weeklyFrequency
+ * - Streak is the total number of consecutive workout days across active weeks
+ */
+export function calculateWeeklyFrequencyStreak(
+  dates: string[],
+  weeklyFrequency: number
+): { currentStreak: number; longestStreak: number; workoutsThisWeek: number } {
+  if (!dates.length) return { currentStreak: 0, longestStreak: 0, workoutsThisWeek: 0 };
+
+  const sorted = dates
+    .map((d) => new Date(d))
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  const getYearWeek = (date: Date) => {
+    const tmp = new Date(date);
+    tmp.setHours(0, 0, 0, 0);
+    tmp.setDate(tmp.getDate() + 3 - ((tmp.getDay() + 6) % 7));
+    const week1 = new Date(tmp.getFullYear(), 0, 4);
+    const weekNum =
+      1 +
+      Math.round(
+        ((tmp.getTime() - week1.getTime()) / 86400000 -
+          3 +
+          ((week1.getDay() + 6) % 7)) /
+          7
+      );
+    return `${tmp.getFullYear()}-W${weekNum}`;
+  };
+
+  // Group by weeks
+  const weeksMap: Record<string, Date[]> = {};
+  sorted.forEach((d) => {
+    const key = getYearWeek(d);
+    if (!weeksMap[key]) weeksMap[key] = [];
+    weeksMap[key].push(d);
+  });
+
+  const sortedWeeks = Object.keys(weeksMap).sort((a, b) => {
+    const [aYear, aWeek] = a.split("-W").map(Number);
+    const [bYear, bWeek] = b.split("-W").map(Number);
+    return aYear === bYear ? aWeek - bWeek : aYear - bYear;
+  });
+
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let consecutiveWeeks = 0;
+
+  const today = new Date();
+  const currentWeekKey = getYearWeek(today);
+  const workoutsThisWeek = weeksMap[currentWeekKey]?.length || 0;
+
+  for (let i = 0; i < sortedWeeks.length; i++) {
+    const weekKey = sortedWeeks[i];
+    const workouts = weeksMap[weekKey].length;
+
+    if (workouts >= weeklyFrequency) {
+      currentStreak += workouts;
+      consecutiveWeeks++;
+    } else {
+      if (weekKey === currentWeekKey) {
+        currentStreak += workouts;
+      } else {
+        currentStreak = 0;
+        consecutiveWeeks = 0;
+      }
+    }
+
+    longestStreak = Math.max(longestStreak, currentStreak);
+  }
+
+  return { currentStreak, longestStreak, workoutsThisWeek };
+}
+
+/**
+ * ✅ Wrapper: fetch Firestore workout dates + weeklyFrequency + calculate streak
+ */
+export async function getStreakData() {
+  const user = auth.currentUser;
+  if (!user) return { currentStreak: 0, longestStreak: 0, workoutsThisWeek: 0, weeklyFrequency: 5 };
+
+  const userDoc = await getDoc(doc(db, "users", user.uid));
+  const userData = userDoc.data();
+  const weeklyFrequency = parseInt(userData?.weeklyFrequency || "5");
+
+  const workoutsRef = collection(db, "users", user.uid, "workouts");
+  const snapshot = await getDocs(workoutsRef);
+
+  const workoutDates: string[] = [];
+  snapshot.forEach((doc) => workoutDates.push(doc.id));
+
+  const { currentStreak, longestStreak, workoutsThisWeek } =
+    calculateWeeklyFrequencyStreak(workoutDates, weeklyFrequency);
+
+  return { currentStreak, longestStreak, workoutsThisWeek, weeklyFrequency };
+}

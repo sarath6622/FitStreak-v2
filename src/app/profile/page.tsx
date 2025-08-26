@@ -8,7 +8,8 @@ import { signOut } from "firebase/auth";
 import ProfileCard from "@/components/Profile/ProfileCard";
 import { UserProfile } from "@/types/UserProfile";
 import { useRouter } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { CheckCircle2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 const ProfilePage: React.FC = () => {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
@@ -83,6 +84,9 @@ const ProfilePage: React.FC = () => {
     if (!firebaseUser || !formData) return;
     await setDoc(doc(db, "users", firebaseUser.uid), formData, { merge: true });
     setProfile(formData);
+    toast.success("Profile updated", {
+      icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
+    });
     setIsEditing(false);
   };
 
