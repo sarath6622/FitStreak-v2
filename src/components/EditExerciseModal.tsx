@@ -61,8 +61,9 @@ export default function EditExerciseModal({
           exercise.muscleGroup,
         ]);
         const exercises = exercisesByGroup[exercise.muscleGroup] || [];
+
         setExerciseOptions(
-          exercises.map((name) => ({ label: name, value: name }))
+          exercises.map((ex) => ({ label: ex.name, value: ex.id }))
         );
       })();
     }
@@ -78,38 +79,38 @@ export default function EditExerciseModal({
     setMuscle(value);
 
     setForm((prev) =>
-      prev ? { ...prev, muscleGroup: value, name: "", id: "" } : null
+      prev ? { ...prev, muscleGroup: value, exerciseId: "", name: "" } : null
     );
 
     const exercisesByGroup = await getExercisesByMuscleGroups([value]);
     const exercises = exercisesByGroup[value] || [];
 
-    setExerciseOptions(exercises.map((name) => ({ label: name, value: name })));
+    setExerciseOptions(exercises.map((ex) => ({ label: ex.name, value: ex.id })));
   };
 
   // Handle exercise change
   const handleExerciseChange = (value: string) => {
-    setForm((prev) =>
-      prev ? { ...prev, name: value, id: value } : null
-    );
+    const selected = exerciseOptions.find((e) => e.value === value);
+    if (selected) {
+      setForm((prev) =>
+        prev ? { ...prev, exerciseId: selected.value, name: selected.label } : null
+      );
+    }
   };
 
-const handleSave = () => {
-  if (!form) return;
+  const handleSave = () => {
+    if (!form) return;
 
-  // ✅ Close modal instantly for fast UX
-  onClose();
+    onClose();
 
-  // ✅ Let parent decide how to handle optimistic update
-  onSave(form)
-    .then(() => {
-      console.log("Exercise updated successfully");
-    })
-    .catch((err) => {
-      console.error("Failed to update exercise:", err);
-      // Parent can rollback state here
-    });
-};
+    onSave(form)
+      .then(() => {
+        console.log("Exercise updated successfully");
+      })
+      .catch((err) => {
+        console.error("Failed to update exercise:", err);
+      });
+  };
 
   // Filter exercise options based on search
   const filteredExercises = exerciseOptions.filter((e) =>
@@ -145,40 +146,30 @@ const handleSave = () => {
               </SelectContent>
             </Select>
 
-{/* Exercise Select + Search */}
-<Select
-  value={
-    exerciseOptions.some((e) => e.value === form?.name) ? form?.name : ""
-  }
-
-  onValueChange={handleExerciseChange}
->
-  <SelectTrigger className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg text-sm sm:text-base">
-    <SelectValue placeholder="Select Exercise" />
-  </SelectTrigger>
-  <SelectContent className="bg-gray-900 border border-gray-700 text-white max-h-72 overflow-y-auto">
-    <div className="p-2">
-      <Input
-        placeholder="Search exercises..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="bg-gray-800 border border-gray-700 text-white text-sm"
-      />
-    </div>
-    {filteredExercises.map((e) => (
-      <SelectItem
-        key={e.value}
-        value={e.value}
-        className="text-sm sm:text-base py-2"
-      >
-        {e.label}
-      </SelectItem>
-    ))}
-    {filteredExercises.length === 0 && (
-      <div className="p-2 text-gray-400 text-sm">No results</div>
-    )}
-  </SelectContent>
-</Select>
+            {/* Exercise Select + Search */}
+            <Select value={form?.exerciseId || ""} onValueChange={handleExerciseChange}>
+              <SelectTrigger className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg text-sm sm:text-base">
+                <SelectValue placeholder="Select Exercise" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border border-gray-700 text-white max-h-72 overflow-y-auto">
+                <div className="p-2">
+                  <Input
+                    placeholder="Search exercises..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="bg-gray-800 border border-gray-700 text-white text-sm"
+                  />
+                </div>
+                {filteredExercises.map((e) => (
+                  <SelectItem key={e.value} value={e.value}>
+                    {e.label}
+                  </SelectItem>
+                ))}
+                {filteredExercises.length === 0 && (
+                  <div className="p-2 text-gray-400 text-sm">No results</div>
+                )}
+              </SelectContent>
+            </Select>
           </div>
         )}
 

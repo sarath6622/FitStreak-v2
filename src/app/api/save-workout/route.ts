@@ -1,7 +1,7 @@
 // app/api/save-workout/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getDocs } from "firebase/firestore";
 
 export async function POST(req: Request) {
   try {
@@ -25,10 +25,25 @@ export async function POST(req: Request) {
     // Reference: users/{uid}/workouts/{date}/plans/{autoId}
     const plansRef = collection(db, "users", userId, "workouts", dateStr, "plans");
 
+    // Fetch master exercises collection so we can map names -> ids
+    const masterExercisesSnap = await getDocs(collection(db, "exercises"));
+    const masterExercises: Record<string, any> = {};
+    masterExercisesSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      masterExercises[data.name.toLowerCase()] = docSnap.id; // map by lowercased name
+    });
+
+    console.log("[save-workout] Master exercises loaded:", masterExercises);
+
     // Normalize workoutPlan into exercises
     const exercises = workoutPlan.map((ex: any, i: number) => {
-      console.log(`[save-workout] Exercise ${i}:`, ex);
+      const matchedId = masterExercises[ex.name?.toLowerCase()] ?? null;
+
+      console.log(`[save-workout] Processing exercise ${i}:`, ex);
+      console.log(`[save-workout] Matched exerciseId for "${ex.name}":`, matchedId);
+
       return {
+        exerciseId: matchedId, // ✅ attach Firestore doc ID
         name: ex.name ?? null,
         muscleGroup: ex.muscleGroup ?? null,
         subGroup: ex.subGroup ?? null,
@@ -42,7 +57,7 @@ export async function POST(req: Request) {
       };
     });
 
-    console.log("[save-workout] Final exercises object:", exercises);
+    console.log("[save-workout] Final exercises object to save:", exercises);
 
     // Save in Firestore
     await addDoc(plansRef, {

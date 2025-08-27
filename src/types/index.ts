@@ -1,23 +1,23 @@
 // src/types/index.ts
-// src/types/index.ts
 export interface Exercise {
-  exerciseId: number;
+  id: string;             // Firestore doc ID
+  exerciseId: string;     // ✅ use string consistently (for selects + backend)
   name: string;
   muscleGroup: string;
   subGroup: string;
   sets: number;
-  reps: number;
+  reps: number | string;  // ✅ reps can sometimes be "8-12"
   repsPerSet: number[];
   weight: number[];
   rest: number;
   intensity: string;
   completed: boolean;
 
-  // 🆕 Add missing fields that UI is expecting
   movementType?: string;
   difficulty?: string;
   secondaryMuscleGroups?: string[];
   equipment?: string[];
+  notes?: string;
 }
 
 export interface WorkoutSession {

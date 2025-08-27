@@ -7,7 +7,7 @@ import { getCompletedExercisesForToday } from "@/services/workoutService";
 import { CheckCircle2 } from "lucide-react";
 import WorkoutModal from "./WorkoutModal";
 import SwipeableCard from "./SwipeableCard";
-import EditExerciseModal from "@/components/EditExerciseModal"; // ✅ new import
+import EditExerciseModal from "@/components/EditExerciseModal";
 import { Exercise } from "@/types";
 import { toast } from "sonner";
 
@@ -39,9 +39,9 @@ function ExerciseCard({
   const progress =
     completedData && exercise.sets > 0
       ? Math.min(
-        100,
-        Math.round((completedData.setsDone / exercise.sets) * 100)
-      )
+          100,
+          Math.round((completedData.setsDone / exercise.sets) * 100)
+        )
       : 0;
 
   const secondary = exercise.secondaryMuscleGroups ?? [];
@@ -75,7 +75,7 @@ function ExerciseCard({
       </div>
 
       <div className="text-xs text-gray-400">
-        {exercise.muscleGroup} • {exercise.subGroup} • {exercise.movementType} ̑
+        {exercise.muscleGroup} • {exercise.subGroup} • {exercise.movementType}
       </div>
 
       <div className="flex flex-wrap gap-1 text-[11px] mt-1">
@@ -121,10 +121,8 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
 
-  // 🆕 keep exercises in state so we can edit/delete
   const [exercises, setExercises] = useState<Exercise[]>(plan.exercises);
 
-  // 🆕 edit modal state
   const [editOpen, setEditOpen] = useState(false);
   const [exerciseToEdit, setExerciseToEdit] = useState<Exercise | null>(null);
 
@@ -134,11 +132,13 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
   }
 
 async function handleSave(updatedExercise: Exercise) {
-  if (!user) return;
+  if (!user || !exerciseToEdit) return;
 
   const dateStr = new Date().toISOString().split("T")[0];
+  const oldExerciseId = exerciseToEdit.exerciseId; // 🔑 keep old one
+
   const exerciseIndex = exercises.findIndex(
-    (ex) => ex.name === exerciseToEdit?.name
+    (ex) => ex.exerciseId === oldExerciseId
   );
   if (exerciseIndex === -1) return;
 
@@ -157,8 +157,8 @@ async function handleSave(updatedExercise: Exercise) {
         userId: user.uid,
         dateStr,
         planId: plan.id,
-        exerciseIndex,
-        updatedExercise,
+        oldExerciseId,         // 🔑 used for lookup
+        updatedExercise,       // 🔑 new full object
       }),
     });
 
@@ -167,35 +167,11 @@ async function handleSave(updatedExercise: Exercise) {
       throw new Error(data.error || "Failed to save exercise");
     }
 
-    // 🔔 show toast with diff
-    const changes: string[] = [];
-    if (oldExercise.name !== updatedExercise.name) {
-      changes.push(`Name: "${oldExercise.name}" → "${updatedExercise.name}"`);
-    }
-
-    if (oldExercise.muscleGroup !== updatedExercise.muscleGroup) {
-      changes.push(
-        `Muscle Group: "${oldExercise.muscleGroup}" → "${updatedExercise.muscleGroup}"`
-      );
-    }
-
-    if (oldExercise.sets !== updatedExercise.sets) {
-      changes.push(`Sets: ${oldExercise.sets} → ${updatedExercise.sets}`);
-    }
-
-    if (oldExercise.reps !== updatedExercise.reps) {
-      changes.push(`Reps: ${oldExercise.reps} → ${updatedExercise.reps}`);
-    }
-
-    toast.success(`Exercise updated: ${updatedExercise.name}`, {
-      description: changes.length
-        ? changes.join(" • ")
-        : "No major fields changed",
-    });
+    toast.success(`Exercise updated: ${updatedExercise.name}`);
   } catch (err) {
     console.error("Save failed:", err);
 
-    // ❌ Rollback on failure
+    // ❌ Rollback
     setExercises((prev) =>
       prev.map((ex, idx) => (idx === exerciseIndex ? oldExercise : ex))
     );
@@ -208,11 +184,11 @@ async function handleSave(updatedExercise: Exercise) {
 }
 
   function handleDelete(exercise: Exercise) {
-    setExercises((prev) => prev.filter((ex) => ex.name !== exercise.name));
+    setExercises((prev) => prev.filter((ex) => ex.exerciseId !== exercise.exerciseId));
     // TODO: remove from Firestore here
   }
 
-  // 🔑 subscribe to auth state
+  // auth state + completed logs
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
@@ -230,12 +206,12 @@ async function handleSave(updatedExercise: Exercise) {
   }, []);
 
   const handleWorkoutSaved = (
-    exerciseName: string,
+    exerciseId: string,
     data: { sets: { weight: number; reps: number; done: boolean }[] }
   ) => {
     setCompletedExercises((prev) => ({
       ...prev,
-      [exerciseName]: {
+      [exerciseId]: {
         setsDone: data.sets.filter((s) => s.done || s.weight > 0).length,
         repsDone: data.sets.reduce(
           (acc, s) =>
@@ -277,36 +253,33 @@ async function handleSave(updatedExercise: Exercise) {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {filteredExercises.map((exercise) => (
             <SwipeableCard
-              key={exercise.name}
+              key={exercise.exerciseId}
               onEdit={() => handleEdit(exercise)}
               onDelete={() => handleDelete(exercise)}
             >
               <ExerciseCard
                 exercise={exercise}
-                selected={selectedExercise === exercise.name}
-                onSelect={() => setSelectedExercise(exercise.name)}
-                completedData={completedExercises[exercise.name]}
+                selected={selectedExercise === exercise.exerciseId}
+                onSelect={() => setSelectedExercise(exercise.exerciseId)}
+                completedData={completedExercises[exercise.exerciseId]}
               />
             </SwipeableCard>
           ))}
         </div>
       )}
 
-      {/* workout modal (logging sets/reps) */}
+      {/* workout modal */}
       {selectedExercise && (
         <WorkoutModal
           isOpen={!!selectedExercise}
           onClose={() => setSelectedExercise(null)}
-          exercise={exercises.find((ex) => ex.name === selectedExercise)}
-          onWorkoutSaved={(data) =>
-            handleWorkoutSaved(selectedExercise, data)
-          }
-
+          exercise={exercises.find((ex) => ex.exerciseId === selectedExercise)}
+          onWorkoutSaved={(data) => handleWorkoutSaved(selectedExercise, data)}
           completedData={completedExercises[selectedExercise]}
         />
       )}
 
-      {/* edit modal (editing exercise info) */}
+      {/* edit modal */}
       {exerciseToEdit && (
         <EditExerciseModal
           open={editOpen}

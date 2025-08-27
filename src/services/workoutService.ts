@@ -357,7 +357,7 @@ function toTitleCase(s: string) {
 
 export async function getExercisesByMuscleGroups(
   muscleGroups: string[]
-): Promise<Record<string, string[]>> {
+): Promise<Record<string, { id: string; name: string }[]>> {
   // Normalize requested groups and remember the desired display casing
   const requested = muscleGroups.map(g => g.trim()).filter(Boolean);
   if (requested.length === 0) return {};
@@ -373,7 +373,7 @@ export async function getExercisesByMuscleGroups(
   const snapshot = await getDocs(collection(db, "exercises"));
 
   // Group by the *display* label that corresponds to the lowercased key
-  const grouped: Record<string, Set<string>> = {};
+  const grouped: Record<string, { id: string; name: string }[]> = {};
 
   snapshot.forEach(doc => {
     const data = doc.data() as { muscleGroup?: string; name?: string };
@@ -383,17 +383,18 @@ export async function getExercisesByMuscleGroups(
     if (!wantedSet.has(groupLow)) return;
 
     const displayKey = lowerToDisplay.get(groupLow)!; // e.g., "Chest"
-    if (!grouped[displayKey]) grouped[displayKey] = new Set();
+    if (!grouped[displayKey]) grouped[displayKey] = [];
 
-    // Store display-friendly exercise name
-    grouped[displayKey].add(toTitleCase(String(data.name)));
+    grouped[displayKey].push({
+      id: doc.id, // ✅ Firestore document ID
+      name: toTitleCase(String(data.name)), // ✅ Title cased display name
+    });
   });
 
-  // Convert Set → Array + sort
-  const result: Record<string, string[]> = {};
+  // Sort each group by name
   for (const key in grouped) {
-    result[key] = Array.from(grouped[key]).sort((a, b) => a.localeCompare(b));
+    grouped[key].sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  return result;
+  return grouped;
 }
