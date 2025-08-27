@@ -346,3 +346,54 @@ export async function getStreakData() {
 
   return { currentStreak, longestStreak, workoutsThisWeek, weeklyFrequency };
 }
+
+function toTitleCase(s: string) {
+  return s
+    .toLowerCase()
+    .split(/\s+/)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+export async function getExercisesByMuscleGroups(
+  muscleGroups: string[]
+): Promise<Record<string, string[]>> {
+  // Normalize requested groups and remember the desired display casing
+  const requested = muscleGroups.map(g => g.trim()).filter(Boolean);
+  if (requested.length === 0) return {};
+
+  const lowerToDisplay = new Map<string, string>();
+  for (const g of requested) {
+    const low = g.toLowerCase();
+    if (!lowerToDisplay.has(low)) lowerToDisplay.set(low, g); // preserve caller's casing
+  }
+
+  const wantedSet = new Set(Array.from(lowerToDisplay.keys()));
+
+  const snapshot = await getDocs(collection(db, "exercises"));
+
+  // Group by the *display* label that corresponds to the lowercased key
+  const grouped: Record<string, Set<string>> = {};
+
+  snapshot.forEach(doc => {
+    const data = doc.data() as { muscleGroup?: string; name?: string };
+    if (!data?.muscleGroup || !data?.name) return;
+
+    const groupLow = String(data.muscleGroup).toLowerCase();
+    if (!wantedSet.has(groupLow)) return;
+
+    const displayKey = lowerToDisplay.get(groupLow)!; // e.g., "Chest"
+    if (!grouped[displayKey]) grouped[displayKey] = new Set();
+
+    // Store display-friendly exercise name
+    grouped[displayKey].add(toTitleCase(String(data.name)));
+  });
+
+  // Convert Set → Array + sort
+  const result: Record<string, string[]> = {};
+  for (const key in grouped) {
+    result[key] = Array.from(grouped[key]).sort((a, b) => a.localeCompare(b));
+  }
+
+  return result;
+}

@@ -135,65 +135,65 @@ export default function WorkoutTimeline({ workouts }: Props) {
               return (
                 <div key={i} className="border-b border-gray-700 last:border-0">
                   {/* Row */}
-<div
-  onClick={() => toggleAccordion(exerciseId)}
-  className="grid grid-cols-[60%_20%_20%] items-center py-1 cursor-pointer hover:bg-gray-800/40 rounded-lg px-2"
->
-  {/* Col 1: exercise */}
-  <div className="flex items-center gap-2 min-w-0">
-    <div className={`w-2.5 h-2.5 rounded-full ${colorClass}`} />
-    <span className="text-sm text-white truncate">{ex.name}</span>
-  </div>
+                  <div
+                    onClick={() => toggleAccordion(exerciseId)}
+                    className="grid grid-cols-[60%_20%_20%] items-center py-1 cursor-pointer hover:bg-gray-800/40 rounded-lg px-2"
+                  >
+                    {/* Col 1: exercise */}
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className={`w-2.5 h-2.5 rounded-full ${colorClass}`} />
+                      <span className="text-sm text-white truncate">{ex.name}</span>
+                    </div>
 
-  {/* Col 2: trend */}
-  <div className="flex justify-center whitespace-nowrap">
-    {trend ? (
-      <div className="flex items-center gap-0.5 text-xs">
-        {trend}
-      </div>
-    ) : (
-      <span className="text-xs text-transparent">--</span>
-    )}
-  </div>
+                    {/* Col 2: trend */}
+                    <div className="flex justify-center whitespace-nowrap">
+                      {trend ? (
+                        <div className="flex items-center gap-0.5 text-xs">
+                          {trend}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-transparent">--</span>
+                      )}
+                    </div>
 
-  {/* Col 3: 1RM */}
-  <div className="flex items-center justify-end gap-1 whitespace-nowrap">
-    <span className="text-xs text-gray-300 font-mono">
-      1RM{" "}
-      <span className="font-bold text-white">
-        {oneRM > 0 ? `${oneRM}kg` : "-"}
-      </span>
-    </span>
-    {isOpen ? (
-      <ChevronUp className="w-4 h-4 text-gray-400" />
-    ) : (
-      <ChevronDown className="w-4 h-4 text-gray-400" />
-    )}
-  </div>
-</div>
+                    {/* Col 3: 1RM */}
+                    <div className="flex items-center justify-end gap-1 whitespace-nowrap">
+                      <span className="text-xs text-gray-300 font-mono">
+                        1RM{" "}
+                        <span className="font-bold text-white">
+                          {oneRM > 0 ? `${oneRM}kg` : "-"}
+                        </span>
+                      </span>
+                      {isOpen ? (
+                        <ChevronUp className="w-4 h-4 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                      )}
+                    </div>
+                  </div>
 
-{/* Accordion content */}
-{isOpen && (
-  <div className="pl-6 pr-2 py-2 space-y-1 text-xs text-gray-300">
-    {/* Full exercise name */}
-    <div className="mb-2 text-sm font-medium text-white">
-      {ex.name}
-    </div>
+                  {/* Accordion content */}
+                  {isOpen && (
+                    <div className="pl-6 pr-2 py-2 space-y-1 text-xs text-gray-300">
+                      {/* Full exercise name */}
+                      <div className="mb-2 text-sm font-medium text-white">
+                        {ex.name}
+                      </div>
 
-    {/* Sets/reps */}
-    {ex.weight.map((wVal, sIdx) => (
-      <div
-        key={sIdx}
-        className="flex justify-between border-b border-gray-700 last:border-0 pb-1"
-      >
-        <span>Set {sIdx + 1}</span>
-        <span>
-          {wVal}kg × {ex.repsPerSet?.[sIdx] || 0} reps
-        </span>
-      </div>
-    ))}
-  </div>
-)}
+                      {/* Sets/reps */}
+                      {ex.weight.map((wVal, sIdx) => (
+                        <div
+                          key={sIdx}
+                          className="flex justify-between border-b border-gray-700 last:border-0 pb-1"
+                        >
+                          <span>Set {sIdx + 1}</span>
+                          <span>
+                            {wVal}kg × {ex.repsPerSet?.[sIdx] || 0} reps
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
