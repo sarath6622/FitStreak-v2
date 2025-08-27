@@ -165,8 +165,8 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
   const canGenerate = selectedMuscles.length > 0 && !isGenerating && !isAnalyzing;
 
   return (
-    <div className="max-w-md mx-auto p-5 bg-gray-900 rounded-xl shadow-lg border border-gray-700">
-      <h2 className="flex items-center text-blue-400 font-semibold text-lg mb-4">
+<div className="max-w-md mx-auto p-5 rounded-xl shadow-lg border border-gray-800 bg-gradient-to-b from-gray-900 to-black">
+<h2 className="flex items-center text-lg mb-4 font-semibold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
         Suggested for You
         {/* Re-Analyze Button (outside the pills) */}
         <button
@@ -202,9 +202,9 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
                     disabled={isGenerating || isAnalyzing}
                     className={clsx(
                       "px-3 py-1 rounded-full text-sm font-medium transition-all",
-                      selected
-                        ? "bg-blue-600 text-white ring-2 ring-blue-300 scale-105"
-                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                     selected
+  ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg ring-2 ring-blue-400"
+  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                     )}
                     title={`Last trained ${m.daysAgo} day${m.daysAgo === 1 ? "" : "s"} ago (${m.lastTrained})`}
                   >
@@ -279,7 +279,7 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
 
       {/* Workout Plan Display */}
       {workoutPlan && (
-        <div className="bg-gray-800 rounded-lg p-4 shadow text-gray-100 mb-3">
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 shadow">
           <h3 className="text-blue-300 font-semibold text-base mb-2">
             Workout plan for {selectedMuscles.join(", ")}:
           </h3>

@@ -46,11 +46,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black overscroll-contain scroll-smooth dark`}
       suppressHydrationWarning
     >
       <head>
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
@@ -78,7 +79,7 @@ export default function RootLayout({
         />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
