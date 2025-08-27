@@ -5,7 +5,8 @@ import { doc, updateDoc } from "firebase/firestore";
 
 export async function POST(req: Request) {
   try {
-    const { userId, dateStr, planId, exerciseIndex, updatedExercise } = await req.json();
+    const { userId, dateStr, planId, exerciseIndex, updatedExercise } =
+      await req.json();
 
     if (
       !userId ||
@@ -17,9 +18,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const planRef = doc(db, "users", userId, "workouts", dateStr, "plans", planId);
+    const planRef = doc(
+      db,
+      "users",
+      userId,
+      "workouts",
+      dateStr,
+      "plans",
+      planId
+    );
 
-    // Build field paths like exercises.0.name, exercises.0.reps, etc.
+    // Create dynamic update fields
     const updates: Record<string, any> = {};
     Object.entries(updatedExercise).forEach(([key, value]) => {
       updates[`exercises.${exerciseIndex}.${key}`] = value;
@@ -27,7 +36,11 @@ export async function POST(req: Request) {
 
     await updateDoc(planRef, updates);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      exerciseIndex,
+      updatedExercise,
+    });
   } catch (err: any) {
     console.error("[edit-exercise] Error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });

@@ -133,75 +133,79 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
     setEditOpen(true);
   }
 
-  async function handleSave(updatedExercise: Exercise) {
-    if (!user) return;
+async function handleSave(updatedExercise: Exercise) {
+  if (!user) return;
 
-    try {
-      const dateStr = new Date().toISOString().split("T")[0];
-      const exerciseIndex = exercises.findIndex(
-        (ex) => ex.name === exerciseToEdit?.name
-      );
-      const oldExercise = exercises[exerciseIndex];
+  const dateStr = new Date().toISOString().split("T")[0];
+  const exerciseIndex = exercises.findIndex(
+    (ex) => ex.name === exerciseToEdit?.name
+  );
+  if (exerciseIndex === -1) return;
 
-      const res = await fetch("/api/edit-exercise", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user.uid,
-          dateStr,
-          planId: plan.id,
-          exerciseIndex,
-          updatedExercise,
-        }),
-      });
+  const oldExercise = exercises[exerciseIndex];
 
-      if (!res.ok) {
-        throw new Error("Failed to save exercise");
-      }
+  // ✅ Optimistically update local state
+  setExercises((prev) =>
+    prev.map((ex, idx) => (idx === exerciseIndex ? updatedExercise : ex))
+  );
 
-      // ✅ update local state
-      setExercises((prev) =>
-        prev.map((ex, idx) =>
-          idx === exerciseIndex ? updatedExercise : ex
-        )
-      );
+  try {
+    const res = await fetch("/api/edit-exercise", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user.uid,
+        dateStr,
+        planId: plan.id,
+        exerciseIndex,
+        updatedExercise,
+      }),
+    });
 
-      // 🔔 show toast with diff
-      const changes: string[] = [];
-      if (oldExercise.name !== updatedExercise.name) {
-        changes.push(`Name: "${oldExercise.name}" → "${updatedExercise.name}"`);
-      }
-
-      if (oldExercise.muscleGroup !== updatedExercise.muscleGroup) {
-        changes.push(
-          `Muscle Group: "${oldExercise.muscleGroup}" → "${updatedExercise.muscleGroup}"`
-        );
-      }
-
-      if (oldExercise.sets !== updatedExercise.sets) {
-        changes.push(`Sets: ${oldExercise.sets} → ${updatedExercise.sets}`);
-      }
-
-      if (oldExercise.reps !== updatedExercise.reps) {
-        changes.push(`Reps: ${oldExercise.reps} → ${updatedExercise.reps}`);
-      }
-
-      toast.success(
-        `Exercise updated: ${updatedExercise.name}`,
-        {
-          description: changes.length
-            ? changes.join(" • ")
-            : "No major fields changed",
-        }
-      );
-    } catch (err) {
-      console.error("Save failed:", err);
-      toast.error("Failed to save exercise");
-    } finally {
-      setEditOpen(false);
-      setExerciseToEdit(null);
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "Failed to save exercise");
     }
+
+    // 🔔 show toast with diff
+    const changes: string[] = [];
+    if (oldExercise.name !== updatedExercise.name) {
+      changes.push(`Name: "${oldExercise.name}" → "${updatedExercise.name}"`);
+    }
+
+    if (oldExercise.muscleGroup !== updatedExercise.muscleGroup) {
+      changes.push(
+        `Muscle Group: "${oldExercise.muscleGroup}" → "${updatedExercise.muscleGroup}"`
+      );
+    }
+
+    if (oldExercise.sets !== updatedExercise.sets) {
+      changes.push(`Sets: ${oldExercise.sets} → ${updatedExercise.sets}`);
+    }
+
+    if (oldExercise.reps !== updatedExercise.reps) {
+      changes.push(`Reps: ${oldExercise.reps} → ${updatedExercise.reps}`);
+    }
+
+    toast.success(`Exercise updated: ${updatedExercise.name}`, {
+      description: changes.length
+        ? changes.join(" • ")
+        : "No major fields changed",
+    });
+  } catch (err) {
+    console.error("Save failed:", err);
+
+    // ❌ Rollback on failure
+    setExercises((prev) =>
+      prev.map((ex, idx) => (idx === exerciseIndex ? oldExercise : ex))
+    );
+
+    toast.error("Failed to save exercise");
+  } finally {
+    setEditOpen(false);
+    setExerciseToEdit(null);
   }
+}
 
   function handleDelete(exercise: Exercise) {
     setExercises((prev) => prev.filter((ex) => ex.name !== exercise.name));

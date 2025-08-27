@@ -95,22 +95,20 @@ export default function EditExerciseModal({
   };
 
 const handleSave = () => {
-  if (form) {
-    // ✅ close modal immediately
-    onClose();
+  if (!form) return;
 
-    // ✅ fire the save in background (don’t block UI)
-    onSave(form)
-      .then(() => {
-        console.log("Exercise updated successfully");
-        // optional: add a toast/snackbar
-        // toast.success("Exercise updated!");
-      })
-      .catch((err) => {
-        console.error("Failed to update exercise:", err);
-        // toast.error("Failed to update exercise");
-      });
-  }
+  // ✅ Close modal instantly for fast UX
+  onClose();
+
+  // ✅ Let parent decide how to handle optimistic update
+  onSave(form)
+    .then(() => {
+      console.log("Exercise updated successfully");
+    })
+    .catch((err) => {
+      console.error("Failed to update exercise:", err);
+      // Parent can rollback state here
+    });
 };
 
   // Filter exercise options based on search
