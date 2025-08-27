@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const viewport: Viewport = {
   maximumScale: 1,
-  userScalable: false,
+  userScalable: true,
   viewportFit: "cover",
   themeColor: "black",
 };
