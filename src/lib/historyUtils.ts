@@ -4,8 +4,8 @@ import type { WorkoutSession } from "@/types";
 export function calculatePRs(workouts: WorkoutSession[]) {
   const prs: Record<string, number> = {};
 
-  workouts.forEach(workout => {
-    workout.exercises.forEach(ex => {
+  workouts.forEach((workout) => {
+    workout.exercises.forEach((ex) => {
       ex.weight.forEach((w, idx) => {
         const reps = ex.repsPerSet?.[idx] ?? 0;
 
@@ -54,7 +54,7 @@ export const getExerciseChartData = (
       return {
         date: formatDate(session.date),
         topWeight: Math.max(...ex.weight),
-        volume: ex.weight.reduce((sum, w) => sum + w * ex.reps, 0),
+        volume: ex.weight.reduce((sum, w) => sum + w * Number(ex.reps), 0),
       };
     })
     .filter(Boolean); // remove nulls
