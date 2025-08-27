@@ -94,12 +94,24 @@ export default function EditExerciseModal({
     );
   };
 
-  const handleSave = async () => {
-    if (form) {
-      await onSave(form);
-      onClose();
-    }
-  };
+const handleSave = () => {
+  if (form) {
+    // ✅ close modal immediately
+    onClose();
+
+    // ✅ fire the save in background (don’t block UI)
+    onSave(form)
+      .then(() => {
+        console.log("Exercise updated successfully");
+        // optional: add a toast/snackbar
+        // toast.success("Exercise updated!");
+      })
+      .catch((err) => {
+        console.error("Failed to update exercise:", err);
+        // toast.error("Failed to update exercise");
+      });
+  }
+};
 
   // Filter exercise options based on search
   const filteredExercises = exerciseOptions.filter((e) =>

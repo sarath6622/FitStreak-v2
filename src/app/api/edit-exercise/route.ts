@@ -1,23 +1,32 @@
 // app/api/edit-exercise/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 
 export async function POST(req: Request) {
   try {
     const { userId, dateStr, planId, exerciseIndex, updatedExercise } = await req.json();
 
-    const planRef = doc(db, "users", userId, "workouts", dateStr, "plans", planId);
-    const snap = await getDoc(planRef);
-    if (!snap.exists()) {
-      return NextResponse.json({ error: "Plan not found" }, { status: 404 });
+    if (
+      !userId ||
+      !dateStr ||
+      !planId ||
+      typeof exerciseIndex !== "number" ||
+      !updatedExercise
+    ) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const data = snap.data();
-    const exercises = data.exercises || [];
-    exercises[exerciseIndex] = { ...exercises[exerciseIndex], ...updatedExercise };
+    const planRef = doc(db, "users", userId, "workouts", dateStr, "plans", planId);
 
-    await updateDoc(planRef, { exercises });
+    // Build field paths like exercises.0.name, exercises.0.reps, etc.
+    const updates: Record<string, any> = {};
+    Object.entries(updatedExercise).forEach(([key, value]) => {
+      updates[`exercises.${exerciseIndex}.${key}`] = value;
+    });
+
+    await updateDoc(planRef, updates);
+
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("[edit-exercise] Error:", err);
