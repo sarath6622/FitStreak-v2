@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Pencil, Trash2 } from "lucide-react";
+import clsx from "clsx";
 
 interface SwipeableCardProps {
   children: React.ReactNode;
@@ -14,7 +15,7 @@ export default function SwipeableCard({ children, onEdit, onDelete }: SwipeableC
   const [isDragging, setIsDragging] = useState(false);
   const startX = useRef(0);
 
-  const actionWidth = 70; // much tighter space since stacked buttons
+  const actionWidth = 80; // slightly wider for breathing room
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsDragging(true);
@@ -25,7 +26,7 @@ export default function SwipeableCard({ children, onEdit, onDelete }: SwipeableC
     if (!isDragging) return;
     const deltaX = e.touches[0].clientX - startX.current;
 
-    // Allow left swipe to open, right swipe to close
+    // Allow left swipe to reveal actions
     if (deltaX < 0 || (translateX < 0 && deltaX > 0)) {
       setTranslateX(Math.min(0, Math.max(deltaX, -actionWidth)));
     }
@@ -42,25 +43,35 @@ export default function SwipeableCard({ children, onEdit, onDelete }: SwipeableC
 
   return (
     <div className="relative w-full overflow-hidden">
-      {/* Action buttons stacked on the right */}
-      <div className="absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-1 pr-1 w-[60px]">
+      {/* Action buttons (revealed on swipe) */}
+      <div className="absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-3 pr-3 w-[70px]">
         <button
           onClick={onEdit}
-          className="bg-blue-600 text-white p-2 rounded-md text-[10px] flex items-center justify-center w-10 h-10"
+          className={clsx(
+            "flex items-center justify-center w-11 h-11 rounded-xl shadow-md transition active:scale-95",
+            "bg-gradient-to-br from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white"
+          )}
         >
-          <Pencil size={14} />
+          <Pencil size={16} />
         </button>
         <button
           onClick={onDelete}
-          className="bg-red-600 text-white p-2 rounded-md text-[10px] flex items-center justify-center w-10 h-10"
+          className={clsx(
+            "flex items-center justify-center w-11 h-11 rounded-xl shadow-md transition active:scale-95",
+            "bg-gradient-to-br from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white"
+          )}
         >
-          <Trash2 size={14} />
+          <Trash2 size={16} />
         </button>
       </div>
 
       {/* Foreground content (swipeable) */}
       <div
-        className="relative bg-gray-800 border border-gray-700 rounded-xl p-0 transition-transform duration-300"
+        className={clsx(
+          "relative transition-transform duration-300",
+          "bg-gray-900 border border-gray-800 rounded-2xl shadow-lg",
+          "active:scale-[0.98]"
+        )}
         style={{ transform: `translateX(${translateX}px)` }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

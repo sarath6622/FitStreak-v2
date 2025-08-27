@@ -54,6 +54,7 @@ function ExerciseCard({
       aria-label={`Select ${exercise.name} exercise`}
       className={`
         relative w-full bg-gray-800 border rounded-xl p-2 text-white text-left transition-transform
+        bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] rounded-xl p-4 shadow-md border border-gray-800 text-center
         ${selected ? "border-yellow-500 scale-105 shadow-lg" : "border-gray-700 hover:border-yellow-500"}
         focus:outline-none focus:ring-2 focus:ring-yellow-500 flex flex-col gap-2
       `}
@@ -240,7 +241,7 @@ async function handleSave(updatedExercise: Exercise) {
         placeholder="Search exercises..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full p-2 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-yellow-500"
+        className="w-full p-2 rounded-md bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] border border-gray-700 text-white focus:outline-none focus:border-yellow-500"
         aria-label="Search exercises"
       />
 

@@ -165,7 +165,7 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
   const canGenerate = selectedMuscles.length > 0 && !isGenerating && !isAnalyzing;
 
   return (
-<div className="max-w-md mx-auto p-5 rounded-xl shadow-lg border border-gray-800 bg-gradient-to-b from-gray-900 to-black">
+<div className="max-w-md mx-auto p-5 rounded-xl shadow-lg border border-gray-800 bg-gradient-to-b from-[#0d0f1a] to-[#161a2b]">
 <h2 className="flex items-center text-lg mb-4 font-semibold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
         Suggested for You
         {/* Re-Analyze Button (outside the pills) */}
@@ -183,11 +183,11 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
       </h2>
 
       {/* Muscle Group Pills */}
-      <div className="mb-5">
+      <div className="mb-5 bg-gradient-to-b from-[#0d0f1a] to-[#161a2b]">
         <h4 className="text-sm font-semibold text-gray-300 mb-2 tracking-wide">
           Choose Muscle Groups
         </h4>
-        <div className="flex flex-wrap gap-2 p-2 bg-gray-800 border border-gray-700 rounded-lg">
+        <div className="flex flex-wrap gap-2 p-2 bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] border border-gray-700 rounded-lg">
           {isAnalyzing ? (
             <p className="text-blue-300 text-sm animate-pulse">Analyzing workout history...</p>
           ) : (

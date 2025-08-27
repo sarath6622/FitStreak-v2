@@ -58,7 +58,7 @@ export default function WorkoutPage() {
         {/* ✅ Show Today's Workouts */}
         {todayMuscleGroups.length > 0 && (
           <Link href="/workouts/todays-workouts">
-            <section className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700 hover:shadow-xl hover:scale-[1.01] transition-all cursor-pointer backdrop-blur-md">
+            <section className="bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] rounded-2xl p-6 shadow-lg border border-gray-700 hover:shadow-xl hover:scale-[1.01] transition-all cursor-pointer backdrop-blur-md">
               <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
                 <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 Today's Workouts
@@ -75,7 +75,7 @@ export default function WorkoutPage() {
         )}
 
         {/* All Muscle Groups */}
-        <section className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700 backdrop-blur-md mt-6">
+        <section className="bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] rounded-2xl p-6 shadow-lg border border-gray-700 backdrop-blur-md mt-6">
           <h2 className="text-lg font-semibold text-white mb-4 tracking-wide">
             All Muscle Groups
           </h2>
