@@ -200,6 +200,8 @@ async function handleSave(updatedExercise: Exercise) {
           firebaseUser.uid,
           today
         );
+        console.log("Completed exercises for today:", completed);
+        
         setCompletedExercises(completed);
       }
     });
@@ -252,20 +254,24 @@ async function handleSave(updatedExercise: Exercise) {
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-          {filteredExercises.map((exercise) => (
-            <SwipeableCard
-              key={exercise.exerciseId}
-              onEdit={() => handleEdit(exercise)}
-              onDelete={() => handleDelete(exercise)}
-            >
-              <ExerciseCard
-                exercise={exercise}
-                selected={selectedExercise === exercise.exerciseId}
-                onSelect={() => setSelectedExercise(exercise.exerciseId)}
-                completedData={completedExercises[exercise.exerciseId]}
-              />
-            </SwipeableCard>
-          ))}
+{filteredExercises.map((exercise) => {
+  const completedData = completedExercises[exercise.name]; // ✅ safe lookup by name
+
+  return (
+    <SwipeableCard
+      key={exercise.exerciseId}
+      onEdit={() => handleEdit(exercise)}
+      onDelete={() => handleDelete(exercise)}
+    >
+      <ExerciseCard
+        exercise={exercise}
+        selected={selectedExercise === exercise.exerciseId}
+        onSelect={() => setSelectedExercise(exercise.exerciseId)}
+        completedData={completedData}
+      />
+    </SwipeableCard>
+  );
+})}
         </div>
       )}
 
