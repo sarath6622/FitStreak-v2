@@ -11,8 +11,6 @@ export const getWorkoutForExercise = async (uid: string, date: string, exerciseN
   const data = docSnap.data();
   const exercise = data.exercises.find((ex: any) => ex.name === exerciseName);
 
-  console.log("Fetched workout data:", data);
-  
   return {
     duration: data.duration,
     rest: data.rest,

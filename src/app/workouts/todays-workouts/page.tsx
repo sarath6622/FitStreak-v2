@@ -12,7 +12,8 @@ export default function TodaysWorkoutsPage() {
       {/* Sticky Header */}
       <header className="sticky top-0 z-40 flex items-center gap-3 bg-black px-3 py-2 border-b border-gray-800 shadow-sm">
         <button
-          onClick={() => router.back()}
+          // 👇 add query param to skip redirect check
+          onClick={() => router.push("/workouts?from=today")}
           className="flex items-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800 px-3 py-1 rounded-full transition"
         >
           <ArrowLeft size={16} /> Back

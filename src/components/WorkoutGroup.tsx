@@ -132,62 +132,56 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
     setEditOpen(true);
   }
 
-async function handleSave(updatedExercise: Exercise) {
-  if (!user || !exerciseToEdit) return;
+  async function handleSave(updatedExercise: Exercise) {
+    if (!user || !exerciseToEdit) return;
 
-  const dateStr = new Date().toISOString().split("T")[0];
-  const oldExerciseId = exerciseToEdit.exerciseId; // 🔑 keep old one
+    const dateStr = new Date().toISOString().split("T")[0];
+    const oldName = exerciseToEdit.name; // 🔑 use name for lookup
 
-  const exerciseIndex = exercises.findIndex(
-    (ex) => ex.exerciseId === oldExerciseId
-  );
-  if (exerciseIndex === -1) return;
+    try {
+      const res = await fetch("/api/edit-exercise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.uid,
+          dateStr,
+          planId: plan.id,
+          oldName,
+          updatedExercise,
+        }),
+      });
 
-  const oldExercise = exercises[exerciseIndex];
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to save exercise");
+      }
 
-  // ✅ Optimistically update local state
-  setExercises((prev) =>
-    prev.map((ex, idx) => (idx === exerciseIndex ? updatedExercise : ex))
-  );
+      // ✅ update exercises from API
+      setExercises(data.exercises);
 
-  try {
-    const res = await fetch("/api/edit-exercise", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: user.uid,
-        dateStr,
-        planId: plan.id,
-        oldExerciseId,         // 🔑 used for lookup
-        updatedExercise,       // 🔑 new full object
-      }),
-    });
+      // ✅ re-fetch completions to update progress bars immediately
+      const fresh = await getCompletedExercisesForToday(user.uid, dateStr);
+      setCompletedExercises(fresh);
 
-    const data = await res.json();
-    if (!res.ok || !data.success) {
-      throw new Error(data.error || "Failed to save exercise");
+      toast.success(`Exercise updated: ${updatedExercise.name}`);
+    } catch (err) {
+      console.error("Save failed:", err);
+      toast.error("Failed to save exercise");
+    } finally {
+      setEditOpen(false);
+      setExerciseToEdit(null);
     }
-
-    toast.success(`Exercise updated: ${updatedExercise.name}`);
-  } catch (err) {
-    console.error("Save failed:", err);
-
-    // ❌ Rollback
-    setExercises((prev) =>
-      prev.map((ex, idx) => (idx === exerciseIndex ? oldExercise : ex))
-    );
-
-    toast.error("Failed to save exercise");
-  } finally {
-    setEditOpen(false);
-    setExerciseToEdit(null);
   }
-}
 
   function handleDelete(exercise: Exercise) {
     setExercises((prev) => prev.filter((ex) => ex.exerciseId !== exercise.exerciseId));
     // TODO: remove from Firestore here
   }
+
+  // Keep exercises in sync if parent plan changes
+  useEffect(() => {
+    setExercises(plan.exercises);
+  }, [plan.id, plan.exercises]);
 
   // auth state + completed logs
   useEffect(() => {
@@ -200,8 +194,6 @@ async function handleSave(updatedExercise: Exercise) {
           firebaseUser.uid,
           today
         );
-        console.log("Completed exercises for today:", completed);
-        
         setCompletedExercises(completed);
       }
     });
@@ -212,13 +204,14 @@ async function handleSave(updatedExercise: Exercise) {
     exerciseId: string,
     data: { sets: { weight: number; reps: number; done: boolean }[] }
   ) => {
+    const ex = exercises.find((e) => e.exerciseId === exerciseId);
+    const key = ex?.name || exerciseId; // 🔑 key by name
     setCompletedExercises((prev) => ({
       ...prev,
-      [exerciseId]: {
+      [key]: {
         setsDone: data.sets.filter((s) => s.done || s.weight > 0).length,
         repsDone: data.sets.reduce(
-          (acc, s) =>
-            acc + (s.done || s.weight > 0 ? s.reps : 0),
+          (acc, s) => acc + (s.done || s.weight > 0 ? s.reps : 0),
           0
         ),
         totalSets: data.sets.length,
@@ -254,24 +247,24 @@ async function handleSave(updatedExercise: Exercise) {
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-{filteredExercises.map((exercise) => {
-  const completedData = completedExercises[exercise.name]; // ✅ safe lookup by name
+          {filteredExercises.map((exercise) => {
+            const completedData = completedExercises[exercise.name]; // 🔑 lookup by name
 
-  return (
-    <SwipeableCard
-      key={exercise.exerciseId}
-      onEdit={() => handleEdit(exercise)}
-      onDelete={() => handleDelete(exercise)}
-    >
-      <ExerciseCard
-        exercise={exercise}
-        selected={selectedExercise === exercise.exerciseId}
-        onSelect={() => setSelectedExercise(exercise.exerciseId)}
-        completedData={completedData}
-      />
-    </SwipeableCard>
-  );
-})}
+            return (
+              <SwipeableCard
+                key={exercise.exerciseId}
+                onEdit={() => handleEdit(exercise)}
+                onDelete={() => handleDelete(exercise)}
+              >
+                <ExerciseCard
+                  exercise={exercise}
+                  selected={selectedExercise === exercise.exerciseId}
+                  onSelect={() => setSelectedExercise(exercise.exerciseId)}
+                  completedData={completedData}
+                />
+              </SwipeableCard>
+            );
+          })}
         </div>
       )}
 
@@ -282,7 +275,10 @@ async function handleSave(updatedExercise: Exercise) {
           onClose={() => setSelectedExercise(null)}
           exercise={exercises.find((ex) => ex.exerciseId === selectedExercise)}
           onWorkoutSaved={(data) => handleWorkoutSaved(selectedExercise, data)}
-          completedData={completedExercises[selectedExercise]}
+          completedData={(() => {
+            const ex = exercises.find((e) => e.exerciseId === selectedExercise);
+            return ex ? completedExercises[ex.name] : undefined; // 🔑 lookup by name
+          })()}
         />
       )}
 
