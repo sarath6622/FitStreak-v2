@@ -6,18 +6,18 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import Auth from "@/components/Auth";
 import WorkoutTimeline from "@/components/history/WorkoutTimeline";
-import SummaryCards from "@/components/history/SummaryCards";
-import PRHighlights from "@/components/history/PRHighlights";
 import Filters from "@/components/history/Filters";
 import { WorkoutSession } from "@/types";
 import { calculatePRs } from "@/lib/historyUtils";
 import { Sparkles } from "lucide-react";
+import WorkoutProgression from "@/components/WorkoutProgression";
 
 export default function HistoryPage() {
   const [user, setUser] = useState<User | null>(null);
   const [allWorkouts, setAllWorkouts] = useState<WorkoutSession[]>([]);
   const [filteredWorkouts, setFilteredWorkouts] = useState<WorkoutSession[]>([]);
   const [prs, setPrs] = useState<Record<string, number>>({});
+  const [lastLoggedExercise, setLastLoggedExercise] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
 
@@ -34,11 +34,15 @@ export default function HistoryPage() {
           ...(doc.data() as WorkoutSession),
         }));
 
-        setAllWorkouts(fetchedWorkouts);   // ✅ store full set
-        setFilteredWorkouts(fetchedWorkouts); // ✅ also show initially
-        console.log("Fetched workouts:", fetchedWorkouts);
-
+        setAllWorkouts(fetchedWorkouts);
+        setFilteredWorkouts(fetchedWorkouts);
         setPrs(calculatePRs(fetchedWorkouts));
+
+        // ✅ set last logged exercise safely
+        if (fetchedWorkouts.length > 0) {
+          const lastExercise = fetchedWorkouts[0].exercises[0]?.name || null;
+          setLastLoggedExercise(lastExercise);
+        }
       }
 
       setLoading(false);
@@ -75,15 +79,13 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-black text-white px-4 py-6">
-      {/* Summary Cards */}
-      <SummaryCards workouts={filteredWorkouts} />
+      {/* ✅ Pass lastLoggedExercise here */}
+      <WorkoutProgression workouts={allWorkouts} defaultExercise={lastLoggedExercise} />
 
-      {/* Filters */}
       <div className="mt-6">
         <Filters allWorkouts={allWorkouts} onFilter={setFilteredWorkouts} />
       </div>
 
-      {/* Workout Timeline */}
       <div className="mt-6">
         <WorkoutTimeline workouts={filteredWorkouts} />
       </div>
