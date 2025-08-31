@@ -23,7 +23,6 @@ interface Exercise {
 
 interface SuggestionSectionProps {
   userId: string;
-  onSelect?: (muscle: string) => void; // optional callback
 }
 
 interface MuscleSummary {
@@ -32,7 +31,7 @@ interface MuscleSummary {
   daysAgo: number;
 }
 
-export default function SuggestionSection({ userId, onSelect }: SuggestionSectionProps) {
+export default function SuggestionSection({ userId }: SuggestionSectionProps) {
   const [muscleSummaries, setMuscleSummaries] = useState<MuscleSummary[]>([]);
   const [muscleGroup, setMuscleGroup] = useState<string[]>([]);
   const [duration, setDuration] = useState<string>("60 min");
@@ -151,12 +150,7 @@ export default function SuggestionSection({ userId, onSelect }: SuggestionSectio
 
       <MuscleGroupSelector
         value={muscleGroup}
-        onChange={(groups) => {
-          setMuscleGroup(groups);
-          if (onSelect && groups.length === 1) {
-            onSelect(groups[0]);
-          }
-        }}
+        onChange={setMuscleGroup}
         summaries={muscleSummaries}
       />
 

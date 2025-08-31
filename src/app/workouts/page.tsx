@@ -66,9 +66,6 @@ export default function WorkoutPage() {
         <div className="bg-gray-900 rounded-xl shadow-md mb-6">
           <SuggestionSection
             userId={auth.currentUser?.uid || ""}
-            onSelect={(m) => {
-              router.push(`/workouts/${encodeURIComponent(m)}`);
-            }}
           />
         </div>
 
