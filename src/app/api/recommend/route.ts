@@ -114,7 +114,7 @@ No text outside JSON.
 
     // Call Groq SDK
     const completion = await groq.chat.completions.create({
-      model: "llama3-70b-8192", // update the model if needed
+      model: "llama-3.1-8b-instant", // update the model if needed
       messages: [
         {
           role: "user",
