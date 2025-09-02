@@ -49,69 +49,74 @@ function ExerciseCard({
   const equipment = exercise.equipment ?? [];
 
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-label={`Select ${exercise.name} exercise`}
-      className={`
-        relative w-full bg-gray-800 border rounded-xl p-2 text-white text-left transition-transform
-        bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] rounded-xl p-4 shadow-md border border-gray-800 text-center
-        ${selected ? "border-yellow-500 scale-105 shadow-lg" : "border-gray-700 hover:border-yellow-500"}
-        focus:outline-none focus:ring-2 focus:ring-yellow-500 flex flex-col gap-2
-      `}
-    >
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-sm">{exercise.name}</span>
-          <span className="px-2 py-0.5 text-yellow-400 bg-yellow-400/10 rounded-md text-xs font-medium">
-            {exercise.sets} × {exercise.reps}
-          </span>
-        </div>
-        {progress === 100 && (
-          <CheckCircle2
-            size={16}
-            className="text-green-500"
-            aria-label="Completed today"
-          />
-        )}
+<button
+  type="button"
+  onClick={onSelect}
+  aria-label={`Select ${exercise.name} exercise`}
+  className={`
+    relative w-full rounded-xl p-3 text-white text-left transition-all
+    bg-[#0d0f1a]/60 backdrop-blur-md border border-gray-800 shadow-sm
+    hover:border-yellow-400/70 hover:shadow-[0_0_8px_rgba(234,179,8,0.25)]
+    ${selected ? "border-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.4)] scale-[1.01]" : ""}
+    focus:outline-none focus:ring-1 focus:ring-yellow-500/40 flex flex-col gap-1.5
+  `}
+>
+  {/* Top Row */}
+  <div className="flex justify-between items-center">
+    <div className="flex items-center gap-1.5">
+      <span className="font-medium text-sm">{exercise.name}</span>
+      <span className="px-1.5 py-0.5 text-yellow-400 bg-yellow-400/10 rounded-md text-[10px] font-medium">
+        {exercise.sets} × {exercise.reps}
+      </span>
+    </div>
+    {progress === 100 && (
+      <CheckCircle2
+        size={14}
+        className="text-green-400"
+        aria-label="Completed today"
+      />
+    )}
+  </div>
+
+  {/* Sub Info */}
+  <div className="text-[11px] text-gray-400 truncate">
+    {exercise.muscleGroup} • {exercise.subGroup} • {exercise.movementType}
+  </div>
+
+  {/* Tags */}
+  <div className="flex flex-wrap gap-1 text-[10px] mt-0.5">
+    <span className="px-1.5 py-0.5 rounded-full bg-blue-500/10 text-gray-400">
+      {exercise.difficulty}
+    </span>
+
+    {secondary.length > 0 && (
+      <span className="px-1.5 py-0.5 rounded-full bg-blue-500/10 text-gray-400">
+        {secondary.join(", ")}
+      </span>
+    )}
+
+    {equipment.length > 0 && (
+      <span className="px-1.5 py-0.5 rounded-full bg-blue-500/10 text-gray-400">
+        {equipment.join(", ")}
+      </span>
+    )}
+  </div>
+
+  {/* Progress */}
+  {completedData && (
+    <div className="mt-1">
+      <div className="w-full bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
+        <div
+          className="h-0.5 rounded-full bg-gradient-to-r from-green-400 to-green-500 transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        />
       </div>
-
-      <div className="text-xs text-gray-400">
-        {exercise.muscleGroup} • {exercise.subGroup} • {exercise.movementType}
+      <div className="text-[10px] text-gray-400 mt-0.5">
+        {completedData.setsDone}/{exercise.sets} sets
       </div>
-
-      <div className="flex flex-wrap gap-1 text-[11px] mt-1">
-        <span className="px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">
-          {exercise.difficulty}
-        </span>
-
-        {secondary.length > 0 && (
-          <span className="px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">
-            {secondary.join(", ")}
-          </span>
-        )}
-
-        {equipment.length > 0 && (
-          <span className="px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">
-            {equipment.join(", ")}
-          </span>
-        )}
-      </div>
-
-      {completedData && (
-        <div className="mt-2">
-          <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-            <div
-              className="bg-green-500 h-2 transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <div className="text-[11px] text-gray-400 mt-0.5">
-            {completedData.setsDone}/{exercise.sets} sets completed
-          </div>
-        </div>
-      )}
-    </button>
+    </div>
+  )}
+</button>
   );
 }
 
@@ -239,7 +244,7 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
           placeholder="Search exercises..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 p-2 rounded-md bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] border border-gray-700 text-white focus:outline-none focus:border-yellow-500"
+          className="w-full pl-10 p-2 rounded-md bg-[#0d0f1a]/60 border border-gray-800 text-white focus:outline-none focus:border-yellow-500"
           aria-label="Search exercises"
         />
       </div>
