@@ -10,6 +10,7 @@ import SwipeableCard from "./SwipeableCard";
 import EditExerciseModal from "@/components/EditExerciseModal";
 import { Exercise } from "@/types";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
 
 interface CompletedExercise {
   setsDone: number;
@@ -39,9 +40,9 @@ function ExerciseCard({
   const progress =
     completedData && exercise.sets > 0
       ? Math.min(
-          100,
-          Math.round((completedData.setsDone / exercise.sets) * 100)
-        )
+        100,
+        Math.round((completedData.setsDone / exercise.sets) * 100)
+      )
       : 0;
 
   const secondary = exercise.secondaryMuscleGroups ?? [];
@@ -231,14 +232,17 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
         Today's {plan.muscleGroup} Workout
       </h2>
 
-      <input
-        type="search"
-        placeholder="Search exercises..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full p-2 rounded-md bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] border border-gray-700 text-white focus:outline-none focus:border-yellow-500"
-        aria-label="Search exercises"
-      />
+      <div className="relative w-full">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <input
+          type="search"
+          placeholder="Search exercises..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 p-2 rounded-md bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] border border-gray-700 text-white focus:outline-none focus:border-yellow-500"
+          aria-label="Search exercises"
+        />
+      </div>
 
       {filteredExercises.length === 0 ? (
         <p className="text-gray-400">
