@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { ThemeProvider } from "next-themes";
 import PageTransition from "@/components/PageTransition";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -87,6 +88,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Toaster />
+          <ServiceWorkerRegistrar />
           {/* Wrap the children with AuthenticatedLayout */}
           <AuthenticatedLayout>
             <PageTransition>{children}</PageTransition>
