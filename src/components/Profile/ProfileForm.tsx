@@ -24,8 +24,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   onChange,
 }) => {
   const handleCustomChange = (name: string, value: string) => {
-  onChange({ target: { name, value } } as any);
-};
+    onChange({ target: { name, value } } as any);
+  };
 
   return (
     <div className="space-y-5">
@@ -101,6 +101,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         <ProfileField
           label="Goal"
           name="goal"
+          type="select"
+          options={[
+            { label: "Lose weight", value: "lose" },
+            { label: "Build muscle", value: "gain" },
+            { label: "Improve stamina", value: "stamina" },
+            { label: "Maintain health", value: "maintain" },
+          ]}
           value={isEditing ? formData?.goal : profile?.goal}
           isEditing={isEditing}
           onChange={onChange}

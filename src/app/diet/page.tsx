@@ -2,9 +2,11 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "@/firebase";
+import { auth, db } from "@/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { CaloriesRing, WaterRing, Macros, MealCard } from "@/components/diet";
 import MealModal from "@/components/diet/MealModal";
+import { UserProfile } from "@/types/UserProfile";
 
 type Meal = {
   id?: string; // from Firestore
@@ -16,32 +18,76 @@ type Meal = {
   fat: number;
 };
 
-// 🔹 Default fixed meal slots
-const DEFAULT_MEALS: Meal[] = [
-  { name: "Breakfast", calories: 0, recommended: 400, carbs: 0, protein: 0, fat: 0 },
-  { name: "Morning Snack", calories: 0, recommended: 200, carbs: 0, protein: 0, fat: 0 },
-  { name: "Lunch", calories: 0, recommended: 600, carbs: 0, protein: 0, fat: 0 },
-  { name: "Evening Snack", calories: 0, recommended: 200, carbs: 0, protein: 0, fat: 0 },
-  { name: "Dinner", calories: 0, recommended: 500, carbs: 0, protein: 0, fat: 0 },
-];
+// 🔹 Calculate calories based on profile
+function calculateCalories(profile: UserProfile): number {
+  if (!profile.height || !profile.weight || !profile.age || !profile.gender) return 2000;
+
+  const bmr =
+    profile.gender === "male"
+      ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5
+      : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161;
+
+  let calories = bmr * 1.55; // moderate activity
+  if (profile.goal === "lose") calories -= 500;
+  if (profile.goal === "gain") calories += 500;
+
+  return Math.round(calories);
+}
+
+// 🔹 Build meals dynamically
+function getDynamicMeals(dailyCalories: number): Meal[] {
+  const distribution = [0.25, 0.1, 0.3, 0.1, 0.25];
+  const names = ["Breakfast", "Morning Snack", "Lunch", "Evening Snack", "Dinner"];
+
+  return names.map((name, i) => ({
+    name,
+    calories: 0,
+    recommended: Math.round(dailyCalories * distribution[i]),
+    carbs: 0,
+    protein: 0,
+    fat: 0,
+  }));
+}
 
 export default function Diet() {
   const [user, setUser] = useState<User | null>(null);
-  const [meals, setMeals] = useState<Meal[]>(DEFAULT_MEALS);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [meals, setMeals] = useState<Meal[]>([]);
   const [selectedMeal, setSelectedMeal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Watch auth state
+  // 🔹 Watch auth
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-    });
+    const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
     return unsubscribe;
   }, []);
 
-  // 🔹 Fetch meals when user is available
+  // 🔹 Fetch profile
   useEffect(() => {
     if (!user) {
+      setProfile(null);
+      setMeals([]);
+      setLoading(false);
+      return;
+    }
+
+    const fetchProfile = async () => {
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) {
+          setProfile(snap.data() as UserProfile);
+        }
+      } catch (err) {
+        console.error("[Diet] ❌ Error fetching profile:", err);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  // 🔹 Fetch meals once profile is ready
+  useEffect(() => {
+    if (!user || !profile) {
       setLoading(false);
       return;
     }
@@ -49,28 +95,31 @@ export default function Diet() {
     const fetchMeals = async () => {
       try {
         setLoading(true);
+
+        const dailyCalories = calculateCalories(profile);
+        const dynamicMeals = getDynamicMeals(dailyCalories);
+
         const res = await fetch(`/api/food/get-meals?userId=${user.uid}`);
         if (!res.ok) throw new Error("Failed to fetch meals");
         const data = await res.json();
 
-        // Merge defaults with saved meals
-        const merged = DEFAULT_MEALS.map((slot) => {
+        const merged = dynamicMeals.map((slot) => {
           const saved = data.meals.find((m: Meal) => m.name === slot.name);
           return saved ? { ...slot, ...saved } : slot;
         });
 
         setMeals(merged);
       } catch (err) {
-        console.error("Error fetching meals:", err);
+        console.error("[Diet] ❌ Error fetching meals:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchMeals();
-  }, [user]);
+  }, [user, profile]);
 
-  // 🔹 Totals (memoized for performance)
+  // 🔹 Totals
   const { totalCalories, calorieGoal, totalCarbs, totalProtein, totalFat } = useMemo(() => {
     const totalCalories = meals.reduce((acc, m) => acc + (m.calories || 0), 0);
     const calorieGoal = meals.reduce((acc, m) => acc + (m.recommended || 0), 0);
@@ -81,8 +130,14 @@ export default function Diet() {
     return { totalCalories, calorieGoal, totalCarbs, totalProtein, totalFat };
   }, [meals]);
 
-  // 🔹 Macro goals (could be dynamic from profile later)
-  const macroGoals = { carbs: 180, protein: 72, fat: 48 };
+  // 🔹 Macro goals (dynamic split)
+  const macroGoals = useMemo(() => {
+    return {
+      carbs: Math.round((0.5 * calorieGoal) / 4),
+      protein: Math.round((0.2 * calorieGoal) / 4),
+      fat: Math.round((0.3 * calorieGoal) / 9),
+    };
+  }, [calorieGoal]);
 
   const macroData = [
     { name: "Carbs", value: totalCarbs, goal: macroGoals.carbs, color: "#3b82f6" },
@@ -93,7 +148,7 @@ export default function Diet() {
   const waterIntake = 1200;
   const waterGoal = 3000;
 
-  // 🔹 Update a meal when saving (local only for now)
+  // 🔹 Local meal update after saving
   const handleSave = useCallback(
     (index: number, calories: number, macros: { carbs: number; protein: number; fat: number }) => {
       setMeals((prev) =>
@@ -104,19 +159,11 @@ export default function Diet() {
   );
 
   if (loading) {
-    return (
-      <div className="p-4 text-gray-400">
-        Loading meals...
-      </div>
-    );
+    return <div className="p-4 text-gray-400">Loading meals...</div>;
   }
 
   if (!user) {
-    return (
-      <div className="p-4 text-red-400">
-        Please log in to see your meals.
-      </div>
-    );
+    return <div className="p-4 text-red-400">Please log in to see your meals.</div>;
   }
 
   return (
@@ -135,7 +182,7 @@ export default function Diet() {
       {/* Macros */}
       <Macros data={macroData} waterIntake={waterIntake} waterGoal={waterGoal} />
 
-      {/* Meals Grid */}
+      {/* Meals */}
       <div className="grid grid-cols-2 gap-3">
         {meals.map((meal, index) => (
           <MealCard
@@ -149,47 +196,46 @@ export default function Diet() {
       </div>
 
       {/* Modal */}
-{selectedMeal !== null && (
-<MealModal
-  isOpen={true}
-  onClose={() => setSelectedMeal(null)}
-  defaultQuantity={100}
-  mealType={meals[selectedMeal].name}
-  defaultMeasure="Grams"
-  onSave={async ({ food, quantity, measure, totals, mealType, userId }) => {
-    try {
-      const res = await fetch("/api/food/save-meal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          food,
-          quantity,
-          measure,
-          totals,
-          mealType,
-        }),
-      });
+      {selectedMeal !== null && (
+        <MealModal
+          isOpen={true}
+          onClose={() => setSelectedMeal(null)}
+          defaultQuantity={100}
+          mealType={meals[selectedMeal].name}
+          defaultMeasure="Grams"
+          onSave={async ({ food, quantity, measure, totals, mealType, userId }) => {
+            try {
+              const res = await fetch("/api/food/save-meal", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  userId,
+                  food,
+                  quantity,
+                  measure,
+                  totals,
+                  mealType,
+                }),
+              });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save meal");
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error || "Failed to save meal");
 
-      console.log("[Diet] ✅ Meal saved:", data);
+              console.log("[Diet] ✅ Meal saved:", data);
 
-      // Update local state
-      handleSave(selectedMeal, totals.calories, {
-        carbs: totals.carbs,
-        protein: totals.protein,
-        fat: totals.fat,
-      });
-    } catch (err) {
-      console.error("[Diet] ❌ Error saving meal:", err);
-    }
+              handleSave(selectedMeal, totals.calories, {
+                carbs: totals.carbs,
+                protein: totals.protein,
+                fat: totals.fat,
+              });
+            } catch (err) {
+              console.error("[Diet] ❌ Error saving meal:", err);
+            }
 
-    setSelectedMeal(null);
-  }}
-/>
-)}
+            setSelectedMeal(null);
+          }}
+        />
+      )}
     </div>
   );
 }
