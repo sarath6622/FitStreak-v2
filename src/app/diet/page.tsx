@@ -8,6 +8,7 @@ import { CaloriesRing, WaterRing, Macros, MealCard } from "@/components/diet";
 import MealModal from "@/components/diet/MealModal";
 import { UserProfile } from "@/types/UserProfile";
 import { Sparkles } from "lucide-react";
+import WaterGlassesCard from "@/components/diet/WaterRing";
 
 type Meal = {
   id?: string; // from Firestore
@@ -183,7 +184,7 @@ export default function Diet() {
 
       {/* Rings */}
       <div className="grid grid-cols-1 gap-4">
-        <WaterRing intake={waterIntake} goal={waterGoal} />
+        <WaterGlassesCard goal={3000} />
         <CaloriesRing total={totalCalories} goal={calorieGoal} />
       </div>
 

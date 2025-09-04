@@ -1,42 +1,104 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { auth } from "@/firebase";
 import { Plus } from "lucide-react";
 import WaterLogModal from "./WaterLogModal";
+import { toast, useSonner } from "sonner";
 
 interface Props {
-  intake: number; // ml consumed
   goal: number;   // total ml goal
   stepMl?: number; // default glass size
-  onAdd?: (amount: number) => void;
   className?: string;
 }
 
 export default function WaterGlassesCard({
-  intake,
   goal,
   stepMl,
-  onAdd,
   className = "",
 }: Props) {
+  const [user, setUser] = useState<User | null>(null);
+  const [intake, setIntake] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const glassSize = stepMl ?? 250;
   const totalGlasses = Math.ceil(goal / glassSize);
+
+  // 🔹 Track auth
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    return () => unsub();
+  }, []);
+
+  // 🔹 Fetch today's water intake from API
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchWater = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/food/get-water?userId=${user.uid}`);
+        if (!res.ok) throw new Error("Failed to fetch water intake");
+        const data = await res.json();
+        setIntake(data.total ?? 0);
+      } catch (err) {
+        console.error("[WaterGlassesCard] ❌ Error fetching water:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWater();
+  }, [user]);
+
+  // 🔹 Log new water entry
+  const handleLog = async (amount: number) => {
+    if (!user) return;
+
+    try {
+      const res = await fetch("/api/food/save-water", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.uid, amount }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save water");
+      }
+
+      // ✅ Optimistically update UI
+      setIntake((prev) => prev + amount);
+      toast.success(`Logged ${amount}ml water`);
+    } catch (err) {
+      console.error("[WaterGlassesCard] ❌ Error saving water:", err);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="p-4 rounded-xl border border-gray-800 text-red-400">
+        Please log in to track water.
+      </div>
+    );
+  }
 
   return (
     <>
       <div
         className={`bg-[#0d0f1a]/60 backdrop-blur-md rounded-2xl p-4 border border-gray-800 text-white w-full flex flex-col gap-3 ${className}`}
       >
-        {/* Header row */}
+        {/* Header */}
         <div className="flex items-center justify-between">
           <p className="text-sm">Water</p>
           <p className="text-xs text-gray-400">
-            {intake}/{goal} ml
+            {loading ? "..." : `${intake}/${goal} ml`}
           </p>
         </div>
 
-        {/* Glasses row with responsive cups + button */}
+        {/* Glasses row */}
         <div className="flex items-end gap-2 w-full">
           {Array.from({ length: totalGlasses }).map((_, i) => {
             const start = i * glassSize;
@@ -48,21 +110,18 @@ export default function WaterGlassesCard({
                 key={i}
                 className="flex-1 h-12 relative flex items-end justify-center"
               >
-                {/* Glass outline */}
                 <div className="w-full h-full rounded-lg border-2 border-gray-700 bg-[#0b1220] overflow-hidden relative">
-                  {/* Fill inside */}
                   <div
                     className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-blue-600 to-blue-400 transition-all duration-500"
                     style={{ height: `${fillPct * 100}%` }}
                   />
-                  {/* Glass shine */}
                   <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
                 </div>
               </div>
             );
           })}
 
-          {/* ➕ button that opens modal */}
+          {/* ➕ button */}
           <button
             onClick={() => setIsModalOpen(true)}
             aria-label="Log water intake"
@@ -82,7 +141,7 @@ export default function WaterGlassesCard({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onLog={(amount) => {
-          onAdd?.(amount);
+          handleLog(amount);
           setIsModalOpen(false);
         }}
       />
