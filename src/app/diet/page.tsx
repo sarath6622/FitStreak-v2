@@ -150,47 +150,45 @@ export default function Diet() {
 
       {/* Modal */}
 {selectedMeal !== null && (
-  <MealModal
-    isOpen={true}
-    onClose={() => setSelectedMeal(null)}
-    defaultQuantity={100}
-    mealType={meals[selectedMeal].name}
-    defaultMeasure="Grams"
-    onSave={async ({ food, quantity, measure, totals }) => {
-      const mealSlot = meals[selectedMeal]; // get meal name (Breakfast, Lunch, etc.)
+<MealModal
+  isOpen={true}
+  onClose={() => setSelectedMeal(null)}
+  defaultQuantity={100}
+  mealType={meals[selectedMeal].name}
+  defaultMeasure="Grams"
+  onSave={async ({ food, quantity, measure, totals, mealType, userId }) => {
+    try {
+      const res = await fetch("/api/food/save-meal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          food,
+          quantity,
+          measure,
+          totals,
+          mealType,
+        }),
+      });
 
-      try {
-        const res = await fetch("/api/food/save-meal", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: user?.uid,
-            food,
-            quantity,
-            measure,
-            totals,
-            mealType: mealSlot.name, // 👈 include meal type
-          }),
-        });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save meal");
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to save meal");
+      console.log("[Diet] ✅ Meal saved:", data);
 
-        console.log("[Diet] ✅ Meal saved:", data);
+      // Update local state
+      handleSave(selectedMeal, totals.calories, {
+        carbs: totals.carbs,
+        protein: totals.protein,
+        fat: totals.fat,
+      });
+    } catch (err) {
+      console.error("[Diet] ❌ Error saving meal:", err);
+    }
 
-        // Update local state
-        handleSave(selectedMeal, totals.calories, {
-          carbs: totals.carbs,
-          protein: totals.protein,
-          fat: totals.fat,
-        });
-      } catch (err) {
-        console.error("[Diet] ❌ Error saving meal:", err);
-      }
-
-      setSelectedMeal(null);
-    }}
-  />
+    setSelectedMeal(null);
+  }}
+/>
 )}
     </div>
   );

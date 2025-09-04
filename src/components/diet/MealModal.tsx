@@ -34,7 +34,7 @@ interface MealModalProps {
   mealType: string; // Breakfast, Lunch, etc.
   defaultQuantity?: number;
   defaultMeasure?: Measure;
-  onSave?: (payload: any) => void; // optional: if parent still wants local state
+  onSave?: (payload: any) => void;
 }
 
 // --------------------
@@ -65,9 +65,6 @@ export default function MealModal({
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 500);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  // Fetch food data
 
   const [user, setUser] = useState<User | null>(null);
 
@@ -75,6 +72,8 @@ export default function MealModal({
     const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
     return unsubscribe;
   }, []);
+
+  // 🔍 Fetch food data
   useEffect(() => {
     if (!debouncedQuery) return;
 
@@ -148,19 +147,19 @@ export default function MealModal({
     };
   }, [selectedFood, netWeightG]);
 
-  const disabled = !selectedFood || saving;
+  const disabled = !selectedFood;
 
   // --------------------
-  // Handle Save → API
+  // Handle Save → parent
   // --------------------
-  const handleAdd = async () => {
+  const handleAdd = () => {
     if (!selectedFood || !totals || !user) {
       alert("You must be logged in to save meals.");
       return;
     }
 
     const payload = {
-      userId: user.uid,   // 👈 REQUIRED
+      userId: user.uid,
       mealType,
       food: selectedFood,
       quantity,
@@ -168,24 +167,8 @@ export default function MealModal({
       totals,
     };
 
-    try {
-      setSaving(true);
-      const res = await fetch("/api/food/save-meal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Failed to save meal");
-
-      onSave?.(payload); // still notify parent if needed
-      onClose();
-    } catch (err) {
-      console.error("[MealModal] Save error:", err);
-      alert("Failed to save meal. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+    onSave?.(payload);
+    onClose();
   };
 
   return (
@@ -253,7 +236,7 @@ export default function MealModal({
         <FooterActions
           disabled={disabled}
           onClose={onClose}
-          onAdd={handleAdd} // 👈 now saves directly to Firestore
+          onAdd={handleAdd}
         />
       </div>
     </div>
