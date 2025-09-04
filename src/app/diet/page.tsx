@@ -146,7 +146,7 @@ export default function Diet() {
     { name: "Fat", value: totalFat, goal: macroGoals.fat, color: "#a855f7" },
   ];
 
-  const waterIntake = 2400;
+  const waterIntake = 3000;
   const waterGoal = 3000;
 
   // 🔹 Local meal update after saving
@@ -183,8 +183,8 @@ export default function Diet() {
 
       {/* Rings */}
       <div className="grid grid-cols-1 gap-4">
-        <CaloriesRing total={totalCalories} goal={calorieGoal} />
         <WaterRing intake={waterIntake} goal={waterGoal} />
+        <CaloriesRing total={totalCalories} goal={calorieGoal} />
       </div>
 
       {/* Macros */}

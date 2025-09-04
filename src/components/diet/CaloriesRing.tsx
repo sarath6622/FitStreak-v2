@@ -1,49 +1,46 @@
 "use client";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import React from "react";
 
 interface Props {
   total: number;
   goal: number;
 }
 
-export default function CaloriesRing({ total, goal }: Props) {
-  const data = [
-    { name: "Eaten", value: total },
-    { name: "Remaining", value: Math.max(goal - total, 0) },
-  ];
+export default function CaloriesProgressBar({ total, goal }: Props) {
+  const percentage = Math.min((total / goal) * 100, 100);
+
+  // Motivational messages depending on progress
+  const getMessage = () => {
+    if (percentage === 0) return "Let's get started 💪";
+    if (percentage < 25) return "Great start, keep it up 🚀";
+    if (percentage < 50) return "Halfway there, stay strong ⚡";
+    if (percentage < 75) return "You're doing awesome 🔥";
+    if (percentage < 100) return "Almost at your goal! 🏆";
+    return "Goal achieved! 🎉";
+  };
 
   return (
-    <div className="bg-[#0d0f1a]/60 backdrop-blur-md rounded-2xl p-4 border border-gray-800 text-white flex flex-col items-center">
-      <div className="w-28 h-28">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              innerRadius="70%"
-              outerRadius="100%"
-              paddingAngle={6}
-              cornerRadius={10}
-              stroke="none"
-              dataKey="value"
-            >
-              {data.map((entry, index) => (
-                <Cell
-                  key={index}
-                  fill={entry.name === "Eaten" ? "url(#eatenGradient)" : "#1f2937"}
-                />
-              ))}
-            </Pie>
-            <defs>
-              <linearGradient id="eatenGradient" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#8b5cf6" />
-                <stop offset="100%" stopColor="#3b82f6" />
-              </linearGradient>
-            </defs>
-          </PieChart>
-        </ResponsiveContainer>
+    <div className="bg-[#0d0f1a]/60 backdrop-blur-md rounded-2xl p-4 border border-gray-800 text-white flex flex-col items-center w-full">
+      {/* Progress bar */}
+      <div className="w-full bg-gray-800/50 rounded-xl h-6 overflow-hidden relative">
+        <div
+          className="h-full rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500"
+          style={{ width: `${percentage}%` }}
+        />
+        {/* Glow Effect */}
+        <div
+          className="absolute top-0 left-0 h-full rounded-xl opacity-40 blur-md bg-gradient-to-r from-purple-400 to-blue-400"
+          style={{ width: `${percentage}%` }}
+        />
       </div>
-      <p className="mt-2 text-sm">Calories</p>
-      <p className="text-xs text-gray-400">{total}/{goal} kcal</p>
+
+      {/* Numbers */}
+      <p className="mt-3 text-sm">
+        {total} / {goal} kcal
+      </p>
+
+      {/* Motivational message */}
+      <p className="text-xs text-gray-400 mt-1">{getMessage()}</p>
     </div>
   );
 }
