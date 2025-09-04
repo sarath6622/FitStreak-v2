@@ -1,7 +1,8 @@
 "use client";
+import { useEffect, useMemo } from "react";
 import { useState } from "react";
 import { X, Check } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, animate } from "framer-motion";
 
 interface WaterLogModalProps {
   isOpen: boolean;
@@ -14,13 +15,30 @@ export default function WaterLogModal({
   onClose,
   onLog,
 }: WaterLogModalProps) {
-  const max = 250; // ml
-  const trackHeight = 200; // px
+  const max = 250;          // ml
+  const step = 25;          // snap step
+  const trackHeight = 200;  // px
 
+  // Motion value for knob Y (0 = top, 200 = bottom)
+  const y = useMotionValue(trackHeight);
   const [value, setValue] = useState(0);
 
-  // Convert ml → y (for knob position)
+  // Map y -> ml, clamp, and keep in sync as the user drags
+  useEffect(() => {
+    const unsub = y.on("change", (latest) => {
+      const clamped = Math.max(0, Math.min(trackHeight, latest));
+      if (clamped !== latest) y.set(clamped);
+      const raw = (1 - clamped / trackHeight) * max;
+      setValue(Math.round(raw));
+    });
+    return () => unsub();
+  }, [y]);
+
+  // Helper: ml -> y px
   const valueToY = (val: number) => (1 - val / max) * trackHeight;
+
+  // Snap to nearest step with spring
+  const snapToStep = (v: number) => Math.round(v / step) * step;
 
   if (!isOpen) return null;
 
@@ -41,14 +59,15 @@ export default function WaterLogModal({
         <div className="flex flex-col items-center">
           <div
             className="relative w-16 h-[200px] rounded-full bg-gray-800 overflow-hidden flex items-end cursor-pointer"
-            onClick={(e) => {
-              // Clicking track sets new value
-              const rect = e.currentTarget.getBoundingClientRect();
-              const clickY = e.clientY - rect.top;
-              const newVal = Math.round(
-                (1 - clickY / trackHeight) * max
-              );
-              setValue(Math.max(0, Math.min(max, newVal)));
+            style={{ touchAction: "none" }} // ensure touch dragging works
+            onPointerDown={(e) => {
+              // Tap track to jump the handle
+              const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+              const clickY = Math.max(0, Math.min(trackHeight, e.clientY - rect.top));
+              const raw = (1 - clickY / trackHeight) * max;
+              const snappedVal = snapToStep(raw);
+              const targetY = valueToY(snappedVal);
+              animate(y, targetY, { type: "spring", stiffness: 400, damping: 30 });
             }}
           >
             {/* Fill */}
@@ -57,26 +76,25 @@ export default function WaterLogModal({
               style={{ height: `${(value / max) * 100}%` }}
             />
 
-            {/* Knob */}
+            {/* Draggable knob (attached to fill) */}
             <motion.div
               drag="y"
-              dragConstraints={{ top: 0, bottom: trackHeight }}
               dragElastic={0}
               dragMomentum={false}
-              style={{ y: valueToY(value) }}
-              onDrag={(e, info) => {
-                const newVal = Math.round(
-                  (1 - info.point.y / trackHeight) * max
-                );
-                setValue(Math.max(0, Math.min(max, newVal)));
+              // We clamp via y.on("change"), so no constraints needed
+              style={{ y, top: 0, left: "50%", translateX: "-50%" }}
+              onDragEnd={() => {
+                const snappedVal = snapToStep(value);
+                const targetY = valueToY(snappedVal);
+                animate(y, targetY, { type: "spring", stiffness: 400, damping: 30 });
               }}
-              className="w-10 h-10 rounded-full bg-white shadow-md cursor-grab active:cursor-grabbing absolute left-1/2 -translate-x-1/2"
+              className="w-10 h-10 rounded-full bg-white shadow-md cursor-grab active:cursor-grabbing absolute"
             />
           </div>
 
           {/* Label */}
           <p className="mt-6 text-3xl font-bold">{value} ml</p>
-          <p className="text-sm text-gray-400">Slide to adjust</p>
+          <p className="text-sm text-gray-400">Drag or tap to adjust</p>
         </div>
 
         {/* Confirm */}
@@ -84,7 +102,7 @@ export default function WaterLogModal({
           onClick={() => {
             if (value > 0) {
               onLog(value);
-              setValue(0);
+              animate(y, trackHeight, { type: "spring", stiffness: 400, damping: 30 }); // reset
               onClose();
             }
           }}
