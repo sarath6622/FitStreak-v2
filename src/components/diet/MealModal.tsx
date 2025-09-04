@@ -110,6 +110,19 @@ export default function MealModal({
     fetchFood();
   }, [debouncedQuery]);
 
+  const [recents, setRecents] = useState<FoodItem[]>([]);
+
+useEffect(() => {
+  if (!isOpen || !user) return;
+
+  fetch(`/api/food/recent-foods?userId=${user.uid}&mealType=${mealType}`)
+    .then((res) => res.json())
+    .then((data) => {
+      if (Array.isArray(data.foods)) setRecents(data.foods);
+    })
+    .catch((err) => console.error("[MealModal] recents error:", err));
+}, [isOpen, user, mealType]);
+
   const [quantity, setQuantity] = useState<number>(defaultQuantity);
   const [measure, setMeasure] = useState<Measure>(defaultMeasure);
 
@@ -173,14 +186,14 @@ export default function MealModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center p-3 justify-center bg-black/70 backdrop-blur-sm"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div className="w-[420px] max-w-[92vw] rounded-3xl border border-white/10 bg-[#0d0f1a] shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 pt-4">
+        <div className="flex items-center justify-between px-4 pt-4 pb-4">
           <h3 className="text-white font-medium">{mealType}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <X className="h-6 w-6" />
@@ -195,6 +208,7 @@ export default function MealModal({
           query={query}
           setQuery={setQuery}
           loading={loading}
+          recents={recents}
           onFallbackSearch={async (q) => {
             setLoading(true);
             try {
