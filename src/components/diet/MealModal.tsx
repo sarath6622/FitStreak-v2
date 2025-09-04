@@ -1,14 +1,18 @@
 "use client";
-import { useMemo, useState } from "react";
-import foods from "@/components/diet/foods.json";
-import FoodHeader from "./modal/FoodHeader";
+import { useEffect, useMemo, useState } from "react";
+import FoodSearch from "@/components/diet/modal/FoodHeader";
 import QuantityMeasure from "./modal/QuantityMeasure";
 import NutrientsCard from "./modal/NutrientsCard";
 import FooterActions from "./modal/FooterActions";
 import { X } from "lucide-react";
+import { auth } from "@/firebase";
+import { onAuthStateChanged, User } from "firebase/auth";
 
+// --------------------
+// Types
+// --------------------
 export type FoodItem = {
-  id: number;
+  id: string;
   name: string;
   serving_size: string;
   calories: number;
@@ -22,50 +26,96 @@ export type FoodItem = {
   piece_weight_g?: number;
 };
 
-// ✅ Define measure type so it's never undefined
 export type Measure = "Grams" | "Serving" | "Cup" | "Oz" | "Piece";
 
 interface MealModalProps {
   isOpen: boolean;
   onClose: () => void;
-  foodId?: number;
+  mealType: string; // Breakfast, Lunch, etc.
   defaultQuantity?: number;
   defaultMeasure?: Measure;
-  onSave: (payload: {
-    food: FoodItem;
-    quantity: number;
-    measure: Measure;
-    totals: {
-      calories: number;
-      protein: number;
-      fat: number;
-      carbs: number;
-      fiber: number;
-      netWeightG: number;
-    };
-  }) => void;
+  onSave?: (payload: any) => void; // optional: if parent still wants local state
 }
 
+// --------------------
+// Debounce Hook
+// --------------------
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debounced;
+}
+
+// --------------------
+// Component
+// --------------------
 export default function MealModal({
   isOpen,
   onClose,
-  foodId,
+  mealType,
   defaultQuantity = 100,
   defaultMeasure = "Grams",
   onSave,
 }: MealModalProps) {
-  const initialFood = useMemo(
-    () => foods.find((f: FoodItem) => f.id === foodId) || null,
-    [foodId]
-  );
+  const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
+  const [results, setResults] = useState<FoodItem[]>([]);
+  const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 500);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const [selectedFood, setSelectedFood] = useState<FoodItem | null>(initialFood);
+  // Fetch food data
+
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
+    return unsubscribe;
+  }, []);
+  useEffect(() => {
+    if (!debouncedQuery) return;
+
+    const fetchFood = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/food/search?q=${debouncedQuery}`);
+        const data = await res.json();
+
+        if (res.ok && Array.isArray(data.foods)) {
+          const mapped = data.foods.map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            serving_size: f.servingSize ?? "100g",
+            calories: f.nutrients.calories ?? 0,
+            protein_g: f.nutrients.protein ?? 0,
+            carbohydrates_g: f.nutrients.carbs ?? 0,
+            fiber_g: f.nutrients.fiber ?? 0,
+            sugar_g: f.nutrients.sugars ?? 0,
+            fat_g: f.nutrients.fat ?? 0,
+          }));
+          setResults(mapped);
+        } else {
+          setResults([]);
+        }
+      } catch (err) {
+        console.error("[MealModal] Error fetching food:", err);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFood();
+  }, [debouncedQuery]);
+
   const [quantity, setQuantity] = useState<number>(defaultQuantity);
-  const [measure, setMeasure] = useState<Measure>(defaultMeasure); // ✅ fixed typing
+  const [measure, setMeasure] = useState<Measure>(defaultMeasure);
 
   if (!isOpen) return null;
 
-  // helpers
   const round = (n: number, d = 1) => Number(n.toFixed(d));
 
   const gramsPerUnit = useMemo(() => {
@@ -98,31 +148,100 @@ export default function MealModal({
     };
   }, [selectedFood, netWeightG]);
 
-  const disabled = !selectedFood;
+  const disabled = !selectedFood || saving;
+
+  // --------------------
+  // Handle Save → API
+  // --------------------
+  const handleAdd = async () => {
+    if (!selectedFood || !totals || !user) {
+      alert("You must be logged in to save meals.");
+      return;
+    }
+
+    const payload = {
+      userId: user.uid,   // 👈 REQUIRED
+      mealType,
+      food: selectedFood,
+      quantity,
+      measure,
+      totals,
+    };
+
+    try {
+      setSaving(true);
+      const res = await fetch("/api/food/save-meal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Failed to save meal");
+
+      onSave?.(payload); // still notify parent if needed
+      onClose();
+    } catch (err) {
+      console.error("[MealModal] Save error:", err);
+      alert("Failed to save meal. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
+        if (e.target === e.currentTarget) onClose();
       }}
     >
       <div className="w-[420px] max-w-[92vw] rounded-3xl border border-white/10 bg-[#0d0f1a] shadow-2xl">
-        {/* Top close button */}
-        <div className="flex items-center justify-end px-4 pt-4">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-4">
+          <h3 className="text-white font-medium">{mealType}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Sections */}
-        <FoodHeader
-          foods={foods}
+        {/* Food Search */}
+        <FoodSearch
           selectedFood={selectedFood}
           setSelectedFood={setSelectedFood}
+          results={results}
+          query={query}
+          setQuery={setQuery}
+          loading={loading}
+          onFallbackSearch={async (q) => {
+            setLoading(true);
+            try {
+              const res = await fetch(`/api/food/search?q=${q}&forceGroq=true`);
+              const data = await res.json();
+              if (res.ok && Array.isArray(data.foods)) {
+                const mapped = data.foods.map((f: any) => ({
+                  id: f.id,
+                  name: f.name,
+                  serving_size: f.servingSize ?? "100g",
+                  calories: f.nutrients?.calories ?? 0,
+                  protein_g: f.nutrients?.protein ?? 0,
+                  carbohydrates_g: f.nutrients?.carbs ?? 0,
+                  fiber_g: f.nutrients?.fiber ?? 0,
+                  sugar_g: f.nutrients?.sugars ?? 0,
+                  fat_g: f.nutrients?.fat ?? 0,
+                }));
+                setResults(mapped);
+              } else {
+                setResults([]);
+              }
+            } catch (err) {
+              console.error("[MealModal] Fallback error:", err);
+              setResults([]);
+            } finally {
+              setLoading(false);
+            }
+          }}
         />
+
         <QuantityMeasure
           quantity={quantity}
           setQuantity={setQuantity}
@@ -130,14 +249,11 @@ export default function MealModal({
           setMeasure={setMeasure}
         />
         <NutrientsCard totals={totals} />
+
         <FooterActions
           disabled={disabled}
           onClose={onClose}
-          onAdd={() => {
-            if (!selectedFood || !totals) return;
-            onSave({ food: selectedFood, quantity, measure, totals });
-            onClose();
-          }}
+          onAdd={handleAdd} // 👈 now saves directly to Firestore
         />
       </div>
     </div>

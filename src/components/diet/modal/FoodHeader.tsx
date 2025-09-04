@@ -1,27 +1,44 @@
 "use client";
 
-import { useState } from "react";
 import { FoodItem } from "@/components/diet/MealModal";
 import { Search, X } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
 
 export default function FoodSearch({
-  foods,
   selectedFood,
   setSelectedFood,
+  results,
+  query,
+  setQuery,
+  loading,
+  onFallbackSearch,
 }: {
-  foods: FoodItem[];
   selectedFood: FoodItem | null;
   setSelectedFood: (f: FoodItem | null) => void;
+  results: FoodItem[];
+  query: string;
+  setQuery: (q: string) => void;
+  loading: boolean;
+  onFallbackSearch: (q: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const filtered = foods.filter((f) =>
-    f.name.toLowerCase().includes(query.toLowerCase())
-  );
+  // ✅ Close when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <div className="relative px-4 pb-2">
+    <div className="relative px-4 pb-2" ref={dropdownRef}>
+      {/* input box */}
       <div
         className="relative h-12 w-full rounded-xl border border-white/20 bg-white/10 flex items-center px-3 text-white cursor-pointer"
         onClick={() => setOpen(true)}
@@ -41,8 +58,6 @@ export default function FoodSearch({
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onFocus={() => setOpen(true)}
-              onBlur={() => setTimeout(() => setOpen(false), 200)} // delay closing
               placeholder="Search food..."
               className="flex-1 bg-transparent outline-none text-white placeholder:text-gray-400"
             />
@@ -55,11 +70,13 @@ export default function FoodSearch({
 
           {/* Results */}
           <div className="mt-4 max-h-[300px] overflow-y-auto">
-            {filtered.length === 0 ? (
+            {loading ? (
+              <p className="text-gray-400 text-center mt-6">Searching...</p>
+            ) : results.length === 0 && query ? (
               <p className="text-gray-400 text-center mt-6">No food found.</p>
             ) : (
               <ul className="space-y-2">
-                {filtered.map((f) => (
+                {results.map((f) => (
                   <li
                     key={f.id}
                     className="px-3 py-2 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700"
@@ -77,8 +94,11 @@ export default function FoodSearch({
           </div>
 
           {/* Bottom action */}
-          <div className="mt-2 text-center text-blue-400 cursor-pointer">
-            Can’t find your food?
+          <div
+            className="mt-2 text-center text-blue-400 cursor-pointer hover:underline"
+            onClick={() => onFallbackSearch(query)}
+          >
+            Can’t find your food? Search globally
           </div>
         </div>
       )}
