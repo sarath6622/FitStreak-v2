@@ -142,9 +142,9 @@ export default function Diet() {
   }, [calorieGoal]);
 
   const macroData = [
-    { name: "Carbs", value: totalCarbs, goal: macroGoals.carbs, color: "#3b82f6" },
-    { name: "Protein", value: totalProtein, goal: macroGoals.protein, color: "#22c55e" },
-    { name: "Fat", value: totalFat, goal: macroGoals.fat, color: "#a855f7" },
+    { name: "Carbs", value: totalCarbs, goal: macroGoals.carbs, color: "#3B82F6" },
+    { name: "Protein", value: totalProtein, goal: macroGoals.protein, color: "#10B981" },
+    { name: "Fat", value: totalFat, goal: macroGoals.fat, color: "#F59E0B" },
   ];
 
   const waterIntake = 3000;
@@ -176,7 +176,7 @@ export default function Diet() {
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 ">
       <header>
         <h2 className="text-xl font-semibold text-white">My Diary</h2>
         <p className="text-gray-400 text-sm">Summary</p>
