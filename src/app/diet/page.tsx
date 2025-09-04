@@ -7,6 +7,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { CaloriesRing, WaterRing, Macros, MealCard } from "@/components/diet";
 import MealModal from "@/components/diet/MealModal";
 import { UserProfile } from "@/types/UserProfile";
+import { Sparkles } from "lucide-react";
 
 type Meal = {
   id?: string; // from Firestore
@@ -145,7 +146,7 @@ export default function Diet() {
     { name: "Fat", value: totalFat, goal: macroGoals.fat, color: "#a855f7" },
   ];
 
-  const waterIntake = 1200;
+  const waterIntake = 2400;
   const waterGoal = 3000;
 
   // 🔹 Local meal update after saving
@@ -159,7 +160,14 @@ export default function Diet() {
   );
 
   if (loading) {
-    return <div className="p-4 text-gray-400">Loading meals...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="flex items-center gap-2 text-gray-300 animate-pulse">
+          <Sparkles className="animate-spin w-5 h-5" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -174,7 +182,7 @@ export default function Diet() {
       </header>
 
       {/* Rings */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <CaloriesRing total={totalCalories} goal={calorieGoal} />
         <WaterRing intake={waterIntake} goal={waterGoal} />
       </div>
