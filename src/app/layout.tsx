@@ -7,6 +7,7 @@ import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { ThemeProvider } from "next-themes";
 import PageTransition from "@/components/PageTransition";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import { useFCM } from "@/hooks/useFCM";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

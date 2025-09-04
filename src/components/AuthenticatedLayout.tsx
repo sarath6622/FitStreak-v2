@@ -6,11 +6,13 @@ import { auth } from "@/firebase";
 import Header from "@/components/Header";
 import Navbar from "@/components/Navbar";
 import { Sparkles } from "lucide-react";
+import { useFCM } from "@/hooks/useFCM";
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
+  const fcmToken = useFCM();
 
   useEffect(() => {
     const copy = [

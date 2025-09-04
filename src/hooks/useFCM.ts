@@ -9,8 +9,11 @@ export function useFCM() {
   const [fcmToken, setFcmToken] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("🔔 Initializing FCM...");
+    
     if (!messaging) return; 
-
+    console.log("✅ Messaging is supported.");
+    
     // 👇 copy into a local non-null variable
     const msg = messaging;
 

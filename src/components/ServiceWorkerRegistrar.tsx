@@ -5,7 +5,9 @@ import { useEffect } from "react";
 function ServiceWorkerRegistrar() {
   useEffect(() => {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
+      navigator./* `useFCM` is a custom React hook that initializes Firebase Cloud Messaging (FCM) for
+      push notifications in a web application. */
+      serviceWorker
         .register("/firebase-messaging-sw.js")
         .then((registration) => {
           console.log("✅ Service Worker registered:", registration);
