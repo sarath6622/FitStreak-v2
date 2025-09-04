@@ -28,6 +28,7 @@ export default function FoodSearch({
 }: FoodSearchProps) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // ✅ Close dropdown when clicking outside
   useEffect(() => {
@@ -49,6 +50,7 @@ export default function FoodSearch({
 <input
   autoFocus
   value={query || selectedFood?.name || ""}
+  ref={inputRef} 
   onChange={(e) => {
     setQuery(e.target.value);
     if (selectedFood) setSelectedFood(null); // clear selection if typing
