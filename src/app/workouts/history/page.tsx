@@ -10,7 +10,7 @@ import Filters from "@/components/history/Filters";
 import { WorkoutSession } from "@/types";
 import { calculatePRs } from "@/lib/historyUtils";
 import { Sparkles } from "lucide-react";
-import WorkoutProgression from "@/components/WorkoutProgression";
+import WorkoutProgression from "@/components/workout/history/WorkoutProgression";
 import HistorySkeleton from "@/components/history/HistorySkeleton";
 
 export default function HistoryPage() {

@@ -30,11 +30,7 @@ export default function PRSection({ prs }: PRSectionProps) {
 
   return (
     <div
-      className="rounded-2xl p-5 shadow-lg"
-      style={{
-        background: "var(--card-background)",
-        border: "1px solid var(--card-border)",
-      }}
+      className="rounded-2xl p-5 shadow-lg bg-[var(--card-background)] border border-[var(--card-border)]"
     >
       {/* Header */}
       <div className="flex items-center gap-2 mb-6">
@@ -55,11 +51,8 @@ export default function PRSection({ prs }: PRSectionProps) {
             return (
               <div
                 key={category}
-                className="rounded-xl overflow-hidden backdrop-blur-md"
-                style={{
-                  background: "linear-gradient(to right, var(--surface-light)/60, var(--surface-dark)/60)",
-                  border: "1px solid var(--card-border)",
-                }}
+                className="rounded-xl overflow-hidden backdrop-blur-md border border-[var(--card-border)]"
+                
               >
                 {/* Category header */}
                 <button

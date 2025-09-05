@@ -37,7 +37,7 @@ export default function WorkoutModal({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 50, opacity: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            className="bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-3 relative"
+            className="bg-black border border-gray-800 m-1 rounded-2xl shadow-xl w-full max-w-md p-3 relative"
           >
             {/* Close Button */}
             <button

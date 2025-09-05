@@ -4,14 +4,18 @@ import { useState, useEffect, useMemo } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/firebase";
 import { getCompletedExercisesForToday } from "@/services/workoutService";
-import { CheckCircle2 } from "lucide-react";
-import WorkoutModal from "./WorkoutModal";
-import SwipeableCard from "./SwipeableCard";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import SwipeableCard from "../SwipeableCard";
 import EditExerciseModal from "@/components/EditExerciseModal";
 import { Exercise } from "@/types";
 import { toast } from "sonner";
 import { Search } from "lucide-react";
-import { Skeleton } from "./ui/skeleton";
+import { Skeleton } from "../ui/skeleton";
+import ExerciseCard from "./ExerciseCard";
+import ExerciseSkeleton from "./ExerciseSkeleton";
+import WorkoutModal from "./WorkoutModal";
+import WorkoutCompletionMeter from "./WorkoutCompletionMeter";
+import { useRouter } from "next/navigation";import router from "next/router"; 
 
 interface CompletedExercise {
   setsDone: number;
@@ -27,100 +31,6 @@ interface WorkoutGroupProps {
   };
 }
 
-function ExerciseCard({
-  exercise,
-  selected,
-  onSelect,
-  completedData,
-}: {
-  exercise: Exercise;
-  selected: boolean;
-  onSelect: () => void;
-  completedData?: CompletedExercise;
-}) {
-  const progress =
-    completedData && exercise.sets > 0
-      ? Math.min(
-        100,
-        Math.round((completedData.setsDone / exercise.sets) * 100)
-      )
-      : 0;
-
-  const secondary = exercise.secondaryMuscleGroups ?? [];
-  const equipment = exercise.equipment ?? [];
-
-  return (
-    <button
-  type="button"
-  onClick={onSelect}
-  aria-label={`Select ${exercise.name} exercise`}
-  className={`
-    relative w-full rounded-xl p-3 text-[var(--text-primary)] text-left transition-all
-    backdrop-blur-md border border-[var(--card-border)] shadow-sm
-    bg-[var(--card-background)] hover:border-[var(--accent-yellow)]/70 hover:shadow-[0_0_8px_rgba(250,204,21,0.25)]
-    ${selected ? "border-[var(--accent-yellow)] shadow-[0_0_8px_rgba(250,204,21,0.4)] scale-[1.01]" : ""}
-    focus:outline-none focus:ring-1 focus:ring-[var(--accent-yellow)]/40 flex flex-col gap-1.5
-  `}
->
-  {/* Top Row */}
-  <div className="flex justify-between items-center">
-    <div className="flex items-center gap-1.5">
-      <span className="font-medium text-sm">{exercise.name}</span>
-      <span className="px-1.5 py-0.5 text-[var(--accent-yellow)] bg-[var(--accent-yellow)]/10 rounded-md text-[10px] font-medium">
-        {exercise.sets} × {exercise.reps}
-      </span>
-    </div>
-    {progress === 100 && (
-      <CheckCircle2
-        size={14}
-        className="text-[var(--accent-green)]"
-        aria-label="Completed today"
-      />
-    )}
-  </div>
-
-  {/* Sub Info */}
-  <div className="text-[11px] text-[var(--text-muted)] truncate">
-    {exercise.muscleGroup} • {exercise.subGroup} • {exercise.movementType}
-  </div>
-
-  {/* Tags */}
-  <div className="flex flex-wrap gap-1 text-[10px] mt-0.5">
-    <span className="px-1.5 py-0.5 rounded-full bg-[var(--accent-blue)]/10 text-[var(--text-muted)]">
-      {exercise.difficulty}
-    </span>
-
-    {secondary.length > 0 && (
-      <span className="px-1.5 py-0.5 rounded-full bg-[var(--accent-purple)]/10 text-[var(--text-muted)]">
-        {secondary.join(", ")}
-      </span>
-    )}
-
-    {equipment.length > 0 && (
-      <span className="px-1.5 py-0.5 rounded-full bg-[var(--accent-orange)]/10 text-[var(--text-muted)]">
-        {equipment.join(", ")}
-      </span>
-    )}
-  </div>
-
-  {/* Progress */}
-{completedData && (
-  <div className="mt-0.5">
-    <div className="w-full bg-[var(--surface-light)]/60 rounded-full h-1 overflow-hidden">
-      <div
-        className="h-full rounded-full bg-gradient-to-r from-[var(--accent-green)] to-[var(--accent-green)] transition-all duration-300"
-        style={{ width: `${progress}%` }}
-      />
-    </div>
-    <div className="text-[9px] text-[var(--text-muted)] mt-0.5">
-      {completedData.setsDone}/{exercise.sets} sets
-    </div>
-  </div>
-)}
-</button>
-  );
-}
-
 export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
   const [user, setUser] = useState<User | null>(null);
   const [completedExercises, setCompletedExercises] = useState<
@@ -128,7 +38,8 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
   >({});
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
-
+    const router = useRouter();
+  
   const [exercises, setExercises] = useState<Exercise[]>(plan.exercises);
 
   const [editOpen, setEditOpen] = useState(false);
@@ -189,20 +100,9 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
   useEffect(() => {
     setExercises(plan.exercises);
   }, [plan.id, plan.exercises]);
-    const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  // auth state + completed logs
-  const ExerciseSkeleton = () => (
-    <div className="rounded-xl p-3 bg-[var(--card-background)] border border-[var(--card-border)] shadow-sm space-y-2">
-      <Skeleton className="h-4 w-24" />
-      <Skeleton className="h-3 w-32" />
-      <div className="flex gap-1">
-        <Skeleton className="h-3 w-12 rounded-full" />
-        <Skeleton className="h-3 w-16 rounded-full" />
-      </div>
-      <Skeleton className="h-2 w-full rounded-full" />
-    </div>
-  );
+  <ExerciseSkeleton />;
 
   // auth state + fetch completed logs
   useEffect(() => {
@@ -250,21 +150,23 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-white">
-        Today's {plan.muscleGroup} Workout
-      </h2>
 
-      <div className="relative w-full">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-        <input
-          type="search"
-          placeholder="Search exercises..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 p-2 rounded-md bg-[#0d0f1a]/60 border border-gray-800 text-white focus:outline-none focus:border-yellow-500"
-          aria-label="Search exercises"
-        />
-      </div>
+      <header className="sticky top-0 z-40 flex items-center gap-3 bg-[var(--card-background)] px-3 py-2 border-b border-[var(--card-border)] shadow-sm">
+        <button
+          onClick={() => router.push("/workouts?from=today")}
+          className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] py-1 px-2 rounded-full transition"
+        >
+          <ArrowLeft size={16} className="bg-[var(--surface-dark)]" /> Back
+        </button>
+              <h2 className="text-lg font-semibold text-white">
+        Today's {plan.muscleGroup} Plan
+      </h2>
+      </header>
+
+      <WorkoutCompletionMeter
+        completedExercises={completedExercises}
+        planExercises={exercises}
+      />
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">

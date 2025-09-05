@@ -119,7 +119,7 @@ export default function EditExerciseModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 text-white w-[95vw] max-w-md sm:max-w-lg p-4 sm:p-6 rounded-lg">
+      <DialogContent className="bg-[var(--card-background)] text-white w-[95vw] max-w-md sm:max-w-lg p-4 sm:p-6 rounded-lg">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl mb-2">
             Edit Exercise
@@ -130,10 +130,10 @@ export default function EditExerciseModal({
           <div className="space-y-4 w-full">
             {/* Muscle Group Select */}
             <Select value={muscle} onValueChange={handleMuscleGroupChange}>
-              <SelectTrigger className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg text-sm sm:text-base">
+              <SelectTrigger className="w-full bg-[var(--card-background)] border border-gray-700 text-white rounded-lg text-sm sm:text-base">
                 <SelectValue placeholder="Select Muscle Group" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border border-gray-700 text-white max-h-60 overflow-y-auto">
+              <SelectContent className="bg-[var(--card-background)] border border-gray-700 text-white max-h-60 overflow-y-auto">
                 {muscleGroups.map((g) => (
                   <SelectItem
                     key={g}

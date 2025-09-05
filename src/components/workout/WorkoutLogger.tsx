@@ -311,7 +311,7 @@ const handleSave = async () => {
   return (
     <div
       ref={modalRef}
-      className="w-full max-w-sm mx-auto p-6 bg-gray-900 rounded-xl shadow-lg border border-gray-700 space-y-4"
+      className="w-full max-w-sm mx-auto p-6 bg-black rounded-xl shadow-lg border border-gray-800 space-y-4"
     >
       <SetsControl sets={setsCount} setSets={setSetsCount} />
 

@@ -16,7 +16,7 @@ export default function WorkoutPage() {
     <div className="max-w-md mx-auto px-4 py-6 space-y-8 bg-black min-h-screen">
       <div className="space-y-1">
         {/* Suggested Section */}
-        <div className="bg-gray-900 rounded-xl shadow-md mb-6">
+        <div className="bg-[var(--card-background)] rounded-xl shadow-md mb-6">
           <SuggestionSection
             userId={auth.currentUser?.uid || ""}
             onSelect={(m) => {

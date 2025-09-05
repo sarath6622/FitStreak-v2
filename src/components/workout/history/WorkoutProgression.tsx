@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { WorkoutSession } from "@/types";
 import { calculate1RM } from "@/utils/strength";
 import { Card, CardContent } from "@/components/ui/card";
-import StatCard from "./StatCard";
+import StatCard from "../../StatCard";
 import {
   LineChart,
   Line,
@@ -28,6 +28,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import ExerciseDropdown from "./ExerciseDropdown";
 
 interface Props {
   workouts: WorkoutSession[];
@@ -105,7 +106,7 @@ export default function WorkoutProgression({ workouts, defaultExercise }: Props)
   );
 
   return (
-    <Card className="bg-[var(--card-background)] border border-[var(--card-border)] rounded-2xl p-4 text-[var(--text-primary)] shadow-md mb-6">
+    <Card className="bg-black border border-[var(--card-border)] rounded-2xl p-4 text-[var(--text-primary)] shadow-md mb-6">
       <CardContent className="p-0 space-y-4">
         {/* Header + Dropdown */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
@@ -114,38 +115,11 @@ export default function WorkoutProgression({ workouts, defaultExercise }: Props)
             <span className="text-[var(--text-muted)] text-xs">(1RM & PR)</span>
           </h2>
 
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <button className="w-full sm:w-52 bg-[var(--surface-light)] border border-[var(--card-border)] text-[var(--text-primary)] rounded-lg px-3 py-2 text-left text-sm hover:bg-[var(--surface-hover)] transition">
-                {exerciseName || "Choose exercise"}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0 w-[250px] bg-[var(--surface-dark)] border border-[var(--card-border)] text-[var(--text-primary)] shadow-lg rounded-xl">
-              <Command>
-                <CommandInput
-                  placeholder="Search exercise..."
-                  className="text-[var(--text-primary)]"
-                />
-                <CommandList className="max-h-[25vh] overflow-y-auto">
-                  <CommandEmpty>No exercise found.</CommandEmpty>
-                  <CommandGroup>
-                    {exerciseOptions.map((name) => (
-                      <CommandItem
-                        key={name}
-                        onSelect={() => {
-                          setSelectedExercise(name);
-                          setOpen(false);
-                        }}
-                        className="cursor-pointer hover:bg-[var(--surface-hover)]"
-                      >
-                        {name}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+<ExerciseDropdown
+  value={exerciseName}
+  options={exerciseOptions}
+  onSelect={(val) => setSelectedExercise(val)}
+/>
         </div>
 
         {/* Stat Cards */}
