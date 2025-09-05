@@ -1,0 +1,26 @@
+/* src/styles/theme.css */
+:root {
+  /* Card container */
+  --card-background: linear-gradient(to bottom, #0d0f1a, #161a2b);
+  --card-border: #1f2937; /* gray-800 */
+  --card-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+
+  /* Text */
+  --text-primary: #f9fafb;   /* near-white */
+  --text-secondary: #d1d5db; /* gray-300 */
+  --text-muted: #9ca3af;     /* gray-400 */
+
+  /* Accents */
+  --accent-yellow: #facc15;   /* yellow-400 */
+  --accent-purple: #a78bfa;   /* violet-400 */
+  --accent-highlight: #7dd3fc; /* sky-300 */
+  --accent-blue: #3b82f6;     /* blue-500 */
+  --accent-blue-ring: #60a5fa; /* blue-400 */
+  --accent-green: #22c55e;      /* green-500 ✅ for pulse dot */
+
+  /* Surfaces */
+  --surface-light: #1f2937;  /* gray-800 */
+  --surface-dark: #111827;   /* gray-900 */
+  --surface-hover: #374151;  /* gray-700 */
+  --surface-hover: #374151;  /* gray-700 ✅ hover background */
+}

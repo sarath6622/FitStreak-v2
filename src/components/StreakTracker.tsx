@@ -26,7 +26,7 @@ export default function StreakTracker() {
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
       {/* Progress Card */}
-      <div className="bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] rounded-xl p-4 shadow-md border border-gray-800">
+      <div className="bg-[var(--card-background)] rounded-xl p-4 shadow-md border border-gray-800">
         <p className="text-xs text-gray-400">This Week's Progress</p>
         <div className="flex justify-between items-center mt-1">
           <span className="text-sm font-medium text-white">
@@ -45,7 +45,7 @@ export default function StreakTracker() {
       {/* Streak Stats */}
       <div className="grid grid-cols-2 gap-3">
         {/* Longest Streak */}
-        <div className="bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] rounded-xl p-4 shadow-md border border-gray-800 text-center">
+        <div className="bg-[var(--card-background)] rounded-xl p-4 shadow-md border border-[var(--card-border)]  text-center">
           <div className="flex justify-center mb-2">
             <Trophy className="w-5 h-5 text-purple-400" />
           </div>
@@ -56,7 +56,7 @@ export default function StreakTracker() {
         </div>
 
         {/* Current Streak */}
-        <div className="bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] rounded-xl p-4 shadow-md border border-gray-800 text-center">
+        <div className="bg-[var(--card-background)] rounded-xl p-4 shadow-md border border-[var(--card-border)]  text-center">
           <div className="flex justify-center mb-2">
             <Flame className="w-5 h-5 text-orange-400" />
           </div>

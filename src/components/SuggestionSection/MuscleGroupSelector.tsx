@@ -38,10 +38,10 @@ export default function MuscleGroupSelector({
 
   return (
     <div className="mb-5">
-      <h4 className="text-sm font-semibold text-gray-300 mb-2 tracking-wide">
+      <h4 className="text-sm font-semibold text-[var(--text-secondary)] mb-2 tracking-wide">
         Choose Muscle Groups
       </h4>
-      <div className="flex flex-wrap gap-2 p-2 bg-gray-800 border border-gray-700 rounded-lg">
+      <div className="flex flex-wrap gap-2 p-2 border border-[var(--card-border)] rounded-lg bg-[var(--surface-dark)]">
         {muscleGroups.map((group) => {
           const selected = value.includes(group);
           const summary = summaries?.find((s) => s.muscleGroup === group);
@@ -53,13 +53,13 @@ export default function MuscleGroupSelector({
               className={clsx(
                 "px-3 py-1 rounded-full text-sm font-medium transition-all flex items-center gap-1",
                 selected
-                  ? "bg-blue-600 text-white ring-2 ring-blue-300 scale-105"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  ? "bg-[var(--accent-blue)] text-[var(--text-primary)] ring-2 ring-[var(--accent-blue-ring)] scale-105"
+                  : "bg-[var(--surface-light)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
               )}
             >
               <span>{group}</span>
               {summary && (
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-[var(--text-muted)]">
                   ({summary.daysAgo}d)
                 </span>
               )}

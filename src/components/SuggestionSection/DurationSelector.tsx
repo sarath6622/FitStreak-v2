@@ -5,7 +5,7 @@ interface DurationSelectorProps {
   onChange: (val: string) => void;
 }
 
-const durations = ["15 min", "30 min", "45 min", "60 min"];
+const durations = ["30 min", "45 min", "60 min", "90 min", "120 min"];
 
 export default function DurationSelector({
   value,
@@ -13,10 +13,10 @@ export default function DurationSelector({
 }: DurationSelectorProps) {
   return (
     <div className="mb-5">
-      <h4 className="text-sm font-semibold text-gray-300 mb-2 tracking-wide">
+      <h4 className="text-sm font-semibold text-[var(--text-secondary)] mb-2 tracking-wide">
         Workout Duration
       </h4>
-      <div className="flex flex-wrap gap-2 p-2 bg-gray-800 border border-gray-700 rounded-lg">
+      <div className="flex flex-wrap gap-2 p-2 bg-[var(--surface-dark)] border border-[var(--card-border)] rounded-lg">
         {durations.map((d) => {
           const selected = value === d;
           return (
@@ -26,8 +26,8 @@ export default function DurationSelector({
               className={clsx(
                 "px-3 py-1 rounded-full text-sm font-medium transition-all",
                 selected
-                  ? "bg-blue-600 text-white ring-2 ring-blue-300 scale-105"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  ? "bg-[var(--accent-blue)] text-[var(--text-primary)] ring-2 ring-[var(--accent-blue-ring)] scale-105"
+                  : "bg-[var(--surface-light)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
               )}
             >
               {d}

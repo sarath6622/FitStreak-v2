@@ -135,7 +135,7 @@ export default function SuggestionSection({ userId }: SuggestionSectionProps) {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] rounded-2xl shadow-lg border border-gray-700">
+    <div className="max-w-xl mx-auto p-6 bg-[var(--card-background)] border-[var(--card-border)] rounded-2xl shadow-lg border border-[var(--card-border)]">
       <h2 className="text-md font-bold text-blue-400 mb-4 flex items-center gap-2">
         <Sparkles className="w-5 h-5 text-blue-300" />
         Workout Suggestions

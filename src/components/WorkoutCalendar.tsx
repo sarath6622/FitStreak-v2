@@ -68,7 +68,7 @@ export default function WorkoutCalendar({ workouts }: WorkoutCalendarProps) {
   }
 
   return (
-    <div className="bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] text-white p-3 rounded-2xl shadow-lg border border-gray-700 w-full max-w-sm">
+    <div className="bg-[var(--card-background)] text-white p-3 rounded-2xl shadow-lg border border-[var(--card-border)] w-full max-w-sm">
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <button

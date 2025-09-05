@@ -29,11 +29,21 @@ export default function PRSection({ prs }: PRSectionProps) {
   };
 
   return (
-    <div className="bg-gradient-to-b from-[#0d0f1a] to-[#161a2b] border border-gray-700 rounded-2xl p-5 shadow-lg">
+    <div
+      className="rounded-2xl p-5 shadow-lg"
+      style={{
+        background: "var(--card-background)",
+        border: "1px solid var(--card-border)",
+        boxShadow: "var(--card-shadow)",
+      }}
+    >
       {/* Header */}
       <div className="flex items-center gap-2 mb-6">
-        <Trophy className="text-yellow-400 drop-shadow" size={22} />
-        <h2 className="font-semibold text-white text-xl tracking-wide">
+        <Trophy style={{ color: "var(--accent-yellow)" }} size={22} />
+        <h2
+          className="font-semibold text-xl tracking-wide"
+          style={{ color: "var(--text-primary)" }}
+        >
           Personal Records
         </h2>
       </div>
@@ -46,21 +56,28 @@ export default function PRSection({ prs }: PRSectionProps) {
             return (
               <div
                 key={category}
-                className="rounded-xl border border-gray-700 overflow-hidden bg-gradient-to-r from-gray-800/60 to-gray-900/60 backdrop-blur-md"
+                className="rounded-xl overflow-hidden backdrop-blur-md"
+                style={{
+                  background: "linear-gradient(to right, var(--surface-light)/60, var(--surface-dark)/60)",
+                  border: "1px solid var(--card-border)",
+                }}
               >
                 {/* Category header */}
                 <button
                   onClick={() => toggleCategory(category)}
                   className="flex justify-between items-center w-full px-4 py-3 text-left"
                 >
-                  <span className="text-gray-100 font-medium flex items-center gap-2">
-                    <Dumbbell size={16} className="text-purple-400" />
+                  <span
+                    className="font-medium flex items-center gap-2"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    <Dumbbell size={16} style={{ color: "var(--accent-purple)" }} />
                     {category}
                   </span>
                   {isOpen ? (
-                    <ChevronDown className="text-gray-400 transition-transform" size={18} />
+                    <ChevronDown style={{ color: "var(--text-muted)" }} size={18} />
                   ) : (
-                    <ChevronRight className="text-gray-400 transition-transform" size={18} />
+                    <ChevronRight style={{ color: "var(--text-muted)" }} size={18} />
                   )}
                 </button>
 
@@ -74,12 +91,22 @@ export default function PRSection({ prs }: PRSectionProps) {
                     {grouped[category].map(({ exercise, weight }) => (
                       <div
                         key={exercise}
-                        className="flex justify-between items-center bg-gray-700/50 px-3 py-2 rounded-lg"
+                        className="flex justify-between items-center px-3 py-2 rounded-lg"
+                        style={{ background: "var(--surface-light)" }}
                       >
-                        <span className="text-white text-sm font-medium truncate">
+                        <span
+                          className="text-sm font-medium truncate"
+                          style={{ color: "var(--text-primary)" }}
+                        >
                           {exercise}
                         </span>
-                        <span className="text-yellow-300 font-semibold text-sm bg-gray-800 px-2 py-0.5 rounded-md">
+                        <span
+                          className="font-semibold text-sm px-2 py-0.5 rounded-md"
+                          style={{
+                            color: "var(--accent-yellow)",
+                            background: "var(--surface-dark)",
+                          }}
+                        >
                           {weight} kg
                         </span>
                       </div>
@@ -91,7 +118,10 @@ export default function PRSection({ prs }: PRSectionProps) {
           })}
         </div>
       ) : (
-        <p className="text-gray-400 text-sm italic">
+        <p
+          className="text-sm italic"
+          style={{ color: "var(--text-muted)" }}
+        >
           No PRs recorded yet. Start logging workouts!
         </p>
       )}
