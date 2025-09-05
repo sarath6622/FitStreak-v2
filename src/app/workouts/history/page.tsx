@@ -11,6 +11,7 @@ import { WorkoutSession } from "@/types";
 import { calculatePRs } from "@/lib/historyUtils";
 import { Sparkles } from "lucide-react";
 import WorkoutProgression from "@/components/WorkoutProgression";
+import HistorySkeleton from "@/components/history/HistorySkeleton";
 
 export default function HistoryPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -68,14 +69,10 @@ export default function HistoryPage() {
       </div>
     );
   }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--surface-dark)] text-[var(--text-primary)]">
-        <Sparkles className="w-8 h-8 animate-spin text-[var(--accent-blue)]" />
-      </div>
-    );
-  }
+  
+if (loading) {
+  return <HistorySkeleton />;
+}
 
   return (
     <div className="min-h-screen bg-[var(--surface-dark)] text-[var(--text-primary)] px-4 py-6">

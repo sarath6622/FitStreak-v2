@@ -9,6 +9,7 @@ import MealModal from "@/components/diet/MealModal";
 import { UserProfile } from "@/types/UserProfile";
 import { Sparkles } from "lucide-react";
 import WaterGlassesCard from "@/components/diet/WaterRing";
+import DietSkeleton from "@/components/diet/DietSkeleton";
 
 type Meal = {
   id?: string; // from Firestore
@@ -160,16 +161,9 @@ export default function Diet() {
     []
   );
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="flex items-center gap-2 text-gray-300 animate-pulse">
-          <Sparkles className="animate-spin w-5 h-5" />
-          <span>Loading...</span>
-        </div>
-      </div>
-    );
-  }
+if (loading) {
+  return <DietSkeleton />;
+}
 
   if (!user) {
     return <div className="p-4 text-red-400">Please log in to see your meals.</div>;

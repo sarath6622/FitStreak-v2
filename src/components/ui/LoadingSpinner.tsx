@@ -77,7 +77,7 @@ export default function DumbbellLoader() {
   }, [barControls, leftPlatesControls, rightPlatesControls]);
 
   return (
-    <div className="min-h-[100svh] absolute top-0 flex items-center justify-center bg-[var(--card-background)] text-gray-300 w-full">
+    <div className="min-h-screen absolute top-0 flex items-center justify-center bg-[var(--card-background)] text-gray-300 w-full">
       {/* Group dumbbell + text together */}
       <div className="flex flex-col items-center justify-center space-y-6">
         {/* Dumbbell */}
@@ -122,7 +122,7 @@ export default function DumbbellLoader() {
         </motion.div>
 
         {/* Cycling motivational text */}
-        <div className="text-base font-semibold text-[var(--accent-orange)] tracking-widest relative w-52 text-center overflow-hidden">
+        <div className="text-base font-semibold text-white tracking-widest relative w-52 text-center overflow-hidden">
           <motion.div
             key={currentPhraseIndex}
             initial={{ opacity: 0, y: 20 }}
