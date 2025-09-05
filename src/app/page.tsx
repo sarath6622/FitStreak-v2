@@ -10,10 +10,9 @@ import Auth from "@/components/Auth";
 import { calculatePRs } from "@/lib/historyUtils";
 import type { WorkoutSession } from "@/types";
 import type { UserProfile } from "@/types/UserProfile";
-import { Sparkles } from "lucide-react";
 import WorkoutCalendar from "@/components/WorkoutCalendar";
 import StreakTracker from "@/components/StreakTracker";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -21,6 +20,7 @@ export default function Home() {
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [weeklyFrequency, setWeeklyFrequency] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -53,17 +53,13 @@ export default function Home() {
         }
       }
 
+      // mark loading false, then trigger fade-in
       setLoading(false);
+      setTimeout(() => setShowContent(true), 100);
     });
 
     return unsubscribe;
   }, []);
-
-  if (loading) {
-    return (
-      <LoadingSpinner />
-    );
-  }
 
   if (!user) {
     return (
@@ -80,24 +76,34 @@ export default function Home() {
       <main className="flex-grow flex flex-col items-center px-4 pt-6 pb-8">
         {/* Welcome card */}
         <div className="bg-[var(--card-background)] border border-[var(--card-border)] rounded-xl shadow-md w-full max-w-sm p-3 flex flex-col items-center text-center space-y-2">
-          {/* Avatar */}
+          {loading && <Skeleton className="w-10 h-10 rounded-full" />}
           {user.photoURL && (
             <img
               src={user.photoURL}
               alt={user.displayName || "Profile"}
-              className="w-10 h-10 rounded-full ring-1 ring-purple-500/70 shadow"
+              className={`w-10 h-10 rounded-full ring-1 ring-purple-500/70 shadow transition-opacity duration-500 ${
+                showContent ? "opacity-100" : "opacity-0"
+              }`}
             />
           )}
 
-          {/* Title */}
-          <h2 className="text-sm font-medium text-[var(--text-primary)]">
-            Welcome{user.displayName ? `, ${user.displayName}` : ""}!
+          <h2
+            className={`text-sm font-medium text-[var(--text-primary)] transition-opacity duration-500 ${
+              showContent ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            {loading ? (
+              <Skeleton className="w-32 h-4 mx-auto" />
+            ) : (
+              <>Welcome{user.displayName ? `, ${user.displayName}` : ""}!</>
+            )}
           </h2>
 
-          {/* CTA */}
           <Link
             href="/workouts"
-            className="bg-[var(--card-background)] hover:opacity-90  text-[var(--text-primary)] px-3 py-1.5 rounded-lg text-xs shadow transition-all"
+            className={`bg-[var(--card-background)] hover:opacity-90 text-[var(--text-primary)] px-3 py-1.5 rounded-lg text-xs shadow transition-all transition-opacity duration-500 ${
+              showContent ? "opacity-100" : "opacity-0"
+            }`}
           >
             Start Workout
           </Link>
@@ -105,17 +111,44 @@ export default function Home() {
 
         {/* Streak Tracker */}
         <div className="mt-6 w-full max-w-2xl">
-          <StreakTracker />
+          {loading && (
+            <Skeleton className="h-20 w-full rounded-lg bg-[var(--card-background)] border border-[var(--card-border)]" />
+          )}
+          <div
+            className={`transition-opacity duration-500 ${
+              showContent ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            {!loading && <StreakTracker />}
+          </div>
         </div>
 
         {/* Workout Calendar */}
         <div className="mt-6 w-full max-w-2xl">
-          <WorkoutCalendar workouts={workouts} />
+          {loading && (
+            <Skeleton className="h-40 w-full rounded-lg bg-[var(--card-background)] border border-[var(--card-border)]" />
+          )}
+          <div
+            className={`transition-opacity duration-500 ${
+              showContent ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            {!loading && <WorkoutCalendar workouts={workouts} />}
+          </div>
         </div>
 
         {/* PR Section */}
         <div className="mt-6 w-full max-w-2xl">
-          <PRSection prs={prs} />
+          {loading && (
+            <Skeleton className="h-24 w-full rounded-lg bg-[var(--card-background)] border border-[var(--card-border)]" />
+          )}
+          <div
+            className={`transition-opacity duration-500 ${
+              showContent ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            {!loading && <PRSection prs={prs} />}
+          </div>
         </div>
       </main>
     </div>

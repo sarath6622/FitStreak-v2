@@ -29,14 +29,14 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
-      setLoading(false);
+      setTimeout(() => setLoading(false), 1000);
     });
     return unsubscribe;
   }, []);
 
   if (loading) {
     return (
-<LoadingSpinner />
+      <LoadingSpinner />
     );
   }
 
