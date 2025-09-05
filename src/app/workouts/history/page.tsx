@@ -53,15 +53,15 @@ export default function HistoryPage() {
 
   if (!authReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
+      <div className="min-h-screen flex items-center justify-center bg-[var(--surface-dark)] text-[var(--text-primary)]">
+        <Sparkles className="w-8 h-8 animate-spin text-[var(--accent-blue)]" />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--surface-dark)] text-[var(--text-primary)]">
         <div className="w-full max-w-md">
           <Auth />
         </div>
@@ -71,14 +71,14 @@ export default function HistoryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
+      <div className="min-h-screen flex items-center justify-center bg-[var(--surface-dark)] text-[var(--text-primary)]">
+        <Sparkles className="w-8 h-8 animate-spin text-[var(--accent-blue)]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white px-4 py-6">
+    <div className="min-h-screen bg-[var(--surface-dark)] text-[var(--text-primary)] px-4 py-6">
       {/* ✅ Pass lastLoggedExercise here */}
       <WorkoutProgression workouts={allWorkouts} defaultExercise={lastLoggedExercise} />
 

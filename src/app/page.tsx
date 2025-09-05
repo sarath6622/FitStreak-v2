@@ -13,6 +13,7 @@ import type { UserProfile } from "@/types/UserProfile";
 import { Sparkles } from "lucide-react";
 import WorkoutCalendar from "@/components/WorkoutCalendar";
 import StreakTracker from "@/components/StreakTracker";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -60,12 +61,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="flex items-center gap-2 text-gray-300 animate-pulse">
-          <Sparkles className="animate-spin w-5 h-5" />
-          <span>Loading...</span>
-        </div>
-      </div>
+      <LoadingSpinner />
     );
   }
 

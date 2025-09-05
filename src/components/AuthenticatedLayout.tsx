@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import Navbar from "@/components/Navbar";
 import { Sparkles } from "lucide-react";
 import { useFCM } from "@/hooks/useFCM";
+import LoadingSpinner from "./ui/LoadingSpinner";
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -35,13 +36,7 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
 
   if (loading) {
     return (
-      <div className="min-h-[100svh] grid place-items-center bg-black text-white">
-        <div className="flex flex-col items-center">
-          <Sparkles className="w-8 h-8 mb-3 animate-spin text-blue-400" />
-          <h1 className="text-3xl font-bold">FitStreak</h1>
-          <p className="text-sm text-gray-400 mt-2">{msg}</p>
-        </div>
-      </div>
+<LoadingSpinner />
     );
   }
 

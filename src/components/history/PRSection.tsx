@@ -34,7 +34,6 @@ export default function PRSection({ prs }: PRSectionProps) {
       style={{
         background: "var(--card-background)",
         border: "1px solid var(--card-border)",
-        boxShadow: "var(--card-shadow)",
       }}
     >
       {/* Header */}
