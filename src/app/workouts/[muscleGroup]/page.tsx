@@ -7,7 +7,7 @@ import { auth } from "@/firebase";
 import { getCompletedExercisesForToday } from "@/services/workoutService";
 import ExerciseList from "@/components/ExerciseList";
 import { Loader2, Sparkles } from "lucide-react";
-import WorkoutModal from "@/components/WorkoutModal";
+import WorkoutModal from "@/components/workout/WorkoutModal";
 
 type CompletedMap = Record<string, { setsDone: number; repsDone: number }>;
 
