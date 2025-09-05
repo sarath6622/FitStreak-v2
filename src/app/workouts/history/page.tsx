@@ -75,7 +75,7 @@ if (loading) {
 }
 
   return (
-    <div className="min-h-screen bg-[var(--surface-dark)] text-[var(--text-primary)] px-4 py-6">
+    <div className="min-h-screen bg-black text-[var(--text-primary)] px-4 py-6">
       {/* ✅ Pass lastLoggedExercise here */}
       <WorkoutProgression workouts={allWorkouts} defaultExercise={lastLoggedExercise} />
 
