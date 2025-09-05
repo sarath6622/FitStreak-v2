@@ -11,6 +11,7 @@ import EditExerciseModal from "@/components/EditExerciseModal";
 import { Exercise } from "@/types";
 import { toast } from "sonner";
 import { Search } from "lucide-react";
+import { Skeleton } from "./ui/skeleton";
 
 interface CompletedExercise {
   setsDone: number;
@@ -49,73 +50,73 @@ function ExerciseCard({
   const equipment = exercise.equipment ?? [];
 
   return (
-<button
+    <button
   type="button"
   onClick={onSelect}
   aria-label={`Select ${exercise.name} exercise`}
   className={`
-    relative w-full rounded-xl p-3 text-white text-left transition-all
-    bg-[#0d0f1a]/60 backdrop-blur-md border border-gray-800 shadow-sm
-    hover:border-yellow-400/70 hover:shadow-[0_0_8px_rgba(234,179,8,0.25)]
-    ${selected ? "border-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.4)] scale-[1.01]" : ""}
-    focus:outline-none focus:ring-1 focus:ring-yellow-500/40 flex flex-col gap-1.5
+    relative w-full rounded-xl p-3 text-[var(--text-primary)] text-left transition-all
+    backdrop-blur-md border border-[var(--card-border)] shadow-sm
+    bg-[var(--card-background)] hover:border-[var(--accent-yellow)]/70 hover:shadow-[0_0_8px_rgba(250,204,21,0.25)]
+    ${selected ? "border-[var(--accent-yellow)] shadow-[0_0_8px_rgba(250,204,21,0.4)] scale-[1.01]" : ""}
+    focus:outline-none focus:ring-1 focus:ring-[var(--accent-yellow)]/40 flex flex-col gap-1.5
   `}
 >
   {/* Top Row */}
   <div className="flex justify-between items-center">
     <div className="flex items-center gap-1.5">
       <span className="font-medium text-sm">{exercise.name}</span>
-      <span className="px-1.5 py-0.5 text-yellow-400 bg-yellow-400/10 rounded-md text-[10px] font-medium">
+      <span className="px-1.5 py-0.5 text-[var(--accent-yellow)] bg-[var(--accent-yellow)]/10 rounded-md text-[10px] font-medium">
         {exercise.sets} × {exercise.reps}
       </span>
     </div>
     {progress === 100 && (
       <CheckCircle2
         size={14}
-        className="text-green-400"
+        className="text-[var(--accent-green)]"
         aria-label="Completed today"
       />
     )}
   </div>
 
   {/* Sub Info */}
-  <div className="text-[11px] text-gray-400 truncate">
+  <div className="text-[11px] text-[var(--text-muted)] truncate">
     {exercise.muscleGroup} • {exercise.subGroup} • {exercise.movementType}
   </div>
 
   {/* Tags */}
   <div className="flex flex-wrap gap-1 text-[10px] mt-0.5">
-    <span className="px-1.5 py-0.5 rounded-full bg-blue-500/10 text-gray-400">
+    <span className="px-1.5 py-0.5 rounded-full bg-[var(--accent-blue)]/10 text-[var(--text-muted)]">
       {exercise.difficulty}
     </span>
 
     {secondary.length > 0 && (
-      <span className="px-1.5 py-0.5 rounded-full bg-blue-500/10 text-gray-400">
+      <span className="px-1.5 py-0.5 rounded-full bg-[var(--accent-purple)]/10 text-[var(--text-muted)]">
         {secondary.join(", ")}
       </span>
     )}
 
     {equipment.length > 0 && (
-      <span className="px-1.5 py-0.5 rounded-full bg-blue-500/10 text-gray-400">
+      <span className="px-1.5 py-0.5 rounded-full bg-[var(--accent-orange)]/10 text-[var(--text-muted)]">
         {equipment.join(", ")}
       </span>
     )}
   </div>
 
   {/* Progress */}
-  {completedData && (
-    <div className="mt-1">
-      <div className="w-full bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
-        <div
-          className="h-0.5 rounded-full bg-gradient-to-r from-green-400 to-green-500 transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-      <div className="text-[10px] text-gray-400 mt-0.5">
-        {completedData.setsDone}/{exercise.sets} sets
-      </div>
+{completedData && (
+  <div className="mt-0.5">
+    <div className="w-full bg-[var(--surface-light)]/60 rounded-full h-1 overflow-hidden">
+      <div
+        className="h-full rounded-full bg-gradient-to-r from-[var(--accent-green)] to-[var(--accent-green)] transition-all duration-300"
+        style={{ width: `${progress}%` }}
+      />
     </div>
-  )}
+    <div className="text-[9px] text-[var(--text-muted)] mt-0.5">
+      {completedData.setsDone}/{exercise.sets} sets
+    </div>
+  </div>
+)}
 </button>
   );
 }
@@ -188,8 +189,22 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
   useEffect(() => {
     setExercises(plan.exercises);
   }, [plan.id, plan.exercises]);
+    const [loading, setLoading] = useState(true);
 
   // auth state + completed logs
+  const ExerciseSkeleton = () => (
+    <div className="rounded-xl p-3 bg-[var(--card-background)] border border-[var(--card-border)] shadow-sm space-y-2">
+      <Skeleton className="h-4 w-24" />
+      <Skeleton className="h-3 w-32" />
+      <div className="flex gap-1">
+        <Skeleton className="h-3 w-12 rounded-full" />
+        <Skeleton className="h-3 w-16 rounded-full" />
+      </div>
+      <Skeleton className="h-2 w-full rounded-full" />
+    </div>
+  );
+
+  // auth state + fetch completed logs
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
@@ -202,6 +217,8 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
         );
         setCompletedExercises(completed);
       }
+
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -249,11 +266,12 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
         />
       </div>
 
-      {filteredExercises.length === 0 ? (
-        <p className="text-gray-400">
-          No exercises found for {plan.muscleGroup}{" "}
-          {searchTerm && `matching "${searchTerm}"`}.
-        </p>
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ExerciseSkeleton key={i} />
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {filteredExercises.map((exercise) => {

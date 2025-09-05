@@ -49,18 +49,10 @@ export default function TodaysWorkouts() {
     fetchPlans();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="text-gray-400 text-center py-4">
-        Loading today's workouts...
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       {plans.map((plan) => (
-        <WorkoutGroup key={plan.id} plan={plan}  />
+        <WorkoutGroup key={plan.id} plan={plan} />
       ))}
     </div>
   );
