@@ -49,14 +49,6 @@ export default function WorkoutPage() {
     checkTodaysPlans();
   }, [router, skipCheck]);
 
-  if (loading || hasTodaysPlan) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-black text-[var(--text-primary)]">
-        Loading...
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-md mx-auto px-4 py-6 space-y-8 bg-black min-h-screen">
       <div className="space-y-1">

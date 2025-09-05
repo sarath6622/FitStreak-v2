@@ -298,11 +298,6 @@ const handleSave = async () => {
   }
 };
 
-  // ---------- render ----------
-  if (loading) {
-    return <p className="text-white text-sm">Loading workout data...</p>;
-  }
-
   const errors: Record<string, string> = {};
   const repOptions: number[] = [];
   const baseButtonClasses =

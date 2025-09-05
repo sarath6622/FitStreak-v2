@@ -134,12 +134,6 @@ export default function ExerciseList({
     onSelectExercise(name);
   };
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      <Sparkles className="w-8 h-8 animate-spin text-blue-400" />
-    </div>
-  }
-
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold text-white">{muscleGroup} Exercises</h2>
