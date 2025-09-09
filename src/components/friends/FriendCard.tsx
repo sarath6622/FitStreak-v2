@@ -1,5 +1,3 @@
-"use client";
-
 import { UserPlus } from "lucide-react";
 import Avatar from "./Avatar";
 
@@ -10,7 +8,7 @@ interface FriendCardProps {
     username?: string;
     photoURL?: string;
   };
-  onAdd: (id: string) => void;
+  onAdd?: (id: string) => void; // 👈 optional now
 }
 
 export default function FriendCard({ user, onAdd }: FriendCardProps) {
@@ -30,12 +28,16 @@ export default function FriendCard({ user, onAdd }: FriendCardProps) {
           </p>
         </div>
       </div>
-      <button
-        onClick={() => onAdd(user.id)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--accent-blue)] hover:bg-[var(--accent-green)] text-sm"
-      >
-        <UserPlus size={16} /> Add Friend
-      </button>
+
+      {/* Only show button if onAdd exists */}
+      {onAdd && (
+        <button
+          onClick={() => onAdd(user.id)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--accent-blue)] hover:bg-[var(--accent-green)] text-sm"
+        >
+          <UserPlus size={16} /> Add Friend
+        </button>
+      )}
     </div>
   );
 }
