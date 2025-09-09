@@ -12,12 +12,21 @@ export default function QuantityMeasure({
   measure: Measure;
   setMeasure: (m: Measure) => void;
 }) {
+  const handleMeasureChange = (newMeasure: Measure) => {
+    setMeasure(newMeasure);
+
+    // ✅ Auto-adjust quantity based on unit
+    if (newMeasure === "Grams") setQuantity(100);
+    else if (newMeasure === "Oz") setQuantity(3); // ~85g
+    else setQuantity(1); // Serving, Cup, Piece
+  };
+
   return (
     <div className="grid grid-cols-2 gap-3 px-4 pt-2">
       <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
         <div className="text-xs text-gray-400 mb-1">Quantity</div>
         <input
-          type="numeric"
+          type="number"
           min={0}
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value || 0))}
@@ -29,7 +38,7 @@ export default function QuantityMeasure({
         <div className="relative">
           <select
             value={measure}
-            onChange={(e) => setMeasure(e.target.value as Measure)} // 👈 cast
+            onChange={(e) => handleMeasureChange(e.target.value as Measure)}
             className="w-full appearance-none bg-transparent text-white pr-7"
           >
             <option value="Grams">Grams</option>

@@ -10,6 +10,7 @@ import { UserProfile } from "@/types/UserProfile";
 import { Sparkles } from "lucide-react";
 import WaterGlassesCard from "@/components/diet/WaterRing";
 import DietSkeleton from "@/components/diet/DietSkeleton";
+import TodaysLog from "@/components/diet/TodaysLog";
 
 type Meal = {
   id?: string; // from Firestore
@@ -56,8 +57,9 @@ export default function Diet() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [meals, setMeals] = useState<Meal[]>([]);
-  const [selectedMeal, setSelectedMeal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedMeal, setSelectedMeal] = useState<number | "new" | null>(null);
+  const mealOptions = ["Breakfast", "Morning Snack", "Lunch", "Evening Snack", "Dinner", "Other"];
 
   // 🔹 Watch auth
   useEffect(() => {
@@ -161,9 +163,9 @@ export default function Diet() {
     []
   );
 
-if (loading) {
-  return <DietSkeleton />;
-}
+  if (loading) {
+    return <DietSkeleton />;
+  }
 
   if (!user) {
     return <div className="p-4 text-red-400">Please log in to see your meals.</div>;
@@ -175,7 +177,12 @@ if (loading) {
         <h2 className="text-xl font-semibold text-white">My Diary</h2>
         <p className="text-gray-400 text-sm">Summary</p>
       </header>
-
+      <button
+        onClick={() => setSelectedMeal("new")}
+        className="w-full py-2 px-4 rounded-lg bg-gradient-to-r from-blue-500 to-green-500 text-white font-medium"
+      >
+        ➕ Add Meal
+      </button>
       {/* Rings */}
       <div className="grid grid-cols-1 gap-4">
         <WaterGlassesCard goal={3000} />
@@ -204,41 +211,80 @@ if (loading) {
           isOpen={true}
           onClose={() => setSelectedMeal(null)}
           defaultQuantity={100}
-          mealType={meals[selectedMeal].name}
+          mealType={selectedMeal === "new" ? "" : meals[selectedMeal].name}
           defaultMeasure="Grams"
-          onSave={async ({ food, quantity, measure, totals, mealType, userId }) => {
-            try {
-              const res = await fetch("/api/food/save-meal", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  userId,
-                  food,
-                  quantity,
-                  measure,
-                  totals,
-                  mealType,
-                }),
-              });
+onSave={async ({ food, quantity, measure, totals, mealType, userId }) => {
+  try {
+    // ✅ Build payload based on new schema
+    const payload = {
+      userId,
+      mealType,
+      foodId: food.id,
+      foodName: food.name,
+      quantity,
+      measure,
+      servingWeight: food.servingUnits?.[measure.toLowerCase()] ?? 100, // fallback
+      nutrients: {
+        calories: totals.calories,
+        protein: totals.protein,
+        fat: totals.fat,
+        carbs: totals.carbs,
+        fiber: totals.fiber,
+        sugars: totals.sugars,
+      },
+    };
 
-              const data = await res.json();
-              if (!res.ok) throw new Error(data.error || "Failed to save meal");
+    // 🔹 Save to backend
+    const res = await fetch("/api/food/save-meal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-              console.log("[Diet] ✅ Meal saved:", data);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to save meal");
 
-              handleSave(selectedMeal, totals.calories, {
-                carbs: totals.carbs,
-                protein: totals.protein,
-                fat: totals.fat,
-              });
-            } catch (err) {
-              console.error("[Diet] ❌ Error saving meal:", err);
-            }
+    console.log("[Diet] ✅ Meal saved:", data);
 
-            setSelectedMeal(null);
-          }}
+    // 🔹 Update local state
+    if (selectedMeal === "new") {
+      if (!mealType) {
+        alert("Please choose a meal type.");
+        return;
+      }
+
+      setMeals((prev) => [
+        ...prev,
+        {
+          id: data.id,
+          foodId: food.id,
+          foodName: food.name,
+          name: mealType,
+          calories: totals.calories,
+          recommended: 0,
+          carbs: totals.carbs,
+          protein: totals.protein,
+          fat: totals.fat,
+        },
+      ]);
+    } else {
+      // 🔄 Update existing meal
+      handleSave(selectedMeal, totals.calories, {
+        carbs: totals.carbs,
+        protein: totals.protein,
+        fat: totals.fat,
+      });
+    }
+  } catch (err) {
+    console.error("[Diet] ❌ Error saving meal:", err);
+  }
+
+  setSelectedMeal(null);
+}}
         />
       )}
+
+      <TodaysLog />
     </div>
   );
 }

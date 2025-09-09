@@ -4,7 +4,6 @@ import { FoodItem } from "@/components/diet/MealModal";
 import { Search, X } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
 interface FoodSearchProps {
   selectedFood: FoodItem | null;
   setSelectedFood: (f: FoodItem | null) => void;
@@ -14,6 +13,7 @@ interface FoodSearchProps {
   loading: boolean;
   recents: FoodItem[];
   onFallbackSearch: (q: string) => void;
+  disabled?: boolean; // 🔹 NEW
 }
 
 export default function FoodSearch({
@@ -25,6 +25,7 @@ export default function FoodSearch({
   loading,
   recents,
   onFallbackSearch,
+  disabled = false, // default false
 }: FoodSearchProps) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -44,43 +45,45 @@ export default function FoodSearch({
 
   return (
     <div className="relative px-4 pb-2" ref={dropdownRef}>
-      {/* 🔍 Single search input */}
-      <div className="relative h-12 w-full rounded-xl border border-white/20 bg-white/10 flex items-center px-3 text-white">
+      {/* 🔍 Search input */}
+      <div
+        className={`relative h-12 w-full rounded-xl border flex items-center px-3 text-white ${
+          disabled
+            ? "border-gray-600 bg-gray-800 opacity-60 cursor-not-allowed"
+            : "border-white/20 bg-white/10"
+        }`}
+      >
         <Search className="h-4 w-4 opacity-70 mr-2" />
-<input
-  autoFocus
-  value={query || selectedFood?.name || ""}
-  ref={inputRef} 
-  onChange={(e) => {
-    setQuery(e.target.value);
-    if (selectedFood) setSelectedFood(null); // clear selection if typing
-  }}
-  placeholder="Search food..."
-  className="flex-1 bg-transparent outline-none text-white placeholder:text-gray-400"
-  onFocus={() => setOpen(true)}
-/>
+        <input
+          autoFocus
+          value={query || selectedFood?.name || ""}
+          ref={inputRef}
+          disabled={disabled} // 🔹 block typing
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (selectedFood) setSelectedFood(null);
+          }}
+          placeholder={disabled ? "Select a meal type first..." : "Search food..."}
+          className="flex-1 bg-transparent outline-none text-white placeholder:text-gray-400 disabled:cursor-not-allowed"
+          onFocus={() => !disabled && setOpen(true)} // 🔹 block dropdown
+        />
 
-{(query || selectedFood) && (
-  <button
-    onClick={() => {
-      setQuery("");
-      setSelectedFood(null);
-      setOpen(true);
-    }}
-  >
-    <X className="h-5 w-5 opacity-70" />
-  </button>
-)}
-        {query && (
-          <button onClick={() => setQuery("")}>
+        {(query || selectedFood) && !disabled && (
+          <button
+            onClick={() => {
+              setQuery("");
+              setSelectedFood(null);
+              setOpen(true);
+            }}
+          >
             <X className="h-5 w-5 opacity-70" />
           </button>
         )}
       </div>
 
-      {/* ✅ Animated dropdown */}
+      {/* ✅ Dropdown only if not disabled */}
       <AnimatePresence>
-        {open && (
+        {!disabled && open && (
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -140,12 +143,14 @@ export default function FoodSearch({
             </div>
 
             {/* Bottom action */}
-            <div
-              className="mt-3 text-center text-blue-400 cursor-pointer hover:underline"
-              onClick={() => onFallbackSearch(query)}
-            >
-              Can’t find your food? Search globally
-            </div>
+            {query && (
+              <div
+                className="mt-3 text-center text-blue-400 cursor-pointer hover:underline"
+                onClick={() => onFallbackSearch(query)}
+              >
+                Can’t find your food? Search globally
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

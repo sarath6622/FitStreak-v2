@@ -1,4 +1,4 @@
-// app/api/save-meal/route.ts
+// app/api/food/save-meal/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
@@ -16,20 +16,41 @@ export async function POST(req: Request) {
 
     console.log("[save-meal] 📨 Raw payload:", JSON.stringify(body, null, 2));
 
-    const { userId, food, quantity, measure, totals, mealType } = body;
+    const {
+      userId,
+      mealType,
+      foodId,
+      foodName,
+      quantity,
+      measure,
+      servingWeight,
+      nutrients,
+    } = body;
 
-    // Validate payload
+    // ✅ Validate against new schema
     if (!userId) console.error("[save-meal] ❌ Missing userId");
-    if (!food) console.error("[save-meal] ❌ Missing food object");
+    if (!mealType) console.error("[save-meal] ❌ Missing mealType");
+    if (!foodId) console.error("[save-meal] ❌ Missing foodId");
+    if (!foodName) console.error("[save-meal] ❌ Missing foodName");
     if (!quantity) console.error("[save-meal] ❌ Missing quantity");
     if (!measure) console.error("[save-meal] ❌ Missing measure");
-    if (!totals) console.error("[save-meal] ❌ Missing totals");
-    if (!mealType) console.error("[save-meal] ❌ Missing mealType");
+    if (!nutrients) console.error("[save-meal] ❌ Missing nutrients");
 
-    if (!userId || !food || !quantity || !measure || !totals || !mealType) {
+    if (
+      !userId ||
+      !mealType ||
+      !foodId ||
+      !foodName ||
+      !quantity ||
+      !measure ||
+      !nutrients
+    ) {
       console.error("[save-meal] ❌ Invalid payload received");
       return NextResponse.json(
-        { error: "Invalid payload: expected { userId, food, quantity, measure, totals, mealType }" },
+        {
+          error:
+            "Invalid payload: expected { userId, mealType, foodId, foodName, quantity, measure, servingWeight, nutrients }",
+        },
         { status: 400 }
       );
     }
@@ -40,24 +61,37 @@ export async function POST(req: Request) {
     console.log("[save-meal] 📅 Date string:", dateStr);
 
     // Firestore reference
-    const mealsRef = collection(db, "users", userId, "meals", dateStr, "entries");
-    console.log("[save-meal] 📂 Firestore path:", `users/${userId}/meals/${dateStr}/entries`);
+    const mealsRef = collection(
+      db,
+      "users",
+      userId,
+      "meals",
+      dateStr,
+      "entries"
+    );
+    console.log(
+      "[save-meal] 📂 Firestore path:",
+      `users/${userId}/meals/${dateStr}/entries`
+    );
 
-    // Build entry
+    // ✅ Build entry with new payload
     const entry = {
-      mealType, // e.g. Breakfast, Lunch, Dinner
+      mealType, // e.g. Breakfast
       food: {
-        id: food.id,
-        name: food.name,
-        serving_size: food.serving_size,
+        id: foodId,
+        name: foodName,
       },
       quantity,
       measure,
-      totals,
+      servingWeight,
+      nutrients,
       createdAt: serverTimestamp(),
     };
 
-    console.log("[save-meal] 📝 Prepared entry:", JSON.stringify(entry, null, 2));
+    console.log(
+      "[save-meal] 📝 Prepared entry:",
+      JSON.stringify(entry, null, 2)
+    );
 
     // Save to Firestore
     const docRef = await addDoc(mealsRef, entry);
