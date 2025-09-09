@@ -12,7 +12,7 @@ interface CompletedExercise {
 interface WorkoutSummaryProps {
   completedExercises: Record<string, CompletedExercise>;
   planExercises: { name: string; sets: number; muscleGroup: string }[];
-  userId: string; // ✅ required for analyze-exercise-progress API
+  userId: string; // ✅ needed for API call
 }
 
 export default function WorkoutSummary({
@@ -103,7 +103,7 @@ export default function WorkoutSummary({
         </div>
       </div>
 
-      {/* Accordion summary (collapsed by default) */}
+      {/* Accordion summary */}
       <div className="space-y-2">
         {Object.entries(grouped).map(([muscle, exercises]) => {
           const total = exercises.length;
@@ -156,16 +156,18 @@ export default function WorkoutSummary({
         })}
       </div>
 
-      {/* Always show End Workout button */}
-      <button
-        disabled={loading}
-        onClick={handleEndWorkout}
-        className="w-full mt-3 px-4 py-2 rounded-lg bg-gradient-to-r 
-                   from-[var(--accent-blue)] to-[var(--accent-green)] 
-                   text-white font-medium disabled:opacity-50"
-      >
-        {loading ? "Analyzing workout..." : "🏁 End Workout"}
-      </button>
+      {/* End Workout Button */}
+      {(progress >= 100 || true) && ( // show button always OR only on 100%
+        <button
+          disabled={loading}
+          onClick={handleEndWorkout}
+          className="w-full mt-3 px-4 py-2 rounded-lg bg-gradient-to-r 
+                     from-[var(--accent-blue)] to-[var(--accent-green)] 
+                     text-white font-medium disabled:opacity-50"
+        >
+          {loading ? "Analyzing workout..." : "🏁 End Workout"}
+        </button>
+      )}
 
       {/* Appreciation Card */}
       {summary && (

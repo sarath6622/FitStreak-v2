@@ -166,6 +166,7 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
       <WorkoutCompletionMeter
         completedExercises={completedExercises}
         planExercises={exercises}
+        userId={user?.uid || ""}
       />
 
       {loading ? (

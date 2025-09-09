@@ -3,7 +3,7 @@
 import React, { forwardRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Dumbbell, History, User, Utensils } from "lucide-react";
+import { Home, Dumbbell, History, User, Utensils, UserCircle2, Users } from "lucide-react";
 import clsx from "clsx";
 
 const navItems = [
@@ -11,7 +11,7 @@ const navItems = [
   { href: "/workouts", label: "Workouts", icon: <Dumbbell size={20} strokeWidth={1.5} /> },
   { href: "/workouts/history", label: "History", icon: <History size={20} strokeWidth={1.5} /> },
   { href: "/diet", label: "Diet", icon: <Utensils size={20} strokeWidth={1.5} /> },
-  { href: "/profile", label: "Profile", icon: <User size={20} strokeWidth={1.5} /> },
+  { href: "/friends", label: "Friends", icon: <Users size={20} strokeWidth={1.5} /> },
 ];
 
 const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
