@@ -168,20 +168,22 @@ const gramsPerUnit = useMemo(() => {
     return measure === "Grams" ? quantity : quantity * gPerUnit;
   }, [quantity, measure, gramsPerUnit]);
 
-  const totals = useMemo(() => {
-    if (!selectedFood) return null;
-    const mult = netWeightG / 100;
-    const n = selectedFood.baseNutrientsPer100g;
-    return {
-      calories: Math.round(n.calories * mult),
-      protein: round(n.protein * mult, 1),
-      fat: round(n.fat * mult, 1),
-      carbs: round(n.carbs * mult, 1),
-      fiber: round(n.fiber * mult, 1),
-      sugars: round(n.sugars * mult, 1),
-      netWeightG: round(netWeightG, 0),
-    };
-  }, [selectedFood, netWeightG]);
+const totals = useMemo(() => {
+  if (!selectedFood || !selectedFood.baseNutrientsPer100g) return null;
+
+  const mult = netWeightG / 100;
+  const n = selectedFood.baseNutrientsPer100g;
+
+  return {
+    calories: Math.round((n.calories ?? 0) * mult),
+    protein: round((n.protein ?? 0) * mult, 1),
+    fat: round((n.fat ?? 0) * mult, 1),
+    carbs: round((n.carbs ?? 0) * mult, 1),
+    fiber: round((n.fiber ?? 0) * mult, 1),
+    sugars: round((n.sugars ?? 0) * mult, 1),
+    netWeightG: round(netWeightG, 0),
+  };
+}, [selectedFood, netWeightG]);
 
   const disabled = !selectedFood;
 
@@ -278,17 +280,25 @@ const gramsPerUnit = useMemo(() => {
               const res = await fetch(`/api/food/search?q=${q}&forceGroq=true`);
               const data = await res.json();
               if (res.ok && Array.isArray(data.foods)) {
-                const mapped = data.foods.map((f: any) => ({
-                  id: f.id,
-                  name: f.name,
-                  serving_size: f.servingSize ?? "100g",
-                  calories: f.nutrients?.calories ?? 0,
-                  protein_g: f.nutrients?.protein ?? 0,
-                  carbohydrates_g: f.nutrients?.carbs ?? 0,
-                  fiber_g: f.nutrients?.fiber ?? 0,
-                  sugar_g: f.nutrients?.sugars ?? 0,
-                  fat_g: f.nutrients?.fat ?? 0,
-                }));
+const mapped = data.foods.map((f: any) => ({
+  id: f.id,
+  name: f.name,
+  category: f.category,
+  baseNutrientsPer100g: f.baseNutrientsPer100g
+    ? {
+        calories: f.baseNutrientsPer100g.calories ?? 0,
+        protein: f.baseNutrientsPer100g.protein ?? 0,
+        carbs: f.baseNutrientsPer100g.carbs ?? 0,
+        fat: f.baseNutrientsPer100g.fat ?? 0,
+        fiber: f.baseNutrientsPer100g.fiber ?? 0,
+        sugars: f.baseNutrientsPer100g.sugars ?? 0,
+      }
+
+    : { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugars: 0 },
+  servingUnits: f.servingUnits ?? { g: 1 },
+  source: f.source,
+  nameLower: f.nameLower ?? f.name.toLowerCase(),
+}));
                 setResults(mapped);
               } else {
                 setResults([]);
