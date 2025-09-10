@@ -213,74 +213,74 @@ export default function Diet() {
           defaultQuantity={100}
           mealType={selectedMeal === "new" ? "" : meals[selectedMeal].name}
           defaultMeasure="Grams"
-onSave={async ({ food, quantity, measure, totals, mealType, userId }) => {
-  try {
-    // ✅ Build payload based on new schema
-    const payload = {
-      userId,
-      mealType,
-      foodId: food.id,
-      foodName: food.name,
-      quantity,
-      measure,
-      servingWeight: food.servingUnits?.[measure.toLowerCase()] ?? 100, // fallback
-      nutrients: {
-        calories: totals.calories,
-        protein: totals.protein,
-        fat: totals.fat,
-        carbs: totals.carbs,
-        fiber: totals.fiber,
-        sugars: totals.sugars,
-      },
-    };
+          onSave={async ({ food, quantity, measure, totals, mealType, userId }) => {
+            try {
+              // ✅ Build payload based on new schema
+              const payload = {
+                userId,
+                mealType,
+                foodId: food.id,
+                foodName: food.name,
+                quantity,
+                measure,
+                servingWeight: food.servingUnits?.[measure.toLowerCase()] ?? 100, // fallback
+                nutrients: {
+                  calories: totals.calories,
+                  protein: totals.protein,
+                  fat: totals.fat,
+                  carbs: totals.carbs,
+                  fiber: totals.fiber,
+                  sugars: totals.sugars,
+                },
+              };
 
-    // 🔹 Save to backend
-    const res = await fetch("/api/food/save-meal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+              // 🔹 Save to backend
+              const res = await fetch("/api/food/save-meal", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to save meal");
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error || "Failed to save meal");
 
-    console.log("[Diet] ✅ Meal saved:", data);
+              console.log("[Diet] ✅ Meal saved:", data);
 
-    // 🔹 Update local state
-    if (selectedMeal === "new") {
-      if (!mealType) {
-        alert("Please choose a meal type.");
-        return;
-      }
+              // 🔹 Update local state
+              if (selectedMeal === "new") {
+                if (!mealType) {
+                  alert("Please choose a meal type.");
+                  return;
+                }
 
-      setMeals((prev) => [
-        ...prev,
-        {
-          id: data.id,
-          foodId: food.id,
-          foodName: food.name,
-          name: mealType,
-          calories: totals.calories,
-          recommended: 0,
-          carbs: totals.carbs,
-          protein: totals.protein,
-          fat: totals.fat,
-        },
-      ]);
-    } else {
-      // 🔄 Update existing meal
-      handleSave(selectedMeal, totals.calories, {
-        carbs: totals.carbs,
-        protein: totals.protein,
-        fat: totals.fat,
-      });
-    }
-  } catch (err) {
-    console.error("[Diet] ❌ Error saving meal:", err);
-  }
+                setMeals((prev) => [
+                  ...prev,
+                  {
+                    id: data.id,
+                    foodId: food.id,
+                    foodName: food.name,
+                    name: mealType,
+                    calories: totals.calories,
+                    recommended: 0,
+                    carbs: totals.carbs,
+                    protein: totals.protein,
+                    fat: totals.fat,
+                  },
+                ]);
+              } else {
+                // 🔄 Update existing meal
+                handleSave(selectedMeal, totals.calories, {
+                  carbs: totals.carbs,
+                  protein: totals.protein,
+                  fat: totals.fat,
+                });
+              }
+            } catch (err) {
+              console.error("[Diet] ❌ Error saving meal:", err);
+            }
 
-  setSelectedMeal(null);
-}}
+            setSelectedMeal(null);
+          }}
         />
       )}
 

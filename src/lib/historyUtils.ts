@@ -1,4 +1,3 @@
-// src/lib/historyUtils.ts
 import type { WorkoutSession } from "@/types";
 
 export function calculatePRs(workouts: WorkoutSession[]) {
@@ -6,10 +5,10 @@ export function calculatePRs(workouts: WorkoutSession[]) {
 
   workouts.forEach((workout) => {
     workout.exercises.forEach((ex) => {
-      ex.weight.forEach((w, idx) => {
+      const weights = Array.isArray(ex.weight) ? ex.weight : []; // ✅ guard
+      weights.forEach((w, idx) => {
         const reps = ex.repsPerSet?.[idx] ?? 0;
 
-        // PR = highest weight used for any set (regardless of reps)
         if (!prs[ex.name] || w > prs[ex.name]) {
           prs[ex.name] = w;
         }
@@ -30,7 +29,8 @@ export const getPRs = (history: WorkoutSession[]): Record<string, number> => {
   const prs: Record<string, number> = {};
   history.forEach((session) => {
     session.exercises.forEach((ex) => {
-      const maxWeight = Math.max(...ex.weight);
+      const weights = Array.isArray(ex.weight) ? ex.weight : []; // ✅ guard
+      const maxWeight = weights.length > 0 ? Math.max(...weights) : 0;
       if (!prs[ex.name] || maxWeight > prs[ex.name]) {
         prs[ex.name] = maxWeight;
       }
@@ -49,13 +49,17 @@ export const getExerciseChartData = (
     )
     .map((session) => {
       const ex = session.exercises.find((e) => e.name === exerciseName);
-      if (!ex) return null; // safety check
+      if (!ex) return null;
 
+      const weights = Array.isArray(ex.weight) ? ex.weight : []; // ✅ guard
       return {
         date: formatDate(session.date),
-        topWeight: Math.max(...ex.weight),
-        volume: ex.weight.reduce((sum, w) => sum + w * Number(ex.reps), 0),
+        topWeight: weights.length > 0 ? Math.max(...weights) : 0,
+        volume: weights.reduce(
+          (sum, w, i) => sum + w * (ex.repsPerSet?.[i] ?? 0),
+          0
+        ),
       };
     })
-    .filter(Boolean); // remove nulls
+    .filter(Boolean);
 };
