@@ -2,19 +2,52 @@
 import { db } from "@/firebase"; // Adjust the import based on your Firebase config file
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
-export const getWorkoutForExercise = async (uid: string, date: string, exerciseName: string) => {
+export const getWorkoutForExercise = async (
+  uid: string,
+  date: string,
+  exerciseName: string
+) => {
+  console.log("[getWorkoutForExercise] ▶️ uid:", uid, "date:", date, "exerciseName:", exerciseName);
+
   const docRef = doc(db, "users", uid, "workouts", date);
   const docSnap = await getDoc(docRef);
-  
-  if (!docSnap.exists()) return null;
-  
+
+  if (!docSnap.exists()) {
+    console.warn("[getWorkoutForExercise] ❌ No workout doc found for", date);
+    return null;
+  }
+
   const data = docSnap.data();
+  console.log("[getWorkoutForExercise] 📄 Workout doc data:", data);
+
+  if (!data.exercises) {
+    console.warn("[getWorkoutForExercise] ⚠️ No 'exercises' field in workout doc");
+    return {
+      duration: data.duration ?? null,
+      rest: data.rest ?? null,
+      exercise: null,
+    };
+  }
+
+  if (!Array.isArray(data.exercises)) {
+    console.error(
+      "[getWorkoutForExercise] ❌ 'exercises' is not an array. Value:",
+      data.exercises
+    );
+    return {
+      duration: data.duration ?? null,
+      rest: data.rest ?? null,
+      exercise: null,
+    };
+  }
+
   const exercise = data.exercises.find((ex: any) => ex.name === exerciseName);
+  console.log("[getWorkoutForExercise] 🔍 Matched exercise:", exercise);
 
   return {
-    duration: data.duration,
-    rest: data.rest,
-    exercise
+    duration: data.duration ?? null,
+    rest: data.rest ?? null,
+    exercise,
   };
 };
 
