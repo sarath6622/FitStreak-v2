@@ -9,6 +9,7 @@ import RequestsButton from "@/components/friends/RequestsButton";
 import FriendsList from "@/components/friends/FriendsList";
 import SearchFriends from "@/components/friends/SearchFriends";
 import WorkoutPreviewModal from "@/components/friends/JoinWorkoutModal";
+import Leaderboard from "@/components/friends/Leaderboard";
 
 export default function FriendsPage() {
   const [user, setUser] = useState<any>(null);
@@ -17,6 +18,9 @@ export default function FriendsPage() {
 
   const [previewPlans, setPreviewPlans] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<"leaderboard" | "friends" | "search">("leaderboard");
 
   // ✅ Watch auth
   useEffect(() => {
@@ -34,7 +38,7 @@ export default function FriendsPage() {
 
   return (
     <div className="p-4 space-y-6 text-white">
-      {/* Top: Friend Code + Requests */}
+      {/* Top Section */}
       {loading ? (
         <div className="flex items-center gap-3 animate-pulse">
           <div className="flex-1 h-12 rounded-lg bg-[var(--surface-dark)] border border-[var(--card-border)]" />
@@ -53,37 +57,45 @@ export default function FriendsPage() {
         )
       )}
 
-      {/* Friends List */}
-      {loading ? (
-        <div className="space-y-3 animate-pulse">
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="h-14 rounded-lg bg-[var(--surface-dark)] border border-[var(--card-border)]"
-            />
-          ))}
-        </div>
-      ) : (
-        user && (
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-[var(--card-border)]">
+        {[
+          { key: "leaderboard", label: "Leaderboard" },
+          { key: "friends", label: "Your Friends" },
+          { key: "search", label: "Find Friends" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key as any)}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg ${
+              activeTab === tab.key
+                ? "bg-[var(--surface-dark)] text-[var(--text-primary)] border-t border-l border-r border-[var(--card-border)]"
+                : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <div>
+        {user && activeTab === "leaderboard" && (
+          <Leaderboard userId={user.uid} />
+        )}
+        {user && activeTab === "friends" && (
           <FriendsList
             userId={user.uid}
             onPreviewWorkout={(plans) => {
-              console.log("📝 Previewing plans:", plans);
               setPreviewPlans(plans);
               setShowModal(true);
             }}
           />
-        )
-      )}
+        )}
+        {user && activeTab === "search" && <SearchFriends userId={user.uid} />}
+      </div>
 
-      {/* Search Friends */}
-      {loading ? (
-        <div className="min-h-screen rounded-lg bg-[var(--surface-dark)] border border-[var(--card-border)] animate-pulse" />
-      ) : (
-        user && <SearchFriends userId={user.uid} />
-      )}
-
-      {/* Workout Preview Modal */}
+      {/* Preview Modal */}
       {showModal && (
         <WorkoutPreviewModal
           userId={user.uid}
