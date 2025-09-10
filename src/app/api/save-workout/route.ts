@@ -1,7 +1,14 @@
 // app/api/save-workout/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/firebase";
-import { collection, addDoc, serverTimestamp, getDocs } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  deleteDoc,
+  doc,
+  setDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 export async function POST(req: Request) {
   try {
@@ -10,10 +17,18 @@ export async function POST(req: Request) {
 
     const { userId, muscleGroups, workoutPlan } = body;
 
-    if (!userId || !Array.isArray(muscleGroups) || muscleGroups.length === 0 || !Array.isArray(workoutPlan)) {
+    if (
+      !userId ||
+      !Array.isArray(muscleGroups) ||
+      muscleGroups.length === 0 ||
+      !Array.isArray(workoutPlan)
+    ) {
       console.error("[save-workout] Invalid payload:", body);
       return NextResponse.json(
-        { error: "Invalid request payload: expected { userId, muscleGroups: [], workoutPlan: [] }" },
+        {
+          error:
+            "Invalid request payload: expected { userId, muscleGroups: [], workoutPlan: [] }",
+        },
         { status: 400 }
       );
     }
@@ -22,28 +37,29 @@ export async function POST(req: Request) {
     const today = new Date();
     const dateStr = today.toISOString().split("T")[0];
 
-    // Reference: users/{uid}/workouts/{date}/plans/{autoId}
+    // Reference: users/{uid}/workouts/{date}/plans
     const plansRef = collection(db, "users", userId, "workouts", dateStr, "plans");
 
-    // Fetch master exercises collection so we can map names -> ids
+    // 1️⃣ Delete all existing docs inside "plans"
+    const existingPlans = await getDocs(plansRef);
+    for (const docSnap of existingPlans.docs) {
+      console.log(`[save-workout] Deleting old plan: ${docSnap.id}`);
+      await deleteDoc(docSnap.ref);
+    }
+
+    // 2️⃣ Fetch master exercises for ID mapping
     const masterExercisesSnap = await getDocs(collection(db, "exercises"));
     const masterExercises: Record<string, any> = {};
     masterExercisesSnap.forEach((docSnap) => {
       const data = docSnap.data();
-      masterExercises[data.name.toLowerCase()] = docSnap.id; // map by lowercased name
+      masterExercises[data.name.toLowerCase()] = docSnap.id;
     });
-
-    console.log("[save-workout] Master exercises loaded:", masterExercises);
 
     // Normalize workoutPlan into exercises
     const exercises = workoutPlan.map((ex: any, i: number) => {
       const matchedId = masterExercises[ex.name?.toLowerCase()] ?? null;
-
-      console.log(`[save-workout] Processing exercise ${i}:`, ex);
-      console.log(`[save-workout] Matched exerciseId for "${ex.name}":`, matchedId);
-
       return {
-        exerciseId: matchedId, // ✅ attach Firestore doc ID
+        exerciseId: matchedId,
         name: ex.name ?? null,
         muscleGroup: ex.muscleGroup ?? null,
         subGroup: ex.subGroup ?? null,
@@ -59,14 +75,15 @@ export async function POST(req: Request) {
 
     console.log("[save-workout] Final exercises object to save:", exercises);
 
-    // Save in Firestore
-    await addDoc(plansRef, {
-      muscleGroups, // ✅ store as array
+    // 3️⃣ Save the latest plan under "current"
+    const planRef = doc(plansRef, "current");
+    await setDoc(planRef, {
+      muscleGroups,
       exercises,
       createdAt: serverTimestamp(),
     });
 
-    console.log("[save-workout] Saved successfully");
+    console.log("[save-workout] Saved successfully (cleaned old plans)");
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("[save-workout] Error:", err);

@@ -1,84 +1,51 @@
 "use client";
 
+import { X } from "lucide-react";
+import WorkoutPreviewBody from "./WorkoutPreviewBody";
+
 export default function WorkoutPreviewModal({
+  isOpen = true,
   title = "Preview Workout",
   plans,
   onConfirm,
   onClose,
   children,
 }: {
+  isOpen?: boolean;
   title?: string;
   plans: any[];
   onConfirm: () => void | Promise<void>;
   onClose: () => void;
   children?: React.ReactNode;
 }) {
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[var(--card-background)] rounded-2xl w-[500px] max-h-[85vh] flex flex-col shadow-xl border border-[var(--card-border)] overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="w-[480px] max-w-[92vw] rounded-3xl border border-white/10 bg-[var(--card-background)] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="p-5 border-b border-[var(--card-border)]">
-          <h2 className="text-xl font-bold text-[var(--text-primary)]">
-            {title}
-          </h2>
+        <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-[var(--text-primary)]">{title}</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition"
+          >
+            <X className="h-6 w-6" />
+          </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Plans Preview */}
-          <div className="space-y-4">
-            {plans.map((plan) => (
-              <div
-                key={plan.id}
-                className="p-4 rounded-xl bg-[var(--surface-dark)] border border-[var(--card-border)] shadow-sm"
-              >
-                <p className="text-sm font-medium text-[var(--text-secondary)] mb-2 flex items-center gap-2">
-                  📅{" "}
-                  {plan.createdAt?.seconds
-                    ? new Date(plan.createdAt.seconds * 1000).toLocaleDateString()
-                    : "Workout"}
-                </p>
-
-                {plan.exercises?.length > 0 ? (
-                  <div className="grid gap-3">
-                    {plan.exercises.map((ex: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className="p-4 rounded-lg bg-[var(--surface-light)] border border-[var(--card-border)] hover:bg-[var(--surface-hover)] transition"
-                      >
-                        <p className="font-semibold text-[var(--text-primary)]">
-                          {ex.name}
-                        </p>
-                        <p className="text-xs text-[var(--text-muted)]">
-                          {ex.sets} sets • {ex.reps} reps • {ex.difficulty}
-                        </p>
-                        <p className="text-xs text-[var(--text-muted)]">
-                          {ex.muscleGroup}{" "}
-                          {ex.subGroup ? `• ${ex.subGroup}` : ""}
-                        </p>
-                        {ex.equipment?.length > 0 && (
-                          <p className="text-xs text-[var(--text-muted)]">
-                            Equipment: {ex.equipment.join(", ")}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-[var(--text-muted)] italic">
-                    No exercises in this plan.
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Extra content */}
-          {children}
-        </div>
+        {/* Body */}
+        {plans.map((plan) => (
+          <WorkoutPreviewBody key={plan.id} exercises={plan.exercises} />
+        ))}
 
         {/* Footer */}
-        <div className="p-4 border-t border-[var(--card-border)] flex gap-3 bg-[var(--surface-dark)]">
+        <div className="px-5 py-4 border-t border-[var(--card-border)] flex gap-3 bg-[var(--surface-dark)]">
           <button
             onClick={onClose}
             className="flex-1 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-[var(--text-primary)] font-medium transition"
@@ -87,7 +54,7 @@ export default function WorkoutPreviewModal({
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-blue)] to-[var(--accent-green)] text-white font-semibold shadow-md hover:opacity-90 transition"
+            className="flex-1 py-2 rounded-lg bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dark)] text-white font-semibold shadow-md transition"
           >
             Confirm
           </button>

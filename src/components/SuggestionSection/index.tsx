@@ -8,6 +8,7 @@ import WorkoutPlanDisplay from "./WorkoutPlanDisplay";
 import GenerateButton from "./GenerateButton";
 import WorkoutPreviewModal from "@/components/workout/WorkoutPreviewModal";
 import { Sparkles } from "lucide-react";
+import AILoader from "../AILoader";
 
 interface Exercise {
   name: string;
@@ -163,6 +164,8 @@ export default function SuggestionSection({ userId }: SuggestionSectionProps) {
           Re-Analyze
         </button>
       </h2>
+
+      {loading && <AILoader />}
 
       <MuscleGroupSelector
         value={muscleGroup}
