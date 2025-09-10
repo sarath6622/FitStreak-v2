@@ -78,7 +78,7 @@ export default function FriendsPage() {
 
       {/* Search Friends */}
       {loading ? (
-        <div className="h-12 rounded-lg bg-[var(--surface-dark)] border border-[var(--card-border)] animate-pulse" />
+        <div className="min-h-screen rounded-lg bg-[var(--surface-dark)] border border-[var(--card-border)] animate-pulse" />
       ) : (
         user && <SearchFriends userId={user.uid} />
       )}

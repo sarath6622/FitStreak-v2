@@ -360,22 +360,33 @@ export function calculateWeeklyFrequencyStreak(
  */
 export async function getStreakData() {
   const user = auth.currentUser;
-  if (!user) return { currentStreak: 0, longestStreak: 0, workoutsThisWeek: 0, weeklyFrequency: 5 };
+  if (!user) {
+    return {
+      currentStreak: 0,
+      longestStreak: 0,
+      workoutsThisWeek: 0,
+      weeklyFrequency: 5,
+      weeklyCurrentStreak: 0,
+      weeklyLongestStreak: 0,
+    };
+  }
 
   const userDoc = await getDoc(doc(db, "users", user.uid));
   const userData = userDoc.data();
-  const weeklyFrequency = parseInt(userData?.weeklyFrequency || "5");
 
-  const workoutsRef = collection(db, "users", user.uid, "workouts");
-  const snapshot = await getDocs(workoutsRef);
+  return {
+    // Daily streaks
+    currentStreak: userData?.currentStreak || 0,
+    longestStreak: userData?.longestStreak || 0,
 
-  const workoutDates: string[] = [];
-  snapshot.forEach((doc) => workoutDates.push(doc.id));
+    // Weekly streaks
+    workoutsThisWeek: userData?.workoutsThisWeek || 0,
+    weeklyCurrentStreak: userData?.weeklyCurrentStreak || 0,
+    weeklyLongestStreak: userData?.weeklyLongestStreak || 0,
 
-  const { currentStreak, longestStreak, workoutsThisWeek } =
-    calculateWeeklyFrequencyStreak(workoutDates, weeklyFrequency);
-
-  return { currentStreak, longestStreak, workoutsThisWeek, weeklyFrequency };
+    // Settings
+    weeklyFrequency: parseInt(userData?.weeklyFrequency || "5"),
+  };
 }
 
 function toTitleCase(s: string) {

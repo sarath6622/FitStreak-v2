@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "@/firebase";
+import { auth, db } from "@/firebase";
 import { getCompletedExercisesForToday } from "@/services/workoutService";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import SwipeableCard from "../SwipeableCard";
@@ -16,6 +16,8 @@ import ExerciseSkeleton from "./ExerciseSkeleton";
 import WorkoutModal from "./WorkoutModal";
 import WorkoutCompletionMeter from "./WorkoutCompletionMeter";
 import { useRouter } from "next/navigation";import router from "next/router"; 
+import { updateUserStreak } from "@/services/streakService";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 interface CompletedExercise {
   setsDone: number;
@@ -123,24 +125,45 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
     return () => unsubscribe();
   }, []);
 
-  const handleWorkoutSaved = (
-    exerciseId: string,
-    data: { sets: { weight: number; reps: number; done: boolean }[] }
-  ) => {
-    const ex = exercises.find((e) => e.exerciseId === exerciseId);
-    const key = ex?.name || exerciseId; // 🔑 key by name
-    setCompletedExercises((prev) => ({
-      ...prev,
-      [key]: {
-        setsDone: data.sets.filter((s) => s.done || s.weight > 0).length,
-        repsDone: data.sets.reduce(
-          (acc, s) => acc + (s.done || s.weight > 0 ? s.reps : 0),
-          0
-        ),
-        totalSets: data.sets.length,
-      },
-    }));
-  };
+const handleWorkoutSaved = async (
+  exerciseId: string,
+  data: { sets: { weight: number; reps: number; done: boolean }[] }
+) => {
+  const ex = exercises.find((e) => e.exerciseId === exerciseId);
+  const key = ex?.name || exerciseId;
+
+  // Local state update
+  setCompletedExercises((prev) => ({
+    ...prev,
+    [key]: {
+      setsDone: data.sets.filter((s) => s.done || s.weight > 0).length,
+      repsDone: data.sets.reduce(
+        (acc, s) => acc + (s.done || s.weight > 0 ? s.reps : 0),
+        0
+      ),
+      totalSets: data.sets.length,
+    },
+  }));
+
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const today = new Date();
+  const dateKey = today.toISOString().split("T")[0]; // YYYY-MM-DD
+
+  const workoutRef = doc(db, "users", user.uid, "workouts", dateKey);
+  await setDoc(
+    workoutRef,
+    {
+      [key]: data.sets,
+      savedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  // Update streaks in one place
+  await updateUserStreak(user.uid, dateKey);
+};
 
   const filteredExercises = useMemo(() => {
     return exercises.filter((exercise) =>
