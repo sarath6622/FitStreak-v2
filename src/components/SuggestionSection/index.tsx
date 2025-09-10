@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";   // <-- import router
+import { useRouter } from "next/navigation";
 import MuscleGroupSelector from "./MuscleGroupSelector";
 import DurationSelector from "./DurationSelector";
 import WorkoutPlanDisplay from "./WorkoutPlanDisplay";
 import GenerateButton from "./GenerateButton";
+import WorkoutPreviewModal from "@/components/workout/WorkoutPreviewModal";
 import { Sparkles } from "lucide-react";
 
 interface Exercise {
@@ -39,8 +40,10 @@ export default function SuggestionSection({ userId }: SuggestionSectionProps) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showOverwriteModal, setShowOverwriteModal] = useState(false);
 
-  const router = useRouter(); // ✅ initialize router
+  const router = useRouter();
 
   // fetch muscle analysis (cached)
   async function fetchMuscleAnalysis() {
@@ -60,8 +63,6 @@ export default function SuggestionSection({ userId }: SuggestionSectionProps) {
         typeof data.summary === "string" ? JSON.parse(data.summary) : data.summary;
 
       setMuscleSummaries(summaries);
-      console.log("Summaries",summaries);
-      
       localStorage.setItem("muscleSummary", JSON.stringify(summaries));
       localStorage.setItem("muscleSummaryDate", new Date().toDateString());
     } catch (err: any) {
@@ -106,6 +107,7 @@ export default function SuggestionSection({ userId }: SuggestionSectionProps) {
           : data.recommendation;
 
       setWorkoutPlan(parsed || []);
+      setShowPreview(true);
     } catch (err: any) {
       setError(err.message || "Failed to generate workout.");
     } finally {
@@ -114,19 +116,33 @@ export default function SuggestionSection({ userId }: SuggestionSectionProps) {
   };
 
   // save + navigate
-  const handleStartWorkout = async () => {
+  const handleStartWorkout = async (overwrite = false) => {
     if (!userId || workoutPlan.length === 0) return;
     setSaving(true);
     try {
       const res = await fetch("/api/save-workout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, muscleGroups: muscleGroup, workoutPlan }),
+        body: JSON.stringify({
+          userId,
+          muscleGroups: muscleGroup,
+          workoutPlan,
+          overwrite,
+        }),
       });
-      if (!res.ok) throw new Error("Failed to save workout");
+
+      const data = await res.json();
+
+      if (data.exists) {
+        // workout already exists → show overwrite modal
+        setShowOverwriteModal(true);
+        return;
+      }
+
+      if (!res.ok) throw new Error(data.error || "Failed to save workout");
 
       // ✅ navigate after save
-      router.push("/workouts/todays-workouts");
+      router.replace("/workouts/todays-workouts");
     } catch (err: any) {
       setError(err.message || "Failed to save workout.");
     } finally {
@@ -135,7 +151,7 @@ export default function SuggestionSection({ userId }: SuggestionSectionProps) {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-[var(--card-background)] border-[var(--card-border)] rounded-2xl shadow-lg border border-[var(--card-border)]">
+    <div className="max-w-xl mx-auto p-6 bg-[var(--card-background)] border-[var(--card-border)] rounded-2xl shadow-lg border">
       <h2 className="text-md font-bold text-blue-400 mb-4 flex items-center gap-2">
         <Sparkles className="w-5 h-5 text-blue-300" />
         Workout Suggestions
@@ -159,16 +175,49 @@ export default function SuggestionSection({ userId }: SuggestionSectionProps) {
 
       {error && <p className="text-red-500 text-sm text-center mt-3">{error}</p>}
 
-      {workoutPlan.length > 0 && (
-        <div className="mt-6">
-          <WorkoutPlanDisplay plan={workoutPlan} />
-          <button
-            onClick={handleStartWorkout}
-            disabled={saving}
-            className="mt-4 w-full py-2 rounded font-semibold bg-blue-500 text-white hover:bg-blue-600 shadow-md disabled:opacity-50"
-          >
-            {saving ? "Starting workout..." : "Start Workout"}
-          </button>
+      {/* Preview Modal */}
+      {showPreview && workoutPlan.length > 0 && (
+        <WorkoutPreviewModal
+          title="Your Generated Workout"
+          plans={[
+            {
+              id: "generated",
+              createdAt: { seconds: Math.floor(Date.now() / 1000) },
+              exercises: workoutPlan,
+            },
+          ]}
+          onConfirm={() => handleStartWorkout(false)}
+          onClose={() => {
+            setShowPreview(false);
+            setWorkoutPlan([]);
+          }}
+        />
+      )}
+
+      {/* Overwrite Confirmation Modal */}
+      {showOverwriteModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-[var(--surface-light)] rounded-xl w-[400px] p-6 space-y-4 shadow-lg border border-[var(--card-border)]">
+            <h2 className="text-lg font-semibold text-white">Overwrite Workout?</h2>
+            <p className="text-sm text-yellow-00">
+              ⚠️ You already have a workout for today. If you continue, your existing
+              workout will be <span className="font-semibold">overwritten</span>.
+            </p>
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={() => setShowOverwriteModal(false)}
+                className="flex-1 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-medium transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleStartWorkout(true)}
+                className="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold shadow-md transition"
+              >
+                Overwrite
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -1,3 +1,5 @@
+"use client";
+
 import { UserPlus } from "lucide-react";
 import Avatar from "./Avatar";
 
@@ -7,13 +9,16 @@ interface FriendCardProps {
     name?: string;
     username?: string;
     photoURL?: string;
+    hasWorkoutPlan?: boolean;
   };
-  onAdd?: (id: string) => void; // 👈 optional now
+  onAdd?: (id: string) => void;
+  onJoinWorkout?: (id: string) => void;
 }
 
-export default function FriendCard({ user, onAdd }: FriendCardProps) {
+export default function FriendCard({ user, onAdd, onJoinWorkout }: FriendCardProps) {
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-light)] border border-[var(--card-border)]">
+    <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--card-background)] border border-[var(--card-border)] shadow-md hover:shadow-lg transition">
+      {/* Left: Avatar + Info */}
       <div className="flex items-center gap-3">
         <Avatar
           id={user.id}
@@ -22,22 +27,41 @@ export default function FriendCard({ user, onAdd }: FriendCardProps) {
           photoURL={user.photoURL}
         />
         <div>
-          <p className="font-medium">@{user.username || "unknown"}</p>
+          <p className="font-semibold text-[var(--text-primary)]">
+            {user.name || "Unnamed"}
+
+          </p>
           <p className="text-xs text-[var(--text-muted)]">
-            {user.name || "Unnamed"} • ID: {user.id.slice(0, 6)}
+            @{user.username || "unknown"}
+
           </p>
         </div>
       </div>
 
-      {/* Only show button if onAdd exists */}
-      {onAdd && (
-        <button
-          onClick={() => onAdd(user.id)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--accent-blue)] hover:bg-[var(--accent-green)] text-sm"
-        >
-          <UserPlus size={16} /> Add Friend
-        </button>
-      )}
+      {/* Right: Actions */}
+      <div className="flex gap-2">
+        {onAdd && (
+          <button
+            onClick={() => onAdd(user.id)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+              bg-gradient-to-r from-[var(--accent-blue)] to-[var(--accent-purple)]
+              text-white shadow-sm hover:shadow-md hover:opacity-90 transition"
+          >
+            <UserPlus size={16} />
+            Add
+          </button>
+        )}
+
+        {user.hasWorkoutPlan && onJoinWorkout && (
+          <button
+            onClick={() => onJoinWorkout(user.id)}
+className="px-3 py-1.5 rounded-lg text-sm font-medium
+           border border-[var(--card-border)] text-white]
+           hover:bg-[var(--surface-hover)] hover:text-white transition">
+            Sync Workout
+          </button>
+        )}
+      </div>
     </div>
   );
 }

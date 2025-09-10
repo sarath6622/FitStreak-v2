@@ -1,19 +1,33 @@
 // app/api/save-workout/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/firebase";
-import { collection, addDoc, serverTimestamp, getDocs } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  getDocs,
+  deleteDoc,
+} from "firebase/firestore";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     console.log("[save-workout] Incoming payload:", JSON.stringify(body, null, 2));
 
-    const { userId, muscleGroups, workoutPlan } = body;
+    const { userId, muscleGroups, workoutPlan, overwrite = false } = body;
 
-    if (!userId || !Array.isArray(muscleGroups) || muscleGroups.length === 0 || !Array.isArray(workoutPlan)) {
+    if (
+      !userId ||
+      !Array.isArray(muscleGroups) ||
+      muscleGroups.length === 0 ||
+      !Array.isArray(workoutPlan)
+    ) {
       console.error("[save-workout] Invalid payload:", body);
       return NextResponse.json(
-        { error: "Invalid request payload: expected { userId, muscleGroups: [], workoutPlan: [] }" },
+        {
+          error:
+            "Invalid request payload: expected { userId, muscleGroups: [], workoutPlan: [] }",
+        },
         { status: 400 }
       );
     }
@@ -22,15 +36,34 @@ export async function POST(req: Request) {
     const today = new Date();
     const dateStr = today.toISOString().split("T")[0];
 
-    // Reference: users/{uid}/workouts/{date}/plans/{autoId}
+    // Reference: users/{uid}/workouts/{date}/plans
     const plansRef = collection(db, "users", userId, "workouts", dateStr, "plans");
 
-    // Fetch master exercises collection so we can map names -> ids
+    // 1️⃣ Check existing plans
+    const existing = await getDocs(plansRef);
+    if (!existing.empty && !overwrite) {
+      console.log("[save-workout] Existing workout found, not overwriting.");
+      return NextResponse.json(
+        { exists: true, message: "Workout already exists for today" },
+        { status: 200 }
+      );
+    }
+
+    // 2️⃣ If overwrite = true → clear old docs
+    if (!existing.empty && overwrite) {
+      for (const docSnap of existing.docs) {
+        await deleteDoc(docSnap.ref);
+      }
+
+      console.log("[save-workout] Old workout deleted, overwriting.");
+    }
+
+    // Fetch master exercises collection
     const masterExercisesSnap = await getDocs(collection(db, "exercises"));
     const masterExercises: Record<string, any> = {};
     masterExercisesSnap.forEach((docSnap) => {
       const data = docSnap.data();
-      masterExercises[data.name.toLowerCase()] = docSnap.id; // map by lowercased name
+      masterExercises[data.name.toLowerCase()] = docSnap.id;
     });
 
     console.log("[save-workout] Master exercises loaded:", masterExercises);
@@ -39,11 +72,8 @@ export async function POST(req: Request) {
     const exercises = workoutPlan.map((ex: any, i: number) => {
       const matchedId = masterExercises[ex.name?.toLowerCase()] ?? null;
 
-      console.log(`[save-workout] Processing exercise ${i}:`, ex);
-      console.log(`[save-workout] Matched exerciseId for "${ex.name}":`, matchedId);
-
       return {
-        exerciseId: matchedId, // ✅ attach Firestore doc ID
+        exerciseId: matchedId,
         name: ex.name ?? null,
         muscleGroup: ex.muscleGroup ?? null,
         subGroup: ex.subGroup ?? null,
@@ -57,11 +87,11 @@ export async function POST(req: Request) {
       };
     });
 
-    console.log("[save-workout] Final exercises object to save:", exercises);
+    console.log("[save-workout] Final exercises to save:", exercises);
 
-    // Save in Firestore
+    // 3️⃣ Save new plan
     await addDoc(plansRef, {
-      muscleGroups, // ✅ store as array
+      muscleGroups,
       exercises,
       createdAt: serverTimestamp(),
     });
