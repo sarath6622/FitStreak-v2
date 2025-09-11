@@ -30,9 +30,9 @@ function normalizeFood(f: any): NormalizedFood {
       sugars: Number(f.baseNutrientsPer100g?.sugars ?? 0),
     },
     servingUnits: {
-      g: Number(f.servingUnits?.g ?? 1), // 1g baseline
+      g: Number(f.servingUnits?.g ?? 100), // 100g baseline
       piece: Number(f.servingUnits?.piece ?? 0),
-      serving: Number(f.servingUnits?.serving ?? 0),
+      serving: Number(f.servingUnits?.serving || f.servingUnits?.piece || 100),
       cup: Number(f.servingUnits?.cup ?? 0),
       oz: Number(f.servingUnits?.oz ?? 0),
     },
@@ -69,7 +69,9 @@ export async function GET(req: NextRequest) {
         const results: NormalizedFood[] = snapshot.docs.map((d) =>
           normalizeFood(d.data())
         );
-        console.log(`[food-search] ✅ Found ${results.length} result(s) in Firestore`);
+        console.log(
+          `[food-search] ✅ Found ${results.length} result(s) in Firestore`
+        );
         return NextResponse.json({ source: "firestore", foods: results });
       }
 
@@ -129,7 +131,10 @@ Rules:
     console.log("[food-search] Groq response:", parsed);
 
     if (!parsed) {
-      return NextResponse.json({ error: "No response from AI" }, { status: 500 });
+      return NextResponse.json(
+        { error: "No response from AI" },
+        { status: 500 }
+      );
     }
 
     let foods: NormalizedFood[];
@@ -138,7 +143,10 @@ Rules:
       foods = obj.foods.map(normalizeFood);
     } catch (err) {
       console.error("❌ Failed to parse AI response:", parsed);
-      return NextResponse.json({ error: "Invalid AI response" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Invalid AI response" },
+        { status: 500 }
+      );
     }
 
     // 💾 Cache first normalized Groq result

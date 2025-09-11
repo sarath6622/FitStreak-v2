@@ -130,16 +130,16 @@ export default function MealModal({
 
   const [recents, setRecents] = useState<FoodItem[]>([]);
 
-useEffect(() => {
-  if (!isOpen || !user || !localMealType) return; // ✅ ensure mealType is chosen
+  useEffect(() => {
+    if (!isOpen || !user || !localMealType) return; // ✅ ensure mealType is chosen
 
-  fetch(`/api/food/recent-foods?userId=${user.uid}&mealType=${localMealType}`)
-    .then((res) => res.json())
-    .then((data) => {
-      if (Array.isArray(data.foods)) setRecents(data.foods);
-    })
-    .catch((err) => console.error("[MealModal] recents error:", err));
-}, [isOpen, user, localMealType]);
+    fetch(`/api/food/recent-foods?userId=${user.uid}&mealType=${localMealType}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.foods)) setRecents(data.foods);
+      })
+      .catch((err) => console.error("[MealModal] recents error:", err));
+  }, [isOpen, user, localMealType]);
 
   const [quantity, setQuantity] = useState<number>(defaultQuantity);
   const [measure, setMeasure] = useState<Measure>(defaultMeasure);
@@ -148,42 +148,42 @@ useEffect(() => {
 
   const round = (n: number, d = 1) => Number(n.toFixed(d));
 
-const gramsPerUnit = useMemo(() => {
-  const f = selectedFood;
-  if (!f || !f.servingUnits) {
-    return { Grams: 1, Serving: 100, Cup: 240, Oz: 28.35, Piece: 100 };
-  }
+  const gramsPerUnit = useMemo(() => {
+    const f = selectedFood;
+    if (!f || !f.servingUnits) {
+      return { Grams: 1, Serving: 100, Cup: 240, Oz: 28.35, Piece: 100 };
+    }
 
-  return {
-    Grams: f.servingUnits.g ?? 1,
-    Serving: f.servingUnits.serving ?? 100,
-    Cup: f.servingUnits.cup ?? 240,
-    Oz: f.servingUnits.oz ?? 28.35,
-    Piece: f.servingUnits.piece ?? 100,
-  };
-}, [selectedFood]);
+    return {
+      Grams: f.servingUnits.g ?? 1,
+      Serving: f.servingUnits.serving ?? 100,
+      Cup: f.servingUnits.cup ?? 240,
+      Oz: f.servingUnits.oz ?? 28.35,
+      Piece: f.servingUnits.piece ?? 100,
+    };
+  }, [selectedFood]);
 
   const netWeightG = useMemo(() => {
     const gPerUnit = gramsPerUnit[measure] ?? 1;
     return measure === "Grams" ? quantity : quantity * gPerUnit;
   }, [quantity, measure, gramsPerUnit]);
 
-const totals = useMemo(() => {
-  if (!selectedFood || !selectedFood.baseNutrientsPer100g) return null;
+  const totals = useMemo(() => {
+    if (!selectedFood || !selectedFood.baseNutrientsPer100g) return null;
 
-  const mult = netWeightG / 100;
-  const n = selectedFood.baseNutrientsPer100g;
+    const mult = netWeightG / 100;
+    const n = selectedFood.baseNutrientsPer100g;
 
-  return {
-    calories: Math.round((n.calories ?? 0) * mult),
-    protein: round((n.protein ?? 0) * mult, 1),
-    fat: round((n.fat ?? 0) * mult, 1),
-    carbs: round((n.carbs ?? 0) * mult, 1),
-    fiber: round((n.fiber ?? 0) * mult, 1),
-    sugars: round((n.sugars ?? 0) * mult, 1),
-    netWeightG: round(netWeightG, 0),
-  };
-}, [selectedFood, netWeightG]);
+    return {
+      calories: Math.round((n.calories ?? 0) * mult),
+      protein: round((n.protein ?? 0) * mult, 1),
+      fat: round((n.fat ?? 0) * mult, 1),
+      carbs: round((n.carbs ?? 0) * mult, 1),
+      fiber: round((n.fiber ?? 0) * mult, 1),
+      sugars: round((n.sugars ?? 0) * mult, 1),
+      netWeightG: round(netWeightG, 0),
+    };
+  }, [selectedFood, netWeightG]);
 
   const disabled = !selectedFood;
 
@@ -223,82 +223,81 @@ const totals = useMemo(() => {
     >
       <div className="w-[420px] max-w-[92vw] rounded-3xl border border-white/10 bg-[#0d0f1a] shadow-2xl">
         {/* Header */}
-<div className="px-4 pt-4 pb-4 relative">
-  {/* Row 1: Close button */}
-  <div className="flex justify-end mb-3">
-    <button
-      onClick={onClose}
-      className="text-gray-400 hover:text-white"
-    >
-      <X className="h-6 w-6" />
-    </button>
-  </div>
+        <div className="px-4 pt-4 pb-4 relative">
+          {/* Row 1: Close button */}
+          <div className="flex justify-end mb-3">
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-white"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
 
-  {/* Row 2: Meal type selection */}
-  {mealType === "" || mealType === "new" ? (
-    <div className="flex flex-col w-full">
-      <label className="text-sm text-gray-400 mb-1">Select meal type</label>
-      <select
-        value={localMealType}
-        onChange={(e) => setLocalMealType(e.target.value)}
-        className={`rounded-lg bg-[var(--surface-dark)] border p-2 text-white ${
-          !localMealType
-            ? "border-blue-500 animate-pulse"
-            : "border-[var(--card-border)]"
-        }`}
-      >
-        <option value="">-- Select meal type --</option>
-        {mealOptions.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-    </div>
-  ) : (
-    <h3 className="text-white font-medium">{mealType}</h3>
-  )}
-</div>
+          {/* Row 2: Meal type selection */}
+          {mealType === "" || mealType === "new" ? (
+            <div className="flex flex-col w-full">
+              <label className="text-sm text-gray-400 mb-1">Select meal type</label>
+              <select
+                value={localMealType}
+                onChange={(e) => setLocalMealType(e.target.value)}
+                className={`rounded-lg bg-[var(--surface-dark)] border p-2 text-white ${!localMealType
+                    ? "border-blue-500 animate-pulse"
+                    : "border-[var(--card-border)]"
+                  }`}
+              >
+                <option value="">-- Select meal type --</option>
+                {mealOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <h3 className="text-white font-medium">{mealType}</h3>
+          )}
+        </div>
 
         {/* Food Search */}
         <FoodSearch
-    selectedFood={selectedFood}
-    setSelectedFood={setSelectedFood}
-    results={results}
-    query={query}
-    setQuery={setQuery}
-    loading={loading}
-    recents={recents}
-    disabled={!localMealType} // 🔹 disable until meal type is chosen
-    // placeholder={
-    //   !localMealType ? "Select a meal type first..." : "Search for a food..."
-    // }
+          selectedFood={selectedFood}
+          setSelectedFood={setSelectedFood}
+          results={results}
+          query={query}
+          setQuery={setQuery}
+          loading={loading}
+          recents={recents}
+          disabled={!localMealType} // 🔹 disable until meal type is chosen
+          // placeholder={
+          //   !localMealType ? "Select a meal type first..." : "Search for a food..."
+          // }
 
-    onFallbackSearch={async (q) => {
+          onFallbackSearch={async (q) => {
             setLoading(true);
             try {
               const res = await fetch(`/api/food/search?q=${q}&forceGroq=true`);
               const data = await res.json();
               if (res.ok && Array.isArray(data.foods)) {
-const mapped = data.foods.map((f: any) => ({
-  id: f.id,
-  name: f.name,
-  category: f.category,
-  baseNutrientsPer100g: f.baseNutrientsPer100g
-    ? {
-        calories: f.baseNutrientsPer100g.calories ?? 0,
-        protein: f.baseNutrientsPer100g.protein ?? 0,
-        carbs: f.baseNutrientsPer100g.carbs ?? 0,
-        fat: f.baseNutrientsPer100g.fat ?? 0,
-        fiber: f.baseNutrientsPer100g.fiber ?? 0,
-        sugars: f.baseNutrientsPer100g.sugars ?? 0,
-      }
+                const mapped = data.foods.map((f: any) => ({
+                  id: f.id,
+                  name: f.name,
+                  category: f.category,
+                  baseNutrientsPer100g: f.baseNutrientsPer100g
+                    ? {
+                      calories: f.baseNutrientsPer100g.calories ?? 0,
+                      protein: f.baseNutrientsPer100g.protein ?? 0,
+                      carbs: f.baseNutrientsPer100g.carbs ?? 0,
+                      fat: f.baseNutrientsPer100g.fat ?? 0,
+                      fiber: f.baseNutrientsPer100g.fiber ?? 0,
+                      sugars: f.baseNutrientsPer100g.sugars ?? 0,
+                    }
 
-    : { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugars: 0 },
-  servingUnits: f.servingUnits ?? { g: 1 },
-  source: f.source,
-  nameLower: f.nameLower ?? f.name.toLowerCase(),
-}));
+                    : { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugars: 0 },
+                  servingUnits: f.servingUnits ?? { g: 1 },
+                  source: f.source,
+                  nameLower: f.nameLower ?? f.name.toLowerCase(),
+                }));
                 setResults(mapped);
               } else {
                 setResults([]);

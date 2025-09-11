@@ -7,7 +7,6 @@ import { doc, getDoc } from "firebase/firestore";
 import { CaloriesRing, WaterRing, Macros, MealCard } from "@/components/diet";
 import MealModal from "@/components/diet/MealModal";
 import { UserProfile } from "@/types/UserProfile";
-import { Sparkles } from "lucide-react";
 import WaterGlassesCard from "@/components/diet/WaterRing";
 import DietSkeleton from "@/components/diet/DietSkeleton";
 import TodaysLog from "@/components/diet/TodaysLog";

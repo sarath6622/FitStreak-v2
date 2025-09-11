@@ -40,7 +40,7 @@ export default function FriendsPage() {
     <div className="p-4 space-y-6 text-white">
       {/* Top Section */}
       {loading ? (
-        <div className="flex items-center gap-3 animate-pulse">
+        <div className="min-h-screen flex items-center gap-3 animate-pulse">
           <div className="flex-1 h-12 rounded-lg bg-[var(--surface-dark)] border border-[var(--card-border)]" />
           <div className="h-12 w-12 rounded-lg bg-[var(--surface-dark)] border border-[var(--card-border)]" />
         </div>
