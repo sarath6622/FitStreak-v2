@@ -165,11 +165,22 @@ const handleWorkoutSaved = async (
   await updateUserStreak(user.uid, dateKey);
 };
 
-  const filteredExercises = useMemo(() => {
-    return exercises.filter((exercise) =>
-      exercise.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [exercises, searchTerm]);
+const filteredExercises = useMemo(() => {
+  const filtered = exercises.filter((exercise) =>
+    exercise.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return filtered.sort((a, b) => {
+    const aData = completedExercises[a.name];
+    const bData = completedExercises[b.name];
+
+    const aDone = aData && aData.setsDone >= aData.totalSets;
+    const bDone = bData && bData.setsDone >= bData.totalSets;
+
+    if (aDone === bDone) return 0; // keep original order if both same
+    return aDone ? 1 : -1; // push completed to bottom
+  });
+}, [exercises, searchTerm, completedExercises]);
 
   return (
     <div className="space-y-4">
