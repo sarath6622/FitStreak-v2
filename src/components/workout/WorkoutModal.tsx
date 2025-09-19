@@ -8,6 +8,7 @@ interface WorkoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   exercise: any;
+  exerciseId: string;
   onWorkoutSaved: (data: any) => void;
   completedData?: {
     setsDone?: number;
@@ -20,6 +21,7 @@ export default function WorkoutModal({
   isOpen,
   onClose,
   exercise,
+  exerciseId,
   onWorkoutSaved,
   completedData,
 }: WorkoutModalProps) {
@@ -55,6 +57,7 @@ export default function WorkoutModal({
             {/* Workout Logger */}
             <WorkoutLogger
               exercise={exercise}
+              exerciseId={exerciseId}
               onClose={onClose}
               onWorkoutSaved={onWorkoutSaved}
               completedData={completedData} // ✅ safe, may be undefined or partial

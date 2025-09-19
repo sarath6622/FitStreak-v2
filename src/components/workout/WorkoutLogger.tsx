@@ -32,11 +32,13 @@ type SetEntry = {
 
 export default function WorkoutLogger({
   exercise,
+  exerciseId,
   onClose,
   onWorkoutSaved,
   completedData,
 }: {
   exercise: Exercise;
+  exerciseId: string;
   onClose: () => void;
   onWorkoutSaved: (data: { sets: { weight: number; reps: number; done: boolean }[] }) => void;
   completedData?: {
@@ -265,7 +267,10 @@ const handleSave = async () => {
       return;
     }
 
+    console.log("Exercise ID:", exerciseId);
+    
     const exerciseData = {
+      id: exerciseId,
       name: exercise.name,
       muscleGroup: exercise.muscleGroup,
       sets: trimmedLength,

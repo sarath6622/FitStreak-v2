@@ -129,6 +129,8 @@ const handleWorkoutSaved = async (
   exerciseId: string,
   data: { sets: { weight: number; reps: number; done: boolean }[] }
 ) => {
+  console.log("Workout saved for", exerciseId, data);
+  
   const ex = exercises.find((e) => e.exerciseId === exerciseId);
   const key = ex?.name || exerciseId;
 
@@ -150,16 +152,6 @@ const handleWorkoutSaved = async (
 
   const today = new Date();
   const dateKey = today.toISOString().split("T")[0]; // YYYY-MM-DD
-
-  const workoutRef = doc(db, "users", user.uid, "workouts", dateKey);
-  await setDoc(
-    workoutRef,
-    {
-      [key]: data.sets,
-      savedAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
 
   // Update streaks in one place
   await updateUserStreak(user.uid, dateKey);
@@ -226,6 +218,7 @@ const handleWorkoutSaved = async (
         <WorkoutModal
           isOpen={!!selectedExercise}
           onClose={() => setSelectedExercise(null)}
+          exerciseId={selectedExercise}
           exercise={exercises.find((ex) => ex.exerciseId === selectedExercise)}
           onWorkoutSaved={(data) => handleWorkoutSaved(selectedExercise, data)}
           completedData={(() => {
