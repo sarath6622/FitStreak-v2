@@ -14,7 +14,7 @@ import ExerciseCard from "./ExerciseCard";
 import ExerciseSkeleton from "./ExerciseSkeleton";
 import WorkoutModal from "./WorkoutModal";
 import WorkoutCompletionMeter from "./WorkoutCompletionMeter";
-import { useRouter } from "next/navigation";import router from "next/router"; 
+import { useRouter } from "next/navigation"; import router from "next/router";
 import { updateUserStreak } from "@/services/streakService";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
@@ -39,8 +39,8 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
   >({});
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
-    const router = useRouter();
-  
+  const router = useRouter();
+
   const [exercises, setExercises] = useState<Exercise[]>(plan.exercises);
 
   const [editOpen, setEditOpen] = useState(false);
@@ -92,9 +92,43 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
     }
   }
 
-  function handleDelete(exercise: Exercise) {
-    setExercises((prev) => prev.filter((ex) => ex.exerciseId !== exercise.exerciseId));
-    // TODO: remove from Firestore here
+  async function handleDelete(exercise: Exercise) {
+    if (!user) return;
+
+    const dateStr = new Date().toISOString().split("T")[0];
+
+    try {
+      const res = await fetch("/api/delete-exercise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.uid,
+          dateStr,
+          planId: plan.id,
+          exerciseId: exercise.exerciseId,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to delete exercise");
+      }
+
+      // ✅ update local state from API response
+      setExercises(data.exercises);
+
+      // ✅ cleanup completed state
+      setCompletedExercises((prev) => {
+        const copy = { ...prev };
+        delete copy[exercise.name];
+        return copy;
+      });
+
+      toast.success(`Deleted exercise: ${exercise.name}`);
+    } catch (err) {
+      console.error("Delete failed:", err);
+      toast.error("Failed to delete exercise");
+    }
   }
 
   // Keep exercises in sync if parent plan changes
@@ -125,51 +159,51 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
   }, []);
 
 
-const handleWorkoutSaved = async (
-  exerciseId: string,
-  data: { sets: { weight: number; reps: number; done: boolean }[] }
-) => {
-  console.log("Workout saved for", exerciseId, data);
+  const handleWorkoutSaved = async (
+    exerciseId: string,
+    data: { sets: { weight: number; reps: number; done: boolean }[] }
+  ) => {
+    console.log("Workout saved for", exerciseId, data);
 
-  const ex = exercises.find((e) => e.exerciseId === exerciseId);
-  const key = ex?.name || exerciseId;
+    const ex = exercises.find((e) => e.exerciseId === exerciseId);
+    const key = ex?.name || exerciseId;
 
-  // Local state update
-  setCompletedExercises((prev) => ({
-    ...prev,
-    [key]: {
-      setsDone: data.sets.filter((s) => s.done || s.weight > 0).length,
-      repsDone: data.sets.reduce(
-        (acc, s) => acc + (s.done || s.weight > 0 ? s.reps : 0),
-        0
-      ),
-      totalSets: data.sets.length,
-    },
-  }));
+    // Local state update
+    setCompletedExercises((prev) => ({
+      ...prev,
+      [key]: {
+        setsDone: data.sets.filter((s) => s.done || s.weight > 0).length,
+        repsDone: data.sets.reduce(
+          (acc, s) => acc + (s.done || s.weight > 0 ? s.reps : 0),
+          0
+        ),
+        totalSets: data.sets.length,
+      },
+    }));
 
-  const user = auth.currentUser;
-  if (!user) return;
+    const user = auth.currentUser;
+    if (!user) return;
 
-  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
-  // ✅ Update streaks
-  await updateUserStreak(user.uid, today);
+    // ✅ Update streaks
+    await updateUserStreak(user.uid, today);
 
-  // ✅ Update exercise index
-  const indexRef = doc(db, "users", user.uid, "exerciseIndex", exerciseId);
-  const snap = await getDoc(indexRef);
+    // ✅ Update exercise index
+    const indexRef = doc(db, "users", user.uid, "exerciseIndex", exerciseId);
+    const snap = await getDoc(indexRef);
 
-  if (snap.exists()) {
-    // Get old history and prepend today if not already first
-    const prev = snap.data().history || [];
-    const newHistory = prev[0] === today ? prev : [today, ...prev];
+    if (snap.exists()) {
+      // Get old history and prepend today if not already first
+      const prev = snap.data().history || [];
+      const newHistory = prev[0] === today ? prev : [today, ...prev];
 
-    await updateDoc(indexRef, { history: newHistory });
-  } else {
-    // First time logging this exercise
-    await setDoc(indexRef, { history: [today] });
-  }
-};
+      await updateDoc(indexRef, { history: newHistory });
+    } else {
+      // First time logging this exercise
+      await setDoc(indexRef, { history: [today] });
+    }
+  };
   const filteredExercises = useMemo(() => {
     return exercises.filter((exercise) =>
       exercise.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -179,17 +213,30 @@ const handleWorkoutSaved = async (
   return (
     <div className="space-y-4">
 
-      <header className="sticky top-0 z-40 flex items-center gap-3 bg-[var(--card-background)] px-3 py-2 border-b border-[var(--card-border)] shadow-sm">
-        <button
-          onClick={() => router.push("/workouts?from=today")}
-          className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] py-1 px-2 rounded-full transition"
-        >
-          <ArrowLeft size={16} className="bg-[var(--surface-dark)]" /> Back
-        </button>
-              <h2 className="text-lg font-semibold text-white">
-        Today's {plan.muscleGroup} Plan
-      </h2>
-      </header>
+<header className="sticky top-0 z-40 flex items-center justify-between bg-[var(--card-background)] px-3 py-2 border-b border-[var(--card-border)] shadow-sm">
+  <div className="flex items-center gap-2">
+    <button
+      onClick={() => router.push("/workouts?from=today")}
+      className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] py-1 px-2 rounded-full transition"
+    >
+      <ArrowLeft size={16} className="bg-[var(--surface-dark)]" />
+    </button>
+    <h2 className="text-lg font-semibold text-white">
+      Today's {plan.muscleGroup} Plan
+    </h2>
+  </div>
+
+  {/* ✅ New Workout button */}
+  <button
+    onClick={() => {
+      setExerciseToEdit(null);
+      setEditOpen(true);
+    }}
+    className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm hover:bg-blue-700"
+  >
+    + New Workout
+  </button>
+</header>
 
       <WorkoutCompletionMeter
         completedExercises={completedExercises}
@@ -250,6 +297,47 @@ const handleWorkoutSaved = async (
           onSave={handleSave}
         />
       )}
+
+      {editOpen && (
+  <EditExerciseModal
+    open={editOpen}
+    onClose={() => {
+      setEditOpen(false);
+      setExerciseToEdit(null);
+    }}
+    exercise={exerciseToEdit} // null = new mode
+    onSave={async (newExercise) => {
+      if (!user) return;
+
+      const dateStr = new Date().toISOString().split("T")[0];
+
+      try {
+        const res = await fetch("/api/add-exercise", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.uid,
+            dateStr,
+            planId: plan.id,
+            exercise: newExercise,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error);
+
+        setExercises(data.exercises);
+        toast.success(`Added new exercise: ${newExercise.name}`);
+      } catch (err) {
+        console.error("Add failed:", err);
+        toast.error("Failed to add exercise");
+      } finally {
+        setEditOpen(false);
+        setExerciseToEdit(null);
+      }
+    }}
+  />
+)}
     </div>
   );
 }
