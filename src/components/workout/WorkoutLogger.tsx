@@ -90,8 +90,10 @@ export default function WorkoutLogger({
       const today = new Date().toISOString().split("T")[0];
 
       const [todayData, lastData] = await Promise.all([
-        getWorkoutForExercise(user.uid, today, exercise.name),
-        getLastWorkoutForExercise(user.uid, exercise.name),
+        getWorkoutForExercise(user.uid, today, exerciseId),
+        getLastWorkoutForExercise(user.uid, exerciseId),
+        //         getWorkoutForExercise(user.uid, today, exercise.name),
+        // getLastWorkoutForExercise(user.uid, exercise.name),
       ]);
 
       const exToday = todayData?.exercise; // may be undefined

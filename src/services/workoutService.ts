@@ -2,83 +2,69 @@
 import { db } from "@/firebase"; // Adjust the import based on your Firebase config file
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
+/**
+ * Get workout for a specific date + exercise
+ */
 export const getWorkoutForExercise = async (
   uid: string,
   date: string,
-  exerciseName: string
+  exerciseId: string
 ) => {
-  console.log("[getWorkoutForExercise] ▶️ uid:", uid, "date:", date, "exerciseName:", exerciseName);
+  // fetch workout for that date
+  const workoutRef = doc(db, "users", uid, "workouts", date);
+  const workoutSnap = await getDoc(workoutRef);
 
-  const docRef = doc(db, "users", uid, "workouts", date);
-  const docSnap = await getDoc(docRef);
-
-  if (!docSnap.exists()) {
-    console.warn("[getWorkoutForExercise] ❌ No workout doc found for", date);
+  if (!workoutSnap.exists()) {
+    console.log(`[getWorkoutForExercise] No workout found for ${date}, exerciseId=${exerciseId}`);
     return null;
   }
 
-  const data = docSnap.data();
-  console.log("[getWorkoutForExercise] 📄 Workout doc data:", data);
+  const data = workoutSnap.data();
+  const exercise = Array.isArray(data.exercises)
+    ? data.exercises.find((ex: any) => ex.exerciseId === exerciseId)
+    : null;
 
-  if (!data.exercises) {
-    console.warn("[getWorkoutForExercise] ⚠️ No 'exercises' field in workout doc");
-    return {
-      duration: data.duration ?? null,
-      rest: data.rest ?? null,
-      exercise: null,
-    };
-  }
-
-  if (!Array.isArray(data.exercises)) {
-    console.error(
-      "[getWorkoutForExercise] ❌ 'exercises' is not an array. Value:",
-      data.exercises
-    );
-    return {
-      duration: data.duration ?? null,
-      rest: data.rest ?? null,
-      exercise: null,
-    };
-  }
-
-  const exercise = data.exercises.find((ex: any) => ex.name === exerciseName);
-  console.log("[getWorkoutForExercise] 🔍 Matched exercise:", exercise);
-
-  return {
+  const result = {
+    date,
     duration: data.duration ?? null,
     rest: data.rest ?? null,
     exercise,
   };
+
+  return result;
 };
 
-export const getLastWorkoutForExercise = async (uid: string, exerciseName: string) => {
-  const today = new Date().toISOString().split("T")[0];
+/**
+ * Get the most recent *past* workout for an exercise
+ */
+export const getLastWorkoutForExercise = async (
+  uid: string,
+  exerciseId: string
+) => {
+  // 1️⃣ lookup exerciseIndex for this exercise
+  const indexRef = doc(db, "users", uid, "exerciseIndex", exerciseId);
+  const indexSnap = await getDoc(indexRef);
 
-  const workoutsRef = collection(db, "users", uid, "workouts");
-  const q = query(
-    workoutsRef,
-    where("date", "<", today),   // 👈 skip today
-    orderBy("date", "desc")
-  );
-
-  const snapshot = await getDocs(q);
-
-  for (const docSnap of snapshot.docs) {
-    const data = docSnap.data();
-    const exercise = data.exercises.find((ex: any) => ex.name === exerciseName);
-    console.log("Checking workout on date:", docSnap.id, "for exercise:", exerciseName, exercise);
-    
-    if (exercise) {
-      return {
-        date: docSnap.id,
-        duration: data.duration,
-        rest: data.rest,
-        exercise
-      };
-    }
+  if (!indexSnap.exists()) {
+    console.log(`[getLastWorkoutForExercise] No index found for exerciseId=${exerciseId}`);
+    return null;
   }
 
-  return null;
+  const { history } = indexSnap.data() as { history: string[] };
+  if (!history || history.length === 0) {
+    console.log(`[getLastWorkoutForExercise] No history for exerciseId=${exerciseId}`);
+    return null;
+  }
+
+  // 2️⃣ take the most recent date (history is sorted desc in your script)
+  const lastDate = history[0];
+
+  // 3️⃣ fetch that workout doc
+  const result = await getWorkoutForExercise(uid, lastDate, exerciseId);
+   console.log("[getLastWorkoutForExercise] returning:", JSON.stringify(result, null, 2));
+
+  
+  return result;
 };
 
 export async function getCompletedExercisesForToday(
