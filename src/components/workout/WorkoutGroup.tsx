@@ -1,4 +1,5 @@
 "use client";
+import { updateDoc, arrayUnion, getDoc } from "firebase/firestore";
 
 import { useState, useEffect, useMemo } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
@@ -9,8 +10,6 @@ import SwipeableCard from "../SwipeableCard";
 import EditExerciseModal from "@/components/EditExerciseModal";
 import { Exercise } from "@/types";
 import { toast } from "sonner";
-import { Search } from "lucide-react";
-import { Skeleton } from "../ui/skeleton";
 import ExerciseCard from "./ExerciseCard";
 import ExerciseSkeleton from "./ExerciseSkeleton";
 import WorkoutModal from "./WorkoutModal";
@@ -125,12 +124,13 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
     return () => unsubscribe();
   }, []);
 
+
 const handleWorkoutSaved = async (
   exerciseId: string,
   data: { sets: { weight: number; reps: number; done: boolean }[] }
 ) => {
   console.log("Workout saved for", exerciseId, data);
-  
+
   const ex = exercises.find((e) => e.exerciseId === exerciseId);
   const key = ex?.name || exerciseId;
 
@@ -150,13 +150,26 @@ const handleWorkoutSaved = async (
   const user = auth.currentUser;
   if (!user) return;
 
-  const today = new Date();
-  const dateKey = today.toISOString().split("T")[0]; // YYYY-MM-DD
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
-  // Update streaks in one place
-  await updateUserStreak(user.uid, dateKey);
+  // ✅ Update streaks
+  await updateUserStreak(user.uid, today);
+
+  // ✅ Update exercise index
+  const indexRef = doc(db, "users", user.uid, "exerciseIndex", exerciseId);
+  const snap = await getDoc(indexRef);
+
+  if (snap.exists()) {
+    // Get old history and prepend today if not already first
+    const prev = snap.data().history || [];
+    const newHistory = prev[0] === today ? prev : [today, ...prev];
+
+    await updateDoc(indexRef, { history: newHistory });
+  } else {
+    // First time logging this exercise
+    await setDoc(indexRef, { history: [today] });
+  }
 };
-
   const filteredExercises = useMemo(() => {
     return exercises.filter((exercise) =>
       exercise.name.toLowerCase().includes(searchTerm.toLowerCase())

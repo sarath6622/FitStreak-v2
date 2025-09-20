@@ -47,7 +47,7 @@ export default function TodaysWorkouts() {
     };
 
     fetchPlans();
-  }, []);
+  }, []);  
 
   return (
     <div className="space-y-4">

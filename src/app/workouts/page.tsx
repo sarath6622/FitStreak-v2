@@ -69,26 +69,6 @@ export default function WorkoutPage() {
             </p>
           </section>
         </Link>
-
-        {/* All Muscle Groups */}
-        <section className="bg-[var(--card-background)] border border-[var(--card-border)] rounded-2xl p-6 shadow-lg backdrop-blur-md mt-6">
-          <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 tracking-wide">
-            All Muscle Groups
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            {muscleGroups.map((group) => (
-              <Link
-                key={group}
-                href={`/workouts/${encodeURIComponent(group)}`}
-                className="bg-[var(--surface-light)] hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] rounded-xl py-4 px-3 
-                           text-sm font-medium shadow-md transition-all border border-[var(--card-border)]
-                           hover:scale-[1.02] hover:shadow-lg backdrop-blur-sm text-center"
-              >
-                {group}
-              </Link>
-            ))}
-          </div>
-        </section>
       </div>
     </div>
   );
