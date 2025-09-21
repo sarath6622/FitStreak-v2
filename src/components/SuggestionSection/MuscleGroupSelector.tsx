@@ -22,7 +22,6 @@ const muscleGroups = [
   "Triceps",
   "Legs",
   "Abs",
-  "Full Body",
 ];
 
 function getRecoveryStatus(group: string, daysAgo: number) {

@@ -5,7 +5,7 @@ interface DurationSelectorProps {
   onChange: (val: string) => void;
 }
 
-const durations = ["30 min", "45 min", "60 min", "90 min", "120 min"];
+const durations = [ "45 min", "60 min", "90 min", "120 min"];
 
 export default function DurationSelector({
   value,
