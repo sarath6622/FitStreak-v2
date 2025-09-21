@@ -74,17 +74,27 @@ export default function SuggestionSection({ userId }: SuggestionSectionProps) {
     }
   }
 
-  useEffect(() => {
-    const cached = localStorage.getItem("muscleSummary");
-    const cachedDate = localStorage.getItem("muscleSummaryDate");
-    const today = new Date().toDateString();
+useEffect(() => {
+  const cached = localStorage.getItem("muscleSummary");
+  const cachedDate = localStorage.getItem("muscleSummaryDate");
+  const today = new Date().toDateString();
 
-    if (cached && cachedDate === today) {
-      setMuscleSummaries(JSON.parse(cached));
-    } else {
+  if (cached && cachedDate === today) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed)) {
+        setMuscleSummaries(parsed);
+      } else {
+        fetchMuscleAnalysis(); // fallback if cached data is corrupted
+      }
+    } catch (e) {
+      console.warn("Failed to parse cached muscle summaries:", e);
       fetchMuscleAnalysis();
     }
-  }, [userId]);
+  } else {
+    fetchMuscleAnalysis();
+  }
+}, [userId]);
 
   // generate workout
   const handleGenerate = async () => {

@@ -198,16 +198,63 @@ export interface WorkoutExerciseHistoryItem {
  * @param limitCount Number of most recent workouts to fetch.
  * @returns Array of workout history items sorted descending by date.
  */
-export async function getUserWorkoutHistory(
+// export async function getUserWorkoutHistory(
+//   userId: string,
+//   limitCount: number
+// ): Promise<WorkoutExerciseHistoryItem[]> {
+//   const workoutsRef = collection(db, "users", userId, "workouts");
+
+//   const q = query(
+//     workoutsRef,
+//     orderBy("date", "desc"),
+//     limit(limitCount)
+//   );
+
+//   const querySnapshot = await getDocs(q);
+
+//   const exercisesHistory: WorkoutExerciseHistoryItem[] = [];
+
+//   querySnapshot.docs.forEach((doc) => {
+//     const data = doc.data();
+//     const workoutDate = data.date;
+
+//     if (Array.isArray(data.exercises)) {
+//       data.exercises.forEach((ex: any) => {
+//         exercisesHistory.push({
+//           date: workoutDate,
+//           muscleGroup: ex.muscleGroup,
+//           sets: ex.sets,
+//           weight: ex.weight || [],
+//           repsPerSet: ex.repsPerSet || [],
+//           name: ex.name,
+//         });
+//       });
+//     }
+//   });
+
+//   return exercisesHistory;
+// }
+
+
+async function getUserWorkoutHistory(
   userId: string,
-  limitCount: number
+  daysBack: number
 ): Promise<WorkoutExerciseHistoryItem[]> {
   const workoutsRef = collection(db, "users", userId, "workouts");
 
+  // Calculate cutoff date (e.g. today - daysBack)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const cutoff = new Date(today);
+  cutoff.setDate(today.getDate() - daysBack);
+
+  // Format as YYYY-MM-DD string to match your doc IDs
+  const cutoffString = cutoff.toISOString().split("T")[0];
+
   const q = query(
     workoutsRef,
-    orderBy("date", "desc"),
-    limit(limitCount)
+    where("__name__", ">=", cutoffString),
+    orderBy("__name__", "desc")
   );
 
   const querySnapshot = await getDocs(q);
@@ -216,7 +263,7 @@ export async function getUserWorkoutHistory(
 
   querySnapshot.docs.forEach((doc) => {
     const data = doc.data();
-    const workoutDate = data.date;
+    const workoutDate = doc.id; // 👈 doc ID is the date
 
     if (Array.isArray(data.exercises)) {
       data.exercises.forEach((ex: any) => {

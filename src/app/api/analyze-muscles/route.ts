@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import Groq from "groq-sdk";
-import { getUserWorkoutHistory } from "@/services/workoutService";
-import { log } from "console";
+import { db } from "@/firebase";
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+} from "firebase/firestore";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+interface WorkoutExerciseHistoryItem {
+  date: string;
+  muscleGroup: string;
+  sets?: number;
+  weight: number[];
+  repsPerSet: number[];
+  name: string;
+}
 
-// Define the structure for the data we'll send to the AI
 interface ProcessedHistory {
   muscleGroup: string;
   lastTrained: string;
@@ -13,96 +24,148 @@ interface ProcessedHistory {
   totalVolume: number;
 }
 
+interface OutputHistory {
+  muscleGroup: string;
+  lastTrained: string;
+  daysAgo: number;
+  intensity: "low" | "medium" | "high";
+}
+
+// 🔑 Muscle group normalization map
+const muscleMap: Record<string, string> = {
+  Core: "Abs",
+  Abdominals: "Abs",
+  Chest: "Chest",
+  Back: "Back",
+  Quads: "Legs",
+  Hamstrings: "Legs",
+  Calves: "Calves",
+  Shoulders: "Shoulders",
+  Biceps: "Biceps",
+  Triceps: "Triceps",
+  Glutes: "Glutes",
+};
+
+// 🔹 Per-muscle volume thresholds
+const volumeThresholds: Record<string, { medium: number; high: number }> = {
+  Chest: { medium: 1000, high: 2500 },
+  Back: { medium: 1000, high: 2500 },
+  Legs: { medium: 1500, high: 3500 },
+  Shoulders: { medium: 800, high: 2000 },
+  Biceps: { medium: 400, high: 1000 },
+  Triceps: { medium: 400, high: 1000 },
+  Abs: { medium: 300, high: 800 },
+  Calves: { medium: 400, high: 1000 },
+  Glutes: { medium: 1000, high: 2500 },
+};
+
+// 🔹 Get workout history from Firestore
+async function getUserWorkoutHistory(
+  userId: string,
+  limitCount: number
+): Promise<WorkoutExerciseHistoryItem[]> {
+  const workoutsRef = collection(db, "users", userId, "workouts");
+  const q = query(workoutsRef, orderBy("__name__", "desc"), limit(limitCount));
+  const querySnapshot = await getDocs(q);
+
+  const exercisesHistory: WorkoutExerciseHistoryItem[] = [];
+  querySnapshot.docs.forEach((doc) => {
+    const data = doc.data();
+    const workoutDate = doc.id;
+
+    if (Array.isArray(data.exercises)) {
+      data.exercises.forEach((ex: any) => {
+        exercisesHistory.push({
+          date: workoutDate,
+          muscleGroup: ex.muscleGroup,
+          sets: ex.sets,
+          weight: ex.weight || [],
+          repsPerSet: ex.repsPerSet || [],
+          name: ex.name,
+        });
+      });
+    }
+  });
+
+  return exercisesHistory;
+}
+
+// 🔹 API Route
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await req.json();
-
     if (!userId) {
       return NextResponse.json({ error: "Missing userId" }, { status: 400 });
     }
 
-    const rawHistory = await getUserWorkoutHistory(userId, 10);
+    const rawHistory = await getUserWorkoutHistory(userId, 30);
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const majorMuscleGroups = ["Chest", "Back", "Legs", "Shoulders", "Biceps", "Triceps", "Abs", "Calves", "Glutes"];
+    const majorMuscleGroups = [
+      "Chest", "Back", "Legs", "Shoulders", "Biceps",
+      "Triceps", "Abs", "Calves", "Glutes",
+    ];
 
-    // Process raw history to get the most recent workout for each muscle group
-    const processedHistory: { [key: string]: ProcessedHistory } = {};
-
-    majorMuscleGroups.forEach(group => {
-        processedHistory[group] = {
-            muscleGroup: group,
-            lastTrained: "Never",
-            daysAgo: 7,
-            totalVolume: 0,
-        };
+    // Initialize processed history
+    const processedHistory: Record<string, ProcessedHistory> = {};
+    majorMuscleGroups.forEach((group) => {
+      processedHistory[group] = {
+        muscleGroup: group,
+        lastTrained: "Never",
+        daysAgo: Infinity,
+        totalVolume: 0,
+      };
     });
 
-    // Populate data for trained muscle groups
-    rawHistory.forEach(exercise => {
+    // Process each exercise
+    rawHistory.forEach((exercise) => {
       const { date, muscleGroup, repsPerSet, weight } = exercise;
+      const normalizedGroup = muscleMap[muscleGroup] || muscleGroup;
 
-      if (majorMuscleGroups.includes(muscleGroup) && date) {
-        const workoutDate = new Date(date);
-        workoutDate.setHours(0, 0, 0, 0);
-        const daysAgo = Math.floor((today.getTime() - workoutDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (!majorMuscleGroups.includes(normalizedGroup) || !date) return;
 
-        // Calculate total volume
-        const totalVolume = repsPerSet.reduce((sum, reps, i) => sum + reps * (weight[i] || 0), 0);
-        
-        // Update history if this is the most recent workout for the muscle group
-        if (daysAgo < processedHistory[muscleGroup].daysAgo) {
-          processedHistory[muscleGroup] = {
-            muscleGroup,
-            lastTrained: date,
-            daysAgo: Math.min(daysAgo, 7), // Cap daysAgo at 7
-            totalVolume,
-          };
-        }
+      const workoutDate = new Date(date);
+      workoutDate.setHours(0, 0, 0, 0);
+      const daysAgo = Math.floor(
+        (today.getTime() - workoutDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      const totalVolume = repsPerSet.reduce(
+        (sum, reps, i) => sum + reps * (weight[i] || 0),
+        0
+      );
+
+      const existing = processedHistory[normalizedGroup];
+
+      // Update last trained if more recent
+      if (daysAgo < existing.daysAgo) {
+        existing.lastTrained = date;
+        existing.daysAgo = daysAgo;
       }
+
+      // Accumulate total volume
+      existing.totalVolume += totalVolume;
     });
 
-    // Convert the processed object to an array for the AI prompt
-    const finalHistoryForAI = Object.values(processedHistory);
-    const historyJson = JSON.stringify(finalHistoryForAI, null, 2);
+    // Generate summary with intensity
+    const summary: OutputHistory[] = Object.values(processedHistory).map((m) => {
+      const thresholds = volumeThresholds[m.muscleGroup] || { medium: 500, high: 1500 };
+      let intensity: "low" | "medium" | "high" = "low";
 
-    const prompt = `
-      You are a virtual fitness coach. Analyze the following workout history to recommend undertrained muscle groups.
-      History contains a list of muscle groups, their last trained date, total days since training (max 7), and total volume.
-      These are the major muscle groups : ["Chest", "Back", "Legs", "Shoulders", "Biceps", "Triceps", "Abs", "Calves", "Glutes"]
-      Workout history:
-      ${historyJson}
+      if (m.totalVolume >= thresholds.high) intensity = "high";
+      else if (m.totalVolume >= thresholds.medium) intensity = "medium";
 
-      Instructions:
-      1. Identify muscle groups that have been trained more than 3 days ago.
-      2. For each identified muscle group, evaluate its 'intensity' based on 'totalVolume'.
-         - 'low' = totalVolume < 500
-         - 'medium' = 500 <= totalVolume < 1500
-         - 'high' = totalVolume >= 1500
-      3. Return ONLY a JSON array of these undertrained muscle groups.
-      4. The response format MUST be:
-         [
-           {
-             "muscleGroup": string,
-             "lastTrained": string,
-             "daysAgo": number,
-             "intensity": "low" | "medium" | "high"
-           },
-           ...
-         ]
-      5. Do NOT include any text, explanations, or greetings outside the JSON array.
-    `;
-
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
-      messages: [{ role: "user", content: prompt }],
+      return {
+        muscleGroup: m.muscleGroup,
+        lastTrained: m.lastTrained,
+        daysAgo: m.daysAgo === Infinity ? 7 : m.daysAgo,
+        intensity,
+      };
     });
-    
-    const summary = completion.choices[0].message.content;
-    console.log("AI Summary:", summary);
 
-    return NextResponse.json({ summary: JSON.parse(summary!) });
+    return NextResponse.json({ summary });
   } catch (error) {
     console.error("Error in /api/analyze-muscles:", error);
     return NextResponse.json({ error: "Failed to analyze muscle groups" }, { status: 500 });
