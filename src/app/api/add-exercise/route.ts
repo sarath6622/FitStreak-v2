@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/firebase"; // ✅ admin SDK
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, getDocs } from "firebase/firestore";
 
 export async function POST(req: Request) {
   try {
@@ -30,7 +30,42 @@ export async function POST(req: Request) {
 
     const data = snap.data();
 
-    const updatedExercises = [...(data.exercises || []), exercise];
+    // 🔎 Enrich the incoming exercise from master exercises collection
+    let enriched = exercise;
+    try {
+      if (exercise?.exerciseId) {
+        const masterSnap = await getDoc(doc(db, "exercises", exercise.exerciseId));
+        if (masterSnap.exists()) {
+          const master = masterSnap.data();
+          enriched = {
+            exerciseId: exercise.exerciseId,
+            name: master.name ?? exercise.name ?? "",
+            muscleGroup: master.muscleGroup ?? exercise.muscleGroup ?? "",
+            subGroup: master.subGroup ?? "",
+            movementType: master.movementType ?? "",
+            difficulty: master.difficulty ?? "",
+            equipment: Array.isArray(master.equipment) ? master.equipment : (master.equipment ? [master.equipment] : []),
+            secondaryMuscleGroups: Array.isArray(master.secondaryMuscleGroups) ? master.secondaryMuscleGroups : [],
+            reps: master.reps ?? exercise.reps ?? "",
+            sets: master.sets ?? exercise.sets ?? 3,
+            notes: exercise.notes ?? null,
+          };
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to enrich exercise; saving as-is", e);
+    }
+
+    // ✅ Ensure uniqueness by exerciseId: replace existing if present, else append
+    const existing: any[] = Array.isArray(data.exercises) ? data.exercises : [];
+    const idx = existing.findIndex((ex) => ex.exerciseId === enriched.exerciseId);
+    let updatedExercises: any[];
+    if (idx >= 0) {
+      updatedExercises = [...existing];
+      updatedExercises[idx] = { ...existing[idx], ...enriched };
+    } else {
+      updatedExercises = [...existing, enriched];
+    }
 
     await updateDoc(planRef, { exercises: updatedExercises });
 
