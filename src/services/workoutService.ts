@@ -322,29 +322,37 @@ export function calculateWeeklyFrequencyStreak(
 ): { currentStreak: number; longestStreak: number; workoutsThisWeek: number } {
   if (!dates.length) return { currentStreak: 0, longestStreak: 0, workoutsThisWeek: 0 };
 
-  const sorted = dates
+  const sortedDates = dates
     .map((d) => new Date(d))
     .sort((a, b) => a.getTime() - b.getTime());
 
-  const getYearWeek = (date: Date) => {
-    const tmp = new Date(date);
-    tmp.setHours(0, 0, 0, 0);
-    tmp.setDate(tmp.getDate() + 3 - ((tmp.getDay() + 6) % 7));
-    const week1 = new Date(tmp.getFullYear(), 0, 4);
-    const weekNum =
-      1 +
-      Math.round(
-        ((tmp.getTime() - week1.getTime()) / 86400000 -
-          3 +
-          ((week1.getDay() + 6) % 7)) /
-          7
-      );
-    return `${tmp.getFullYear()}-W${weekNum}`;
+  const startOfISOWeek = (date: Date) => {
+    const d = new Date(date);
+    const day = (d.getDay() + 6) % 7; // 0 = Monday
+    d.setDate(d.getDate() - day);
+    d.setHours(0, 0, 0, 0);
+    return d;
   };
 
-  // Group by weeks
+  const endOfISOWeek = (date: Date) => {
+    const start = startOfISOWeek(date);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return end;
+  };
+
+  const getYearWeek = (date: Date) => {
+    const s = startOfISOWeek(date);
+    const week1 = startOfISOWeek(new Date(s.getFullYear(), 0, 4));
+    const diffDays = Math.round((s.getTime() - week1.getTime()) / 86400000);
+    const weekNum = Math.floor(diffDays / 7) + 1;
+    return `${s.getFullYear()}-W${weekNum}`;
+  };
+
+  // Group by week key
   const weeksMap: Record<string, Date[]> = {};
-  sorted.forEach((d) => {
+  sortedDates.forEach((d) => {
     const key = getYearWeek(d);
     if (!weeksMap[key]) weeksMap[key] = [];
     weeksMap[key].push(d);
@@ -358,7 +366,6 @@ export function calculateWeeklyFrequencyStreak(
 
   let currentStreak = 0;
   let longestStreak = 0;
-  let consecutiveWeeks = 0;
 
   const today = new Date();
   const currentWeekKey = getYearWeek(today);
@@ -368,15 +375,22 @@ export function calculateWeeklyFrequencyStreak(
     const weekKey = sortedWeeks[i];
     const workouts = weeksMap[weekKey].length;
 
-    if (workouts >= weeklyFrequency) {
-      currentStreak += workouts;
-      consecutiveWeeks++;
-    } else {
-      if (weekKey === currentWeekKey) {
-        currentStreak += workouts;
+    if (weekKey !== currentWeekKey) {
+      // Past weeks: either met target or streak resets
+      if (workouts >= weeklyFrequency) {
+        currentStreak += workouts; // count workout days in successful weeks
       } else {
         currentStreak = 0;
-        consecutiveWeeks = 0;
+      }
+    } else {
+      // Current week: keep streak alive if target still achievable
+      const end = endOfISOWeek(today);
+      const daysLeft = Math.max(0, Math.ceil((end.getTime() - today.setHours(0,0,0,0)) / 86400000) + 1);
+      const stillPossible = workouts + daysLeft >= weeklyFrequency;
+      if (workouts >= weeklyFrequency || stillPossible) {
+        currentStreak += workouts; // add logged days so far
+      } else {
+        currentStreak = 0; // cannot meet target anymore this week
       }
     }
 
@@ -397,26 +411,28 @@ export async function getStreakData() {
       longestStreak: 0,
       workoutsThisWeek: 0,
       weeklyFrequency: 5,
-      weeklyCurrentStreak: 0,
-      weeklyLongestStreak: 0,
     };
   }
 
+  // read weeklyFrequency from user profile
   const userDoc = await getDoc(doc(db, "users", user.uid));
-  const userData = userDoc.data();
+  const weeklyFrequency = parseInt(String(userDoc.data()?.weeklyFrequency ?? 5));
+
+  // fetch workout dates from subcollection
+  const workoutsRef = collection(db, "users", user.uid, "workouts");
+  const snap = await getDocs(workoutsRef);
+  const dates: string[] = snap.docs.map((d) => d.id);
+
+  const { currentStreak, longestStreak, workoutsThisWeek } = calculateWeeklyFrequencyStreak(
+    dates,
+    weeklyFrequency
+  );
 
   return {
-    // Daily streaks
-    currentStreak: userData?.currentStreak || 0,
-    longestStreak: userData?.longestStreak || 0,
-
-    // Weekly streaks
-    workoutsThisWeek: userData?.workoutsThisWeek || 0,
-    weeklyCurrentStreak: userData?.weeklyCurrentStreak || 0,
-    weeklyLongestStreak: userData?.weeklyLongestStreak || 0,
-
-    // Settings
-    weeklyFrequency: parseInt(userData?.weeklyFrequency || "5"),
+    currentStreak,
+    longestStreak,
+    workoutsThisWeek,
+    weeklyFrequency,
   };
 }
 
