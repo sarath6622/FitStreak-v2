@@ -74,7 +74,9 @@ useEffect(() => {
       exerciseId: "",
       name: "",
       muscleGroup: "",
-      sets: [],
+      // Default target: 3 sets of 12 reps
+      sets: 3 as unknown as any,
+      reps: "12" as unknown as any,
     } as unknown as Exercise);
     setMuscle("");
     setExerciseOptions([]);
@@ -105,7 +107,16 @@ useEffect(() => {
     const selected = exerciseOptions.find((e) => e.value === value);
     if (selected) {
       setForm((prev) =>
-        prev ? { ...prev, exerciseId: selected.value, name: selected.label } : null
+        prev
+          ? {
+              ...prev,
+              exerciseId: selected.value,
+              name: selected.label,
+              // ensure defaults are present for new selections
+              sets: (prev as any).sets && Number((prev as any).sets) > 0 ? (prev as any).sets : (3 as any),
+              reps: (prev as any).reps ? (prev as any).reps : ("12" as any),
+            }
+          : null
       );
     }
   };

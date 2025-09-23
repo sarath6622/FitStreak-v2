@@ -66,7 +66,13 @@ export default function FriendsList({
             <FriendCard
               key={f.id}
               user={f}
-              onJoinWorkout={(id) => onPreviewWorkout([id])} // ✅ matches FriendCard signature
+              onJoinWorkout={async (id) => {
+                const today = new Date().toISOString().split("T")[0];
+                const plansCol = collection(db, "users", id, "workouts", today, "plans");
+                const plansSnap = await getDocs(plansCol);
+                const plans = plansSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+                onPreviewWorkout(plans);
+              }}
             />
           ))
         ) : (

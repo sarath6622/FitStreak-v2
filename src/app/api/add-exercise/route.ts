@@ -46,7 +46,7 @@ export async function POST(req: Request) {
             difficulty: master.difficulty ?? "",
             equipment: Array.isArray(master.equipment) ? master.equipment : (master.equipment ? [master.equipment] : []),
             secondaryMuscleGroups: Array.isArray(master.secondaryMuscleGroups) ? master.secondaryMuscleGroups : [],
-            reps: master.reps ?? exercise.reps ?? "",
+            reps: master.reps ?? exercise.reps ?? "12",
             sets: master.sets ?? exercise.sets ?? 3,
             notes: exercise.notes ?? null,
           };
