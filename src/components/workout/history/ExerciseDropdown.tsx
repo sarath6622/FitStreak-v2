@@ -18,6 +18,7 @@ export default function ExerciseDropdown({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [focused, setFocused] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   // close on outside click
@@ -47,15 +48,24 @@ export default function ExerciseDropdown({
         <input
           type="text"
           placeholder={placeholder}
-          value={query}
+          value={focused ? query : value || ""}
           onChange={(e) => {
             setQuery(e.target.value);
             setOpen(true);
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            // Clear the input for fast next search without changing chart state
+            setFocused(true);
+            setQuery("");
+            setOpen(true);
+          }}
+          onBlur={() => {
+            // When leaving, show the currently selected value again
+            setFocused(false);
+          }}
           className="flex-1 bg-transparent focus:outline-none placeholder-[var(--text-muted)]"
         />
-        {query && (
+        {(focused && query) && (
           <button
             type="button"
             onClick={() => {
@@ -81,8 +91,10 @@ export default function ExerciseDropdown({
                   key={opt}
                   onClick={() => {
                     onSelect(opt);
-                    setQuery(opt);
+                    // Clear search input for fast next selection, keep chart as parent state
+                    setQuery("");
                     setOpen(false);
+                    setFocused(false);
                   }}
                   className="px-3 py-2 text-sm text-[var(--text-primary)] cursor-pointer hover:bg-[var(--surface-hover)]"
                 >

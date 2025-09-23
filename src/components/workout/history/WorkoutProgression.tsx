@@ -13,6 +13,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  ReferenceLine,
+  ReferenceDot,
 } from "recharts";
 
 import {
@@ -105,21 +107,54 @@ export default function WorkoutProgression({ workouts, defaultExercise }: Props)
     [workouts]
   );
 
+  // 🎯 highlight latest point in the chart
+  const latestIndex = history.length > 0 ? history.length - 1 : -1;
+  const latestPoint = latestIndex >= 0 ? history[latestIndex] : null;
+  const renderOneRMDot = (props: any) => {
+    const { cx, cy, index } = props;
+    const isLatest = index === latestIndex;
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={isLatest ? 5 : 2}
+        fill={isLatest ? 'var(--accent-green)' : 'var(--accent-green)'}
+        stroke={isLatest ? '#fff' : 'none'}
+        strokeWidth={isLatest ? 2 : 0}
+      />
+    );
+  };
+  const renderPRDot = (props: any) => {
+    const { cx, cy, index } = props;
+    const isLatest = index === latestIndex;
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={isLatest ? 5 : 2}
+        fill={isLatest ? 'var(--accent-blue)' : 'var(--accent-blue)'}
+        stroke={isLatest ? '#fff' : 'none'}
+        strokeWidth={isLatest ? 2 : 0}
+      />
+    );
+  };
+
   return (
     <Card className="bg-black border border-[var(--card-border)] rounded-2xl p-4 text-[var(--text-primary)] shadow-md mb-6">
       <CardContent className="p-0 space-y-4">
-        {/* Header + Dropdown */}
+        {/* Header + Dropdown (shows current exercise inside the input) */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <h2 className="text-base font-semibold">
             Progression{" "}
             <span className="text-[var(--text-muted)] text-xs">(1RM & PR)</span>
           </h2>
 
-<ExerciseDropdown
-  value={exerciseName}
-  options={exerciseOptions}
-  onSelect={(val) => setSelectedExercise(val)}
-/>
+          <ExerciseDropdown
+            value={exerciseName}
+            options={exerciseOptions}
+            onSelect={(val) => setSelectedExercise(val)}
+            placeholder="Search exercise..."
+          />
         </div>
 
         {/* Stat Cards */}
@@ -150,6 +185,7 @@ export default function WorkoutProgression({ workouts, defaultExercise }: Props)
             <span className="w-3 h-1.5 rounded-sm bg-[var(--accent-blue)]"></span>
             PR
           </div>
+          {/* removed separate current badge; input shows current selection */}
         </div>
 
         {/* Chart */}
@@ -164,6 +200,13 @@ export default function WorkoutProgression({ workouts, defaultExercise }: Props)
                   strokeDasharray="3 3"
                   stroke="var(--card-border)"
                 />
+                {latestPoint && (
+                  <ReferenceLine
+                    x={latestPoint.date}
+                    stroke="rgba(255,255,255,0.2)"
+                    strokeDasharray="3 3"
+                  />
+                )}
                 <XAxis
                   dataKey="date"
                   stroke="var(--text-muted)"
@@ -188,7 +231,7 @@ export default function WorkoutProgression({ workouts, defaultExercise }: Props)
                   dataKey="oneRM"
                   stroke="var(--accent-green)"
                   strokeWidth={2}
-                  dot={{ r: 2 }}
+                  dot={renderOneRMDot}
                   name="1RM"
                 />
                 <Line
@@ -196,9 +239,20 @@ export default function WorkoutProgression({ workouts, defaultExercise }: Props)
                   dataKey="pr"
                   stroke="var(--accent-blue)"
                   strokeWidth={2}
-                  dot={{ r: 2 }}
+                  dot={renderPRDot}
                   name="PR"
                 />
+                {latestPoint && (
+                  <ReferenceDot
+                    x={latestPoint.date}
+                    y={latestPoint.oneRM}
+                    r={6}
+                    fill="transparent"
+                    stroke="#fff"
+                    strokeWidth={2}
+                    label={{ value: exerciseName || 'Current', position: 'top', fill: 'var(--text-secondary)', fontSize: 10 }}
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </div>
