@@ -11,9 +11,10 @@ import {
 interface Props {
   allWorkouts: WorkoutSession[];
   onFilter: (filtered: WorkoutSession[]) => void;
+  onDateRangeChange?: (range: string) => void; // notify parent to refetch from DB
 }
 
-export default function Filters({ allWorkouts, onFilter }: Props) {
+export default function Filters({ allWorkouts, onFilter, onDateRangeChange }: Props) {
   const [muscle, setMuscle] = useState("all");
   const [dateRange, setDateRange] = useState<string>("14d"); // default: last 14 days
 
@@ -61,6 +62,11 @@ export default function Filters({ allWorkouts, onFilter }: Props) {
     const filtered = allWorkouts.filter((w) => passesDate(w) && passesMuscle(w));
     onFilter(filtered);
   }, [allWorkouts, muscle, dateRange, onFilter]);
+
+  // Notify parent when date range changes so it can refetch from DB
+  useEffect(() => {
+    if (onDateRangeChange) onDateRangeChange(dateRange);
+  }, [dateRange, onDateRangeChange]);
 
   return (
     <div className="flex gap-2 items-center w-full">

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { auth, db } from "@/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
 import Auth from "@/components/Auth";
 import WorkoutTimeline from "@/components/history/WorkoutTimeline";
 import Filters from "@/components/history/Filters";
@@ -21,15 +21,39 @@ export default function HistoryPage() {
   const [lastLoggedExercise, setLastLoggedExercise] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
+  const [dateRange, setDateRange] = useState<string>("14d"); // default fetch window
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setAuthReady(true);
       if (firebaseUser) {
+        // initial fetch based on dateRange
         const workoutsRef = collection(db, "users", firebaseUser.uid, "workouts");
-        const q = query(workoutsRef, orderBy("date", "desc"));
-        const snapshot = await getDocs(q);
+        // compute start boundary for date-based query using document id (YYYY-MM-DD)
+        const now = new Date();
+        let start: string | null = null;
+        if (dateRange === "14d") {
+          const s = new Date(now);
+          s.setDate(now.getDate() - 13);
+          start = s.toISOString().split("T")[0];
+        } else if (dateRange === "30d") {
+          const s = new Date(now);
+          s.setDate(now.getDate() - 29);
+          start = s.toISOString().split("T")[0];
+        } else {
+          start = null; // all time
+        }
+
+        const qBase = start
+          ? query(
+              workoutsRef,
+              orderBy("__name__", "desc"),
+              where("__name__", ">=", start)
+            )
+          : query(workoutsRef, orderBy("__name__", "desc"));
+
+        const snapshot = await getDocs(qBase);
 
         const fetchedWorkouts: WorkoutSession[] = snapshot.docs.map((doc) => ({
           ...(doc.data() as WorkoutSession),
@@ -50,7 +74,7 @@ export default function HistoryPage() {
     });
 
     return unsub;
-  }, []);
+  }, [dateRange]);
 
   if (!authReady) {
     return (
@@ -80,7 +104,11 @@ if (loading) {
       <WorkoutProgression workouts={allWorkouts} defaultExercise={lastLoggedExercise} />
 
       <div className="mt-6">
-        <Filters allWorkouts={allWorkouts} onFilter={setFilteredWorkouts} />
+        <Filters
+          allWorkouts={allWorkouts}
+          onFilter={setFilteredWorkouts}
+          onDateRangeChange={setDateRange}
+        />
       </div>
 
       <div className="mt-6">
