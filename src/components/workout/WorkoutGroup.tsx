@@ -151,6 +151,8 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
           today
         );
         setCompletedExercises(completed);
+        console.log(completed);
+        
       }
 
       setLoading(false);

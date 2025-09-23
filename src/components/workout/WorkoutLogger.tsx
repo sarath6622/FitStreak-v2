@@ -229,7 +229,8 @@ const handleSave = async () => {
 
     const today = new Date().toISOString().split("T")[0];
 
-    const todayData = await getWorkoutForExercise(user.uid, today, exercise.name);
+    // Use exerciseId for lookup (consistent with how we render/select exercises)
+    const todayData = await getWorkoutForExercise(user.uid, today, exerciseId);
     const exToday = todayData?.exercise;
 
     const existingWeight: number[] = exToday?.weight ?? [];
@@ -270,9 +271,10 @@ const handleSave = async () => {
     }
 
     console.log("Exercise ID:", exerciseId);
-    
+
     const exerciseData = {
-      id: exerciseId,
+      id: exerciseId, // legacy field kept for backward compatibility
+      exerciseId,     // explicit field to ensure fetch by id works
       name: exercise.name,
       muscleGroup: exercise.muscleGroup,
       sets: trimmedLength,

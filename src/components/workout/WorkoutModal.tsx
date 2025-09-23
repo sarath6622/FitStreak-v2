@@ -25,7 +25,9 @@ export default function WorkoutModal({
   onWorkoutSaved,
   completedData,
 }: WorkoutModalProps) {
+  console.log("completedData from workoutModal" , completedData);
   return (
+    
     <AnimatePresence>
       {isOpen && (
         <motion.div

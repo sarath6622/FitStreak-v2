@@ -21,7 +21,10 @@ export const getWorkoutForExercise = async (
 
   const data = workoutSnap.data();
   const exercise = Array.isArray(data.exercises)
-    ? data.exercises.find((ex: any) => ex.exerciseId === exerciseId)
+    ? data.exercises.find((ex: any) => {
+        // Support both new and legacy fields
+        return ex.exerciseId === exerciseId || ex.id === exerciseId;
+      })
     : null;
 
   const result = {
@@ -56,11 +59,16 @@ export const getLastWorkoutForExercise = async (
     return null;
   }
 
-  // 2️⃣ take the most recent date (history is sorted desc in your script)
-  const lastDate = history[0];
+  // 2️⃣ take the most recent PAST date (exclude today if present)
+  const today = new Date().toISOString().split("T")[0];
+  const lastPastDate = history.find(d => d !== today);
+  if (!lastPastDate) {
+    console.log(`[getLastWorkoutForExercise] Only today's entry exists for exerciseId=${exerciseId}`);
+    return null;
+  }
 
   // 3️⃣ fetch that workout doc
-  const result = await getWorkoutForExercise(uid, lastDate, exerciseId);
+  const result = await getWorkoutForExercise(uid, lastPastDate, exerciseId);
    console.log("[getLastWorkoutForExercise] returning:", JSON.stringify(result, null, 2));
 
   
@@ -235,26 +243,16 @@ export interface WorkoutExerciseHistoryItem {
 //   return exercisesHistory;
 // }
 
-
-async function getUserWorkoutHistory(
+export async function getUserWorkoutHistory(
   userId: string,
-  daysBack: number
+  limitCount: number
 ): Promise<WorkoutExerciseHistoryItem[]> {
   const workoutsRef = collection(db, "users", userId, "workouts");
 
-  // Calculate cutoff date (e.g. today - daysBack)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const cutoff = new Date(today);
-  cutoff.setDate(today.getDate() - daysBack);
-
-  // Format as YYYY-MM-DD string to match your doc IDs
-  const cutoffString = cutoff.toISOString().split("T")[0];
-
   const q = query(
     workoutsRef,
-    where("__name__", ">=", cutoffString),
-    orderBy("__name__", "desc")
+    orderBy("__name__", "desc"), // order by document ID (the date string)
+    limit(limitCount)
   );
 
   const querySnapshot = await getDocs(q);
@@ -263,7 +261,7 @@ async function getUserWorkoutHistory(
 
   querySnapshot.docs.forEach((doc) => {
     const data = doc.data();
-    const workoutDate = doc.id; // 👈 doc ID is the date
+    const workoutDate = doc.id; // 👈 FIX: use document ID as date
 
     if (Array.isArray(data.exercises)) {
       data.exercises.forEach((ex: any) => {
