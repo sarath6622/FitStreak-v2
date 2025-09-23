@@ -10,6 +10,7 @@ interface FriendCardProps {
     username?: string;
     photoURL?: string;
     hasWorkoutPlan?: boolean;
+    hasWorkoutToday?: boolean;
   };
   onAdd?: (id: string) => void;
   onJoinWorkout?: (id: string) => void;
@@ -52,7 +53,7 @@ export default function FriendCard({ user, onAdd, onJoinWorkout }: FriendCardPro
           </button>
         )}
 
-        {user.hasWorkoutPlan && onJoinWorkout && (
+        {user.hasWorkoutToday && onJoinWorkout && (
           <button
             onClick={() => onJoinWorkout(user.id)}
 className="px-3 py-1.5 rounded-lg text-sm font-medium

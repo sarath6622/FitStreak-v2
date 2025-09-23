@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db } from "@/firebase";
-import { collection, doc, getDoc, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, onSnapshot } from "firebase/firestore";
 import FriendCard from "./FriendCard";
 
 export default function FriendsList({
@@ -26,12 +26,16 @@ export default function FriendsList({
         const fsnap = await getDoc(doc(db, "users", friendId));
         if (fsnap.exists()) {
           const data = fsnap.data();
+          // Check if friend has a workout PLANS doc for TODAY
+          const today = new Date().toISOString().split("T")[0];
+          const plansSnap = await getDocs(collection(db, "users", friendId, "workouts", today, "plans"));
           friendProfiles.push({
             id: fsnap.id,
             name: data.name,
             username: data.username,
             photoURL: data.photoURL,
             hasWorkoutPlan: Boolean(data.workoutsThisWeek || data.currentStreak), // ✅ infer flag
+            hasWorkoutToday: !plansSnap.empty,
           });
         }
       }
