@@ -57,8 +57,21 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
           ref={ref}
           {...props}
           className="sm:hidden fixed bottom-0 left-0 right-0 z-50"
+          style={{
+            transform: 'translate3d(0, 0, 0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            willChange: 'transform',
+          }}
         >
-          <div className="mx-3 rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl p-2">
+          <div
+            className="mx-3 mb-2 rounded-2xl bg-black/80 backdrop-blur-lg shadow-xl p-2"
+            style={{
+              transform: 'translate3d(0, 0, 0)',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+            }}
+          >
             <ul className="flex justify-around items-center pb-2 pt-1">
               {navItems.map(({ href, label, icon }) => {
                 const isActive = (() => {
@@ -87,11 +100,14 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
                     <Link
                       href={href}
                       className={clsx(
-                        "flex items-center p-4 rounded-xl transition active:scale-90",
+                        "flex items-center p-4 rounded-xl transition-colors duration-150 active:scale-90",
                         isActive
                           ? "bg-gradient-to-r from-blue-500/30 to-indigo-500/30 text-blue-300 shadow-inner"
                           : "text-gray-400 hover:text-gray-200"
                       )}
+                      style={{
+                        transform: 'translate3d(0, 0, 0)',
+                      }}
                     >
                       {icon}
                       <span

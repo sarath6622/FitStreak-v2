@@ -49,7 +49,7 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
         The padding is applied using `calc()` to combine a base height
         with the dynamic safe area insets.
       */}
-      <main className=" pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+      <main className="pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(10rem+env(safe-area-inset-bottom))]">
         {children}
       </main>
 
