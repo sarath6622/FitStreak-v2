@@ -100,7 +100,7 @@ if (loading) {
   if (!firebaseUser) return <div className="text-center mt-10">Please log in to view your profile.</div>;
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6">
       <ProfileCard
         formData={formData}
         profile={profile}

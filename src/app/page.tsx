@@ -73,7 +73,7 @@ export default function Home() {
 
   return (
     <div className="bg-black text-[var(--text-primary)] flex flex-col min-h-screen">
-      <main className="flex-grow flex flex-col items-center px-4 pt-6 pb-8">
+      <main className="flex-grow flex flex-col items-center px-4 pt-6">
         {/* Welcome card */}
         <div className="bg-[var(--card-background)] border border-[var(--card-border)] rounded-xl shadow-md w-full max-w-sm p-3 flex flex-col items-center text-center space-y-2">
           {loading && <Skeleton className="w-10 h-10 rounded-full" />}
@@ -138,7 +138,7 @@ export default function Home() {
         </div>
 
         {/* PR Section */}
-        <div className="mt-6 w-full max-w-2xl">
+        <div className="mt-6 w-full max-w-2xl mb-8">
           {loading && (
             <Skeleton className="h-24 w-full rounded-lg bg-[var(--card-background)] border border-[var(--card-border)]" />
           )}

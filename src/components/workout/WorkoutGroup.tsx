@@ -243,13 +243,13 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
       />
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pb-32">
           {Array.from({ length: 6 }).map((_, i) => (
             <ExerciseSkeleton key={i} />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pb-32">
           {filteredExercises.map((exercise, index) => {
             const completedData = completedExercises[exercise.name]; // 🔑 lookup by name
             const uniqueKey = exercise.exerciseId || exercise.id || `${exercise.name}-${index}`;

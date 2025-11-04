@@ -59,7 +59,7 @@ export default function WorkoutPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 min-h-screen bg-black pb-24">
+    <div className="max-w-4xl mx-auto px-4 py-6 min-h-screen bg-black">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Workouts</h1>
@@ -148,7 +148,7 @@ export default function WorkoutPage() {
       )}
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-4 mt-6">
+      <div className="grid grid-cols-2 gap-4 mt-6 mb-8">
         <Link href="/workouts/history">
           <Card className="bg-gray-900/50 border-gray-800 hover:border-gray-700 transition-all cursor-pointer group">
             <CardContent className="p-6">

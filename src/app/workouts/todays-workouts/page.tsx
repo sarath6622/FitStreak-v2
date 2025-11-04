@@ -8,10 +8,13 @@ export default function TodaysWorkoutsPage() {
   const router = useRouter();
 
   return (
-    <div className="max-w-md mx-auto px-4 py-6 pt-0 space-y-6 bg-[var(--card-background)] min-h-screen text-[var(--text-primary)]">
+    <div className="max-w-md mx-auto px-4 py-6 pt-0 space-y-6 bg-[var(--card-background)] text-[var(--text-primary)]">
 
       {/* List of plans */}
       <TodaysWorkouts />
+
+      {/* Spacer to ensure content doesn't hide behind navbar */}
+      <div className="h-20" />
     </div>
   );
 }

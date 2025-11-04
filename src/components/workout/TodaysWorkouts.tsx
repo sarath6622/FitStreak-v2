@@ -57,7 +57,7 @@ export default function TodaysWorkouts() {
   }, []);  
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-24">
       {plans.map((plan) => (
         <WorkoutGroup key={plan.id} plan={plan} />
       ))}
