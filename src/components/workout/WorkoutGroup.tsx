@@ -13,7 +13,8 @@ import { toast } from "sonner";
 import ExerciseCard from "./ExerciseCard";
 import ExerciseSkeleton from "./ExerciseSkeleton";
 import WorkoutModal from "./WorkoutModal";
-import WorkoutCompletionMeter from "./WorkoutCompletionMeter";
+import ImprovedWorkoutCompletionMeter from "./ImprovedWorkoutCompletionMeter";
+import RestTimer from "./RestTimer";
 import { useRouter } from "next/navigation"; import router from "next/router";
 import { updateUserStreak } from "@/services/streakService";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -224,23 +225,12 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
       <ArrowLeft size={16} className="bg-[var(--surface-dark)]" />
     </button>
     <h2 className="text-lg font-semibold text-white">
-      Today's {plan.muscleGroup} Plan
+      Today's Workout
     </h2>
   </div>
-
-  {/* ✅ New Workout button */}
-  <button
-    onClick={() => {
-      setExerciseToEdit(null);
-      setEditOpen(true);
-    }}
-    className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm hover:bg-blue-700"
-  >
-    + New Workout
-  </button>
 </header>
 
-      <WorkoutCompletionMeter
+      <ImprovedWorkoutCompletionMeter
         completedExercises={completedExercises}
         planExercises={exercises}
         userId={user?.uid || ""}
@@ -340,6 +330,9 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
     }}
   />
 )}
+
+      {/* Rest Timer - Floating Action Button */}
+      <RestTimer defaultDuration={90} />
     </div>
   );
 }
