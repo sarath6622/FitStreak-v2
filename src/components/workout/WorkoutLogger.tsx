@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2, Save } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SetsControl from "@/components/WorkoutLogger/SetsControl";
 import WeightRepsInput from "@/components/WorkoutLogger/WeightRepsInput";
 import {
@@ -61,7 +61,7 @@ export default function WorkoutLogger({
   const [rest, setRest] = useState(90);
   const [duration, setDuration] = useState(45);
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   // keep placeholders for resize logic
   const placeholdersRef = useRef<{ weight: number[]; reps: number[] }>({ weight: [], reps: [] });
@@ -209,14 +209,6 @@ export default function WorkoutLogger({
     setSets((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], reps: repsNum };
-      return next;
-    });
-  };
-
-  const toggleDone = (setIndex: number) => {
-    setSets((prev) => {
-      const next = [...prev];
-      next[setIndex] = { ...next[setIndex], done: !next[setIndex].done };
       return next;
     });
   };

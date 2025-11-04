@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Dumbbell, Activity, Info } from "lucide-react";
+import { ChevronDown, ChevronUp, Activity, Info } from "lucide-react";
 import clsx from "clsx";
 
 interface Exercise {
@@ -118,7 +118,7 @@ export default function WorkoutPlanListCard({
             </div>
 
             <div className="space-y-2">
-              {exs.map((ex, idx) => {
+              {exs.map((ex) => {
                 const globalIdx = exercises.indexOf(ex);
                 const isExpanded = expandedIndex === globalIdx;
 

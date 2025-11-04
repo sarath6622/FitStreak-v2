@@ -4,10 +4,17 @@ import { useEffect, useState } from "react";
 import { auth, db } from "@/firebase";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import WorkoutGroup from "./WorkoutGroup";
+import { Exercise } from "@/types";
+
+interface WorkoutPlan {
+  id: string;
+  muscleGroup: string;
+  exercises: Exercise[];
+}
 
 export default function TodaysWorkouts() {
-  const [plans, setPlans] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [plans, setPlans] = useState<WorkoutPlan[]>([]);
+  const [loading] = useState(true);
 
   useEffect(() => {
     const fetchPlans = async () => {

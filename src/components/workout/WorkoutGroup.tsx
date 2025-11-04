@@ -1,11 +1,11 @@
 "use client";
-import { updateDoc, arrayUnion, getDoc } from "firebase/firestore";
+import { updateDoc, getDoc } from "firebase/firestore";
 
 import { useState, useEffect, useMemo } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth, db } from "@/firebase";
 import { getCompletedExercisesForToday } from "@/services/workoutService";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import SwipeableCard from "../SwipeableCard";
 import EditExerciseModal from "@/components/EditExerciseModal";
 import { Exercise } from "@/types";
@@ -15,9 +15,9 @@ import ExerciseSkeleton from "./ExerciseSkeleton";
 import WorkoutModal from "./WorkoutModal";
 import ImprovedWorkoutCompletionMeter from "./ImprovedWorkoutCompletionMeter";
 import RestTimer from "./RestTimer";
-import { useRouter } from "next/navigation"; import router from "next/router";
+import { useRouter } from "next/navigation";
 import { updateUserStreak } from "@/services/streakService";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 
 interface CompletedExercise {
   setsDone: number;
@@ -38,7 +38,7 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
   const [completedExercises, setCompletedExercises] = useState<
     Record<string, CompletedExercise>
   >({});
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const router = useRouter();
 
@@ -225,7 +225,7 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
       <ArrowLeft size={16} className="bg-[var(--surface-dark)]" />
     </button>
     <h2 className="text-lg font-semibold text-white">
-      Today's Workout
+      Today&apos;s Workout
     </h2>
   </div>
 </header>
@@ -273,10 +273,6 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
           exerciseId={selectedExercise}
           exercise={exercises.find((ex) => ex.exerciseId === selectedExercise)}
           onWorkoutSaved={(data) => handleWorkoutSaved(selectedExercise, data)}
-          completedData={(() => {
-            const ex = exercises.find((e) => e.exerciseId === selectedExercise);
-            return ex ? completedExercises[ex.name] : undefined; // 🔑 lookup by name
-          })()}
         />
       )}
 

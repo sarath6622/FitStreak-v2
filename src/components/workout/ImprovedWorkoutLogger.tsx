@@ -1,7 +1,7 @@
 "use client";
 
-import { CheckCircle2, Save, Plus, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Save, Plus, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import {
   upsertWorkout,
   getWorkoutForExercise,
@@ -41,17 +41,11 @@ export default function ImprovedWorkoutLogger({
   exerciseId,
   onClose,
   onWorkoutSaved,
-  completedData,
 }: {
   exercise: Exercise;
   exerciseId: string;
   onClose: () => void;
   onWorkoutSaved: (data: { sets: { weight: number; reps: number; done: boolean }[] }) => void;
-  completedData?: {
-    setsDone?: number;
-    repsDone?: number;
-    totalSets?: number;
-  };
 }) {
   const parseReps = (val?: string): number => {
     if (!val) return 0;
@@ -256,6 +250,9 @@ export default function ImprovedWorkoutLogger({
   };
 
   // Auto-mark set as done when both weight and reps are entered
+  // Create a serialized key from sets data for dependency tracking
+  const setsDataKey = sets.map(s => `${s.weight}-${s.reps}`).join(',');
+
   useEffect(() => {
     setSets((prev) => {
       const next = prev.map((set, idx) => {
@@ -282,7 +279,7 @@ export default function ImprovedWorkoutLogger({
       });
       return next;
     });
-  }, [sets.map(s => `${s.weight}-${s.reps}`).join(','), rest]);
+  }, [setsDataKey, rest]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

@@ -21,7 +21,7 @@ export default function WorkoutSummary({
   userId,
 }: WorkoutSummaryProps) {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
-  const [summary, setSummary] = useState<any | null>(null);
+  const [summary, setSummary] = useState<{ summary?: string; stats?: { totalSets: number; totalReps: number; totalVolume: number } } | null>(null);
   const [loading, setLoading] = useState(false);
 
   // ✅ Total sets across all exercises

@@ -2,18 +2,14 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import ImprovedWorkoutLogger from "./ImprovedWorkoutLogger";
+import { Exercise } from "@/types";
 
 interface WorkoutModalProps {
   isOpen: boolean;
   onClose: () => void;
-  exercise: any;
+  exercise: Exercise;
   exerciseId: string;
-  onWorkoutSaved: (data: any) => void;
-  completedData?: {
-    setsDone?: number;
-    repsDone?: number;
-    totalSets?: number;
-  };
+  onWorkoutSaved: (data: { sets: { weight: number; reps: number; done: boolean }[] }) => void;
 }
 
 export default function WorkoutModal({
@@ -22,7 +18,6 @@ export default function WorkoutModal({
   exercise,
   exerciseId,
   onWorkoutSaved,
-  completedData,
 }: WorkoutModalProps) {
   return (
     <AnimatePresence>
@@ -47,7 +42,6 @@ export default function WorkoutModal({
               exerciseId={exerciseId}
               onClose={onClose}
               onWorkoutSaved={onWorkoutSaved}
-              completedData={completedData}
             />
           </motion.div>
         </motion.div>

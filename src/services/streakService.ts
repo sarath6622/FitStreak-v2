@@ -17,7 +17,7 @@ export async function updateUserStreak(userId: string, dateKey: string) {
 
   let currentStreak = userData.currentStreak || 0;
   let longestStreak = userData.longestStreak || 0;
-  let lastWorkoutDate = userData.lastWorkoutDate;
+  const lastWorkoutDate = userData.lastWorkoutDate;
 
   // ----- Daily Streak -----
   if (lastWorkoutDate) {

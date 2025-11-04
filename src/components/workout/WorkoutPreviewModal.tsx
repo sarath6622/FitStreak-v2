@@ -16,7 +16,7 @@ export default function WorkoutPreviewModal({
 }: {
   isOpen?: boolean;
   title?: string;
-  plans: any[];
+  plans: { muscleGroup: string; exercises: { name: string; sets: number; reps: number | string }[] }[];
   onConfirm: () => void | Promise<void>;
   onClose: () => void;
   children?: React.ReactNode;

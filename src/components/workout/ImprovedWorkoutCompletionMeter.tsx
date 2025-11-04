@@ -22,7 +22,7 @@ export default function ImprovedWorkoutCompletionMeter({
   userId,
 }: WorkoutSummaryProps) {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
-  const [summary, setSummary] = useState<any | null>(null);
+  const [summary, setSummary] = useState<{ summary?: string; stats?: { totalSets: number; totalReps: number; totalVolume: number } } | null>(null);
   const [loading, setLoading] = useState(false);
   const [showEndWorkoutModal, setShowEndWorkoutModal] = useState(false);
 
@@ -110,7 +110,7 @@ export default function ImprovedWorkoutCompletionMeter({
           {/* Top Row - Main Progress */}
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h3 className="text-sm font-semibold text-white">Today's Workout</h3>
+              <h3 className="text-sm font-semibold text-white">Today&apos;s Workout</h3>
               <div className="flex items-center gap-3 mt-1">
                 <span className="text-2xl font-bold text-white">
                   {completedSets}
@@ -347,7 +347,7 @@ export default function ImprovedWorkoutCompletionMeter({
             >
               <h3 className="text-xl font-bold text-white mb-2">End Workout?</h3>
               <p className="text-gray-400 text-sm mb-6">
-                You've completed {completedSets}/{totalSets} sets ({Math.round(progress)}%). Are
+                You&apos;ve completed {completedSets}/{totalSets} sets ({Math.round(progress)}%). Are
                 you sure you want to end your workout?
               </p>
 
