@@ -9,29 +9,22 @@ import {
   setDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { saveWorkoutSchema, validateRequestBody } from "@/lib/validations";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("[save-workout] Incoming payload:", JSON.stringify(body, null, 2));
 
-    const { userId, muscleGroups, workoutPlan } = body;
-
-    if (
-      !userId ||
-      !Array.isArray(muscleGroups) ||
-      muscleGroups.length === 0 ||
-      !Array.isArray(workoutPlan)
-    ) {
-      console.error("[save-workout] Invalid payload:", body);
+    // Validate input
+    const validation = validateRequestBody(saveWorkoutSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        {
-          error:
-            "Invalid request payload: expected { userId, muscleGroups: [], workoutPlan: [] }",
-        },
+        { error: "Validation failed", details: validation.error },
         { status: 400 }
       );
     }
+
+    const { userId, muscleGroups, workoutPlan } = validation.data;
 
     // Today's date as YYYY-MM-DD
     const today = new Date();
@@ -43,20 +36,19 @@ export async function POST(req: Request) {
     // 1️⃣ Delete all existing docs inside "plans"
     const existingPlans = await getDocs(plansRef);
     for (const docSnap of existingPlans.docs) {
-      console.log(`[save-workout] Deleting old plan: ${docSnap.id}`);
       await deleteDoc(docSnap.ref);
     }
 
     // 2️⃣ Fetch master exercises for ID mapping
     const masterExercisesSnap = await getDocs(collection(db, "exercises"));
-    const masterExercises: Record<string, any> = {};
+    const masterExercises: Record<string, string> = {};
     masterExercisesSnap.forEach((docSnap) => {
       const data = docSnap.data();
       masterExercises[data.name.toLowerCase()] = docSnap.id;
     });
 
     // Normalize workoutPlan into exercises
-    const exercises = workoutPlan.map((ex: any, i: number) => {
+    const exercises = workoutPlan.map((ex) => {
       const matchedId = masterExercises[ex.name?.toLowerCase()] ?? null;
       return {
         exerciseId: matchedId,
@@ -73,8 +65,6 @@ export async function POST(req: Request) {
       };
     });
 
-    console.log("[save-workout] Final exercises object to save:", exercises);
-
     // 3️⃣ Save the latest plan under "current"
     const planRef = doc(plansRef, "current");
     await setDoc(planRef, {
@@ -83,12 +73,10 @@ export async function POST(req: Request) {
       createdAt: serverTimestamp(),
     });
 
-    console.log("[save-workout] Saved successfully (cleaned old plans)");
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    console.error("[save-workout] Error:", err);
+  } catch (err: unknown) {
     return NextResponse.json(
-      { error: "Failed to save workout", details: err.message },
+      { error: "Failed to save workout" },
       { status: 500 }
     );
   }

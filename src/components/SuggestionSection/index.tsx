@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import clsx from "clsx";
 import MuscleGroupSelector from "./MuscleGroupSelector";
 import DurationSelector from "./DurationSelector";
 import WorkoutPlanDisplay from "./WorkoutPlanDisplay";
 import GenerateButton from "./GenerateButton";
 import WorkoutPreviewModal from "@/components/workout/WorkoutPreviewModal";
-import { Sparkles } from "lucide-react";
+import { TrendingUp, RefreshCw, AlertCircle } from "lucide-react";
 import AILoader from "../AILoader";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Exercise {
   name: string;
@@ -162,20 +165,24 @@ useEffect(() => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-4 pt-6 bg-[var(--card-background)] border-[var(--card-border)] rounded-2xl shadow-lg border">
-      <h2 className="text-md font-bold text-blue-400 mb-4 flex items-center gap-2">
-        <Sparkles className="w-5 h-5 text-blue-300" />
-        Workout Suggestions
-        <button
-          onClick={fetchMuscleAnalysis}
-          disabled={loading}
-          className="ml-auto px-3 py-1 rounded-full text-xs bg-gray-700 text-gray-300 hover:bg-gray-600"
-        >
-          Re-Analyze
-        </button>
-      </h2>
+    <div className="space-y-6">
+      {/* Error Alert */}
+      {error && (
+        <Alert variant="destructive" className="bg-red-500/10 border-red-500/50">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-red-400">{error}</AlertDescription>
+        </Alert>
+      )}
 
-      {loading && <AILoader />}
+      {/* AI Loading State */}
+      {loading && (
+        <div className="p-8 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+          <AILoader />
+          <p className="text-center text-blue-400 text-sm mt-4">
+            Generating your personalized workout plan...
+          </p>
+        </div>
+      )}
 
       <MuscleGroupSelector
         value={muscleGroup}
@@ -184,9 +191,22 @@ useEffect(() => {
       />
 
       <DurationSelector value={duration} onChange={setDuration} />
-      <GenerateButton onClick={handleGenerate} loading={loading} />
 
-      {error && <p className="text-red-500 text-sm text-center mt-3">{error}</p>}
+      <GenerateButton onClick={handleGenerate} loading={loading} disabled={muscleGroup.length === 0} />
+
+      {/* Re-analyze button */}
+      <div className="flex justify-center pt-2">
+        <Button
+          onClick={fetchMuscleAnalysis}
+          disabled={loading}
+          variant="ghost"
+          size="sm"
+          className="text-gray-500 hover:text-gray-300"
+        >
+          <RefreshCw className={clsx("w-4 h-4 mr-2", loading && "animate-spin")} />
+          Refresh Muscle Status
+        </Button>
+      </div>
 
       {/* Preview Modal */}
       {showPreview && workoutPlan.length > 0 && (
@@ -199,6 +219,8 @@ useEffect(() => {
               exercises: workoutPlan,
             },
           ]}
+          selectedMuscles={muscleGroup}
+          duration={duration}
           onConfirm={() => handleStartWorkout(false)}
           onClose={() => {
             setShowPreview(false);

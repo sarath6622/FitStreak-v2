@@ -1,27 +1,30 @@
 import { NextResponse } from "next/server";
-import { db } from "@/firebase"; // ✅ admin SDK
-import { doc, getDoc, updateDoc, collection, getDocs } from "firebase/firestore";
+import { db } from "@/firebase";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { addExerciseSchema, validateRequestBody } from "@/lib/validations";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("📥 Received request body:", body);
 
-    const { userId, dateStr, planId, exercise } = body;
-
-    if (!userId || !dateStr || !planId || !exercise) {
+    // Validate input
+    const validation = validateRequestBody(addExerciseSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: "Missing fields" },
+        { success: false, error: "Validation failed", details: validation.error },
         { status: 400 }
       );
     }
 
-    // ✅ Correct nested path: users/{uid}/workouts/{dateStr}/plans/{planId}
-    const planRef = doc(db, "users", userId, "workouts", dateStr, "plans", planId);
+    const { userId, dateStr, planId, exercise } = validation.data;
+
+    // Use today's date if not provided
+    const actualDateStr = dateStr || new Date().toISOString().split("T")[0];
+
+    const planRef = doc(db, "users", userId, "workouts", actualDateStr, "plans", planId);
     const snap = await getDoc(planRef);
 
     if (!snap.exists()) {
-      console.error("❌ Plan not found at:", planRef.path);
       return NextResponse.json(
         { success: false, error: "Workout not found" },
         { status: 404 }
@@ -30,7 +33,7 @@ export async function POST(req: Request) {
 
     const data = snap.data();
 
-    // 🔎 Enrich the incoming exercise from master exercises collection
+    // Enrich the incoming exercise from master exercises collection
     let enriched = exercise;
     try {
       if (exercise?.exerciseId) {
@@ -53,10 +56,10 @@ export async function POST(req: Request) {
         }
       }
     } catch (e) {
-      console.warn("Failed to enrich exercise; saving as-is", e);
+      // Failed to enrich, continue with original exercise
     }
 
-    // ✅ Ensure uniqueness by exerciseId: replace existing if present, else append
+    // Ensure uniqueness by exerciseId: replace existing if present, else append
     const existing: any[] = Array.isArray(data.exercises) ? data.exercises : [];
     const idx = existing.findIndex((ex) => ex.exerciseId === enriched.exerciseId);
     let updatedExercises: any[];
@@ -73,8 +76,7 @@ export async function POST(req: Request) {
       success: true,
       exercises: updatedExercises,
     });
-  } catch (err) {
-    console.error("Add failed:", err);
+  } catch (err: unknown) {
     return NextResponse.json(
       { success: false, error: "Internal Server Error" },
       { status: 500 }

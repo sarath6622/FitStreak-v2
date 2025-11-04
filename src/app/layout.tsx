@@ -7,6 +7,7 @@ import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { ThemeProvider } from "next-themes";
 import PageTransition from "@/components/PageTransition";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useFCM } from "@/hooks/useFCM";
 
 const geistSans = Geist({
@@ -82,19 +83,21 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body suppressHydrationWarning>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Toaster />
-          <ServiceWorkerRegistrar />
-          {/* Wrap the children with AuthenticatedLayout */}
-          <AuthenticatedLayout>
-            <PageTransition>{children}</PageTransition>
-          </AuthenticatedLayout>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Toaster />
+            <ServiceWorkerRegistrar />
+            {/* Wrap the children with AuthenticatedLayout */}
+            <AuthenticatedLayout>
+              <PageTransition>{children}</PageTransition>
+            </AuthenticatedLayout>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

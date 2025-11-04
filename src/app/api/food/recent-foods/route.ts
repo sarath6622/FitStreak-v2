@@ -2,15 +2,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/firebase";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { getRecentFoodsSchema, validateQueryParams } from "@/lib/validations";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
+
+    // Validate input
+    const validation = validateQueryParams(getRecentFoodsSchema, searchParams);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: validation.error },
+        { status: 400 }
+      );
+    }
+
+    const { userId } = validation.data;
     const mealType = searchParams.get("mealType");
 
-    if (!userId || !mealType) {
-      return NextResponse.json({ error: "Missing userId or mealType" }, { status: 400 });
+    if (!mealType) {
+      return NextResponse.json({ error: "Missing mealType" }, { status: 400 });
     }
 
     const today = new Date();
@@ -23,19 +34,26 @@ export async function GET(req: NextRequest) {
 
     const recents: any[] = [];
 
-    for (const dateStr of days) {
+    // FIX: Fetch all days in parallel to avoid N+1 query problem
+    const queryPromises = days.map(async (dateStr) => {
       const entriesRef = collection(db, "users", userId, "meals", dateStr, "entries");
       const q = query(entriesRef, orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
+      return { dateStr, docs: snap.docs };
+    });
 
-      snap.forEach((doc) => {
+    const allDaysData = await Promise.all(queryPromises);
+
+    // Process all docs
+    for (const { docs } of allDaysData) {
+      docs.forEach((doc) => {
         const data = doc.data();
 
         if (data.mealType === mealType && data.food) {
           recents.push({
             id: data.food.id,
             name: data.food.name,
-            category: mealType, // we don’t store category, fallback to mealType
+            category: mealType,
             baseNutrientsPer100g: {
               calories: data.nutrients?.calories ?? 0,
               protein: data.nutrients?.protein ?? 0,
@@ -45,7 +63,7 @@ export async function GET(req: NextRequest) {
               sugars: data.nutrients?.sugars ?? 0,
             },
             servingUnits: {
-              g: 1, // always fallback to grams
+              g: 1,
               serving: data.servingWeight ?? 100,
             },
           });
@@ -57,8 +75,7 @@ export async function GET(req: NextRequest) {
     const unique = Array.from(new Map(recents.map((f) => [f.id, f])).values()).slice(0, 10);
 
     return NextResponse.json({ foods: unique });
-  } catch (err: any) {
-    console.error("[recent-meals] Fatal error:", err);
-    return NextResponse.json({ error: err.message, stack: err.stack }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: "Failed to fetch recent foods" }, { status: 500 });
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
 import WorkoutPreviewBody from "./WorkoutPreviewBody";
 
 export default function WorkoutPreviewModal({
@@ -11,6 +11,8 @@ export default function WorkoutPreviewModal({
   onConfirm,
   onClose,
   children,
+  selectedMuscles = [],
+  duration = "60 min",
 }: {
   isOpen?: boolean;
   title?: string;
@@ -18,6 +20,8 @@ export default function WorkoutPreviewModal({
   onConfirm: () => void | Promise<void>;
   onClose: () => void;
   children?: React.ReactNode;
+  selectedMuscles?: string[];
+  duration?: string;
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -39,13 +43,14 @@ export default function WorkoutPreviewModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-[480px] max-w-[92vw] rounded-3xl border border-white/10 bg-[var(--card-background)] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+      <div className="w-[520px] max-w-[92vw] rounded-3xl border border-white/10 bg-[var(--card-background)] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="px-5 pt-5 pb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[var(--text-primary)]">{title}</h2>
+        <div className="px-5 pt-5 pb-4 flex items-center justify-between border-b border-[var(--card-border)]">
+          <h2 className="text-xl font-bold text-white">{title}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition"
+            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-all"
+            aria-label="Close modal"
           >
             <X className="h-6 w-6" />
           </button>
@@ -53,22 +58,30 @@ export default function WorkoutPreviewModal({
 
         {/* Body */}
         {plans.map((plan) => (
-          <WorkoutPreviewBody key={plan.id} exercises={plan.exercises} />
+          <WorkoutPreviewBody
+            key={plan.id}
+            exercises={plan.exercises}
+            selectedMuscles={selectedMuscles}
+            duration={duration}
+          />
         ))}
 
-        {/* Footer */}
+        {/* Footer - Improved Button Hierarchy */}
         <div className="px-5 py-4 border-t border-[var(--card-border)] flex gap-3 bg-[var(--surface-dark)]">
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-[var(--text-primary)] font-medium transition"
+            className="px-4 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
+
+          <div className="flex-1" />
+
           <button
             onClick={handleConfirm}
             disabled={loading}
-            className="flex-1 py-2 rounded-lg bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dark)] text-white font-semibold shadow-md transition flex items-center justify-center gap-2 relative overflow-hidden"
+            className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all flex items-center justify-center gap-2 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
           >
             {/* Spinner */}
             <span
@@ -99,10 +112,11 @@ export default function WorkoutPreviewModal({
 
             {/* Button Text */}
             <span
-              className={`transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"
+              className={`transition-opacity duration-300 flex items-center gap-2 ${loading ? "opacity-0" : "opacity-100"
                 }`}
             >
-              Confirm
+              <Check className="w-4 h-4" />
+              Save Workout
             </span>
           </button>
         </div>

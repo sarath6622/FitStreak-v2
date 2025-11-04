@@ -4,26 +4,28 @@ import {
   getWorkoutsForUser,
   getExerciseNamesByMuscleGroup,
 } from "@/services/workoutService";
+import { recommendWorkoutSchema, validateRequestBody } from "@/lib/validations";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, muscleGroups, duration } = await req.json();
+    const body = await req.json();
 
-    if (!userId) {
+    // Validate input
+    const validation = validateRequestBody(recommendWorkoutSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "Missing userId in body" },
+        { error: "Validation failed", details: validation.error },
         { status: 400 }
       );
     }
 
+    const { userId, muscleGroups, duration } = validation.data;
+
     // Fetch last 7 workouts (may be used for context)
     const previousWorkouts = await getWorkoutsForUser(userId, { limit: 7 });
     const exerciseList = await getExerciseNamesByMuscleGroup(muscleGroups);
-    console.log(muscleGroups);
-    
-    console.log("Exercises found:", exerciseList);
 
     // Build workout summary for context
     const workoutSummary = previousWorkouts
@@ -34,7 +36,6 @@ export async function POST(req: NextRequest) {
           } sets – ${w.weight.join(",")}kg`
       )
       .join("\n");
-    console.log(`- Make sure the workout is ${duration} in duration.`);
 
     // Prepare prompt with conditional muscleGroup targeting and JSON-only output requested
     const prompt = muscleGroups?.length
@@ -126,8 +127,7 @@ No text outside JSON.
     const recommendation = completion.choices[0].message.content;
 
     return NextResponse.json({ recommendation });
-  } catch (err) {
-    console.error(err);
+  } catch (err: unknown) {
     return NextResponse.json(
       { error: "Failed to generate recommendation" },
       { status: 500 }

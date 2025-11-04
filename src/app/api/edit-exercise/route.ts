@@ -2,17 +2,26 @@
 import { NextResponse } from "next/server";
 import { db } from "@/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { editExerciseSchema, validateRequestBody } from "@/lib/validations";
 
 export async function POST(req: Request) {
   try {
-    const { userId, dateStr, planId, oldName, updatedExercise } = await req.json();
+    const body = await req.json();
 
-    if (!userId || !dateStr || !planId || !oldName || !updatedExercise) {
-      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    // Validate input
+    const validation = validateRequestBody(editExerciseSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: validation.error },
+        { status: 400 }
+      );
     }
+
+    const { userId, dateStr, planId, exerciseIndex, updatedExercise } = validation.data;
 
     const planRef = doc(db, "users", userId, "workouts", dateStr, "plans", planId);
     const snap = await getDoc(planRef);
+
     if (!snap.exists()) {
       return NextResponse.json({ error: "Plan not found" }, { status: 404 });
     }
@@ -20,28 +29,23 @@ export async function POST(req: Request) {
     const planData = snap.data();
     const exercises: any[] = Array.isArray(planData.exercises) ? planData.exercises : [];
 
-    const idx = exercises.findIndex(
-      (ex) => (ex?.name || "").trim().toLowerCase() === oldName.trim().toLowerCase()
-    );
-    if (idx === -1) {
-      return NextResponse.json({ error: "Exercise not found" }, { status: 404 });
+    if (exerciseIndex < 0 || exerciseIndex >= exercises.length) {
+      return NextResponse.json({ error: "Exercise index out of bounds" }, { status: 400 });
     }
 
-    // Merge old + updated (so you can send partials safely)
-    const merged = { ...exercises[idx], ...updatedExercise };
+    // Merge old + updated
+    const merged = { ...exercises[exerciseIndex], ...updatedExercise };
     const newExercises = [...exercises];
-    newExercises[idx] = merged;
+    newExercises[exerciseIndex] = merged;
 
     await updateDoc(planRef, { exercises: newExercises });
 
-    // 🔥 Return the updated array directly
     return NextResponse.json({
       success: true,
       exercises: newExercises,
-      replacedIndex: idx,
+      replacedIndex: exerciseIndex,
     });
-  } catch (err: any) {
-    console.error("[edit-exercise] Error:", err);
-    return NextResponse.json({ error: err.message || "Server error" }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

@@ -2,22 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/firebase";
 import { collection, getDocs } from "firebase/firestore";
 import Groq from "groq-sdk";
+import { analyzeExerciseProgressSchema, validateQueryParams } from "@/lib/validations";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
-    const muscleGroupsParam = searchParams.get("muscleGroups");
 
-    if (!userId || !muscleGroupsParam) {
+    // Validate input
+    const validation = validateQueryParams(analyzeExerciseProgressSchema, searchParams);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "Missing userId or muscleGroups" },
+        { error: "Validation failed", details: validation.error },
         { status: 400 }
       );
     }
 
+    const { userId, muscleGroups: muscleGroupsParam } = validation.data;
     const muscleGroups = muscleGroupsParam.split(",").map((m) => m.trim().toLowerCase());
 
     // 🔹 Date helpers
@@ -31,17 +33,26 @@ export async function GET(req: NextRequest) {
     const workoutsRef = collection(db, "users", userId, "workouts");
     const snapshot = await getDocs(workoutsRef);
 
-    let history: any[] = [];
-    let todayWorkout: any | null = null;
+    const history: Array<{ date: string; muscleGroups: string[]; exercises: unknown[] }> = [];
+    let todayWorkout: { date: string; muscleGroups: string[]; exercises: unknown[] } | null = null;
 
-    for (const doc of snapshot.docs) {
-      const date = doc.id; // yyyy-mm-dd
-      if (date < monthAgoStr || date > todayStr) continue;
+    // FIX: Fetch all plans in parallel to avoid N+1 query problem
+    const relevantDates = snapshot.docs
+      .map(doc => doc.id)
+      .filter(date => date >= monthAgoStr && date <= todayStr);
 
+    // Fetch all plans in parallel
+    const plansPromises = relevantDates.map(async (date) => {
       const plansRef = collection(db, "users", userId, "workouts", date, "plans");
       const plansSnap = await getDocs(plansRef);
+      return { date, plans: plansSnap.docs };
+    });
 
-      plansSnap.forEach((plan) => {
+    const allPlansData = await Promise.all(plansPromises);
+
+    // Process all plans
+    for (const { date, plans } of allPlansData) {
+      plans.forEach((plan) => {
         const data = plan.data();
         const planMuscleGroups = (data.muscleGroups || []).map((m: string) =>
           m.toLowerCase()
@@ -108,7 +119,6 @@ Output as JSON:
     try {
       parsed = JSON.parse(aiResponse);
     } catch (err) {
-      console.error("[analyze-exercise-progress] JSON parse error:", aiResponse);
       return NextResponse.json({ error: "Invalid AI response" }, { status: 500 });
     }
 
@@ -117,10 +127,9 @@ Output as JSON:
       muscleGroups,
       appreciation: parsed, // ✅ contains { summary, stats }
     });
-  } catch (err: any) {
-    console.error("[analyze-exercise-progress] ❌ Error:", err);
+  } catch (err: unknown) {
     return NextResponse.json(
-      { error: "Failed to analyze progress", details: err.message },
+      { error: "Failed to analyze progress" },
       { status: 500 }
     );
   }
