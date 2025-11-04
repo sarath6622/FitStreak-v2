@@ -21,7 +21,7 @@ export const getWorkoutForExercise = async (
 
   const data = workoutSnap.data();
   const exercise = Array.isArray(data.exercises)
-    ? data.exercises.find((ex: any) => {
+    ? data.exercises.find((ex: { exerciseId?: string; id?: string }) => {
         // Support both new and legacy fields
         return ex.exerciseId === exerciseId || ex.id === exerciseId;
       })
@@ -92,7 +92,7 @@ export async function getCompletedExercisesForToday(
     const data = doc.data();
     if (!data.exercises) return;
 
-    data.exercises.forEach((exercise: any) => {
+    data.exercises.forEach((exercise: { name?: string; sets?: number; repsPerSet?: number[]; weight?: number[] }) => {
       if (!exercise.name || !exercise.sets) return;
 
       const totalSets = exercise.sets;
@@ -121,7 +121,7 @@ export async function getCompletedExercisesForToday(
   return completedExercises;
 }
 
-export const upsertWorkout = async (uid: string, date: string, exercise: any, duration: number, rest: number) => {
+export const upsertWorkout = async (uid: string, date: string, exercise: Record<string, unknown>, duration: number, rest: number) => {
   const workoutDocRef = doc(db, "users", uid, "workouts", date);
   const docSnap = await getDoc(workoutDocRef);
 
@@ -130,7 +130,7 @@ export const upsertWorkout = async (uid: string, date: string, exercise: any, du
     const existingExercises = existingData.exercises || [];
 
     // Check if this exercise already exists in today's workout
-    const exerciseIndex = existingExercises.findIndex((ex: any) => ex.name === exercise.name);
+    const exerciseIndex = existingExercises.findIndex((ex: { name?: string }) => ex.name === exercise.name);
 
     if (exerciseIndex >= 0) {
       existingExercises[exerciseIndex] = exercise; // update
@@ -264,7 +264,7 @@ export async function getUserWorkoutHistory(
     const workoutDate = doc.id; // 👈 FIX: use document ID as date
 
     if (Array.isArray(data.exercises)) {
-      data.exercises.forEach((ex: any) => {
+      data.exercises.forEach((ex: { muscleGroup?: string; sets?: number; weight?: number[]; repsPerSet?: number[]; name?: string }) => {
         exercisesHistory.push({
           date: workoutDate,
           muscleGroup: ex.muscleGroup,

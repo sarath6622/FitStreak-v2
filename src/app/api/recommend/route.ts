@@ -23,6 +23,13 @@ export async function POST(req: NextRequest) {
 
     const { userId, muscleGroups, duration } = validation.data;
 
+    if (!muscleGroups || muscleGroups.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Missing muscleGroups" },
+        { status: 400 }
+      );
+    }
+
     // Fetch last 7 workouts (may be used for context)
     const previousWorkouts = await getWorkoutsForUser(userId, { limit: 7 });
     const exerciseList = await getExerciseNamesByMuscleGroup(muscleGroups);

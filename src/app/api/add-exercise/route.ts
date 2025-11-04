@@ -18,6 +18,13 @@ export async function POST(req: Request) {
 
     const { userId, dateStr, planId, exercise } = validation.data;
 
+    if (!userId || !planId) {
+      return NextResponse.json(
+        { success: false, error: "Missing userId or planId" },
+        { status: 400 }
+      );
+    }
+
     // Use today's date if not provided
     const actualDateStr = dateStr || new Date().toISOString().split("T")[0];
 
@@ -55,14 +62,14 @@ export async function POST(req: Request) {
           };
         }
       }
-    } catch (e) {
+    } catch {
       // Failed to enrich, continue with original exercise
     }
 
     // Ensure uniqueness by exerciseId: replace existing if present, else append
-    const existing: any[] = Array.isArray(data.exercises) ? data.exercises : [];
+    const existing: Record<string, unknown>[] = Array.isArray(data.exercises) ? data.exercises : [];
     const idx = existing.findIndex((ex) => ex.exerciseId === enriched.exerciseId);
-    let updatedExercises: any[];
+    let updatedExercises: Record<string, unknown>[];
     if (idx >= 0) {
       updatedExercises = [...existing];
       updatedExercises[idx] = { ...existing[idx], ...enriched };
@@ -76,7 +83,7 @@ export async function POST(req: Request) {
       success: true,
       exercises: updatedExercises,
     });
-  } catch (err: unknown) {
+  } catch {
     return NextResponse.json(
       { success: false, error: "Internal Server Error" },
       { status: 500 }
