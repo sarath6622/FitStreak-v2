@@ -9,6 +9,7 @@ import PageTransition from "@/components/PageTransition";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useFCM } from "@/hooks/useFCM";
+import WorkoutReminderBanner from "@/components/WorkoutReminderBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -92,6 +93,7 @@ export default function RootLayout({
           >
             <Toaster />
             <ServiceWorkerRegistrar />
+            <WorkoutReminderBanner />
             {/* Wrap the children with AuthenticatedLayout */}
             <AuthenticatedLayout>
               <PageTransition>{children}</PageTransition>

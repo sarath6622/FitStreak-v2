@@ -10,6 +10,7 @@ import { UserProfile } from "@/types/UserProfile";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import WorkoutReminderSettings from "@/components/WorkoutReminderSettings";
 
 const ProfilePage: React.FC = () => {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
@@ -99,15 +100,20 @@ if (loading) {
   if (!firebaseUser) return <div className="text-center mt-10">Please log in to view your profile.</div>;
 
   return (
-    <ProfileCard
-      formData={formData}
-      profile={profile}
-      isEditing={isEditing}
-      onChange={handleChange}
-      onSave={handleSave}
-      onToggleEdit={() => setIsEditing((prev) => !prev)}
-      onSignOut={handleSignOut}
-    />
+    <div className="space-y-6 pb-20">
+      <ProfileCard
+        formData={formData}
+        profile={profile}
+        isEditing={isEditing}
+        onChange={handleChange}
+        onSave={handleSave}
+        onToggleEdit={() => setIsEditing((prev) => !prev)}
+        onSignOut={handleSignOut}
+      />
+
+      {/* Workout Reminder Settings */}
+      <WorkoutReminderSettings />
+    </div>
   );
 };
 
