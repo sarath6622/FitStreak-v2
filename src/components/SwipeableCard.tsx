@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import clsx from "clsx";
 
@@ -14,30 +14,56 @@ export default function SwipeableCard({ children, onEdit, onDelete }: SwipeableC
   const [translateX, setTranslateX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const startX = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const actionWidth = 80; // slightly wider for breathing room
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging) return;
+      const currentX = e.touches[0].clientX;
+      const deltaX = currentX - startX.current;
+
+      // Only prevent default if user actually swiped (moved more than 10px)
+      if (Math.abs(deltaX) > 10) {
+        e.preventDefault();
+      }
+
+      // Allow left swipe to reveal actions
+      if (deltaX < 0 || (translateX < 0 && deltaX > 0)) {
+        setTranslateX(Math.min(0, Math.max(deltaX, -actionWidth)));
+      }
+    };
+
+    // Add listener with { passive: false } to allow preventDefault
+    element.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      element.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [isDragging, translateX, actionWidth]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsDragging(true);
     startX.current = e.touches[0].clientX;
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    const deltaX = e.touches[0].clientX - startX.current;
-
-    // Allow left swipe to reveal actions
-    if (deltaX < 0 || (translateX < 0 && deltaX > 0)) {
-      setTranslateX(Math.min(0, Math.max(deltaX, -actionWidth)));
-    }
-  };
-
   const handleTouchEnd = () => {
+    const didSwipe = Math.abs(translateX) > 10;
     setIsDragging(false);
+
     if (translateX < -actionWidth / 2) {
       setTranslateX(-actionWidth); // keep open
     } else {
       setTranslateX(0); // snap back
+    }
+
+    // Reset dragging state after a brief delay to allow click to fire
+    if (!didSwipe) {
+      setTimeout(() => setIsDragging(false), 50);
     }
   };
 
@@ -67,6 +93,7 @@ export default function SwipeableCard({ children, onEdit, onDelete }: SwipeableC
 
       {/* Foreground content (swipeable) */}
       <div
+        ref={containerRef}
         className={clsx(
           "relative transition-transform duration-300",
           "bg-gray-900 border border-gray-800 rounded-2xl shadow-lg",
@@ -74,7 +101,6 @@ export default function SwipeableCard({ children, onEdit, onDelete }: SwipeableC
         )}
         style={{ transform: `translateX(${translateX}px)` }}
         onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         {children}

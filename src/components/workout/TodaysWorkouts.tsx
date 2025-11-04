@@ -14,7 +14,7 @@ interface WorkoutPlan {
 
 export default function TodaysWorkouts() {
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
-  const [loading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPlans = async () => {

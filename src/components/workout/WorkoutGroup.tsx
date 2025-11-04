@@ -56,7 +56,13 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
     if (!user || !exerciseToEdit) return;
 
     const dateStr = new Date().toISOString().split("T")[0];
-    const oldName = exerciseToEdit.name; // 🔑 use name for lookup
+
+    // Find the index of the exercise being edited
+    const exerciseIndex = exercises.findIndex(ex => ex.name === exerciseToEdit.name);
+    if (exerciseIndex === -1) {
+      toast.error("Exercise not found");
+      return;
+    }
 
     try {
       const res = await fetch("/api/edit-exercise", {
@@ -66,7 +72,7 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
           userId: user.uid,
           dateStr,
           planId: plan.id,
-          oldName,
+          exerciseIndex,
           updatedExercise,
         }),
       });
@@ -244,19 +250,20 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-          {filteredExercises.map((exercise) => {
+          {filteredExercises.map((exercise, index) => {
             const completedData = completedExercises[exercise.name]; // 🔑 lookup by name
+            const uniqueKey = exercise.exerciseId || exercise.id || `${exercise.name}-${index}`;
 
             return (
               <SwipeableCard
-                key={exercise.exerciseId}
+                key={uniqueKey}
                 onEdit={() => handleEdit(exercise)}
                 onDelete={() => handleDelete(exercise)}
               >
                 <ExerciseCard
                   exercise={exercise}
-                  selected={selectedExercise === exercise.exerciseId}
-                  onSelect={() => setSelectedExercise(exercise.exerciseId)}
+                  selected={selectedExercise === uniqueKey}
+                  onSelect={() => setSelectedExercise(uniqueKey)}
                   completedData={completedData}
                 />
               </SwipeableCard>
@@ -266,66 +273,38 @@ export default function WorkoutGroup({ plan }: WorkoutGroupProps) {
       )}
 
       {/* workout modal */}
-      {selectedExercise && (
-        <WorkoutModal
-          isOpen={!!selectedExercise}
-          onClose={() => setSelectedExercise(null)}
-          exerciseId={selectedExercise}
-          exercise={exercises.find((ex) => ex.exerciseId === selectedExercise)}
-          onWorkoutSaved={(data) => handleWorkoutSaved(selectedExercise, data)}
-        />
-      )}
+      {selectedExercise && (() => {
+        // Find exercise by uniqueKey (exerciseId, id, or name-index)
+        const selectedEx = filteredExercises.find((ex, idx) => {
+          const key = ex.exerciseId || ex.id || `${ex.name}-${idx}`;
+          return key === selectedExercise;
+        });
+
+        if (!selectedEx) return null;
+
+        return (
+          <WorkoutModal
+            isOpen={!!selectedExercise}
+            onClose={() => setSelectedExercise(null)}
+            exerciseId={selectedEx.exerciseId || selectedEx.id || selectedExercise}
+            exercise={selectedEx}
+            onWorkoutSaved={(data) => handleWorkoutSaved(selectedEx.exerciseId || selectedEx.id || selectedExercise, data)}
+          />
+        );
+      })()}
 
       {/* edit modal */}
       {exerciseToEdit && (
         <EditExerciseModal
           open={editOpen}
-          onClose={() => setEditOpen(false)}
+          onClose={() => {
+            setEditOpen(false);
+            setExerciseToEdit(null);
+          }}
           exercise={exerciseToEdit}
           onSave={handleSave}
         />
       )}
-
-      {editOpen && (
-  <EditExerciseModal
-    open={editOpen}
-    onClose={() => {
-      setEditOpen(false);
-      setExerciseToEdit(null);
-    }}
-    exercise={exerciseToEdit} // null = new mode
-    onSave={async (newExercise) => {
-      if (!user) return;
-
-      const dateStr = new Date().toISOString().split("T")[0];
-
-      try {
-        const res = await fetch("/api/add-exercise", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: user.uid,
-            dateStr,
-            planId: plan.id,
-            exercise: newExercise,
-          }),
-        });
-
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error);
-
-        setExercises(data.exercises);
-        toast.success(`Added new exercise: ${newExercise.name}`);
-      } catch (err) {
-        console.error("Add failed:", err);
-        toast.error("Failed to add exercise");
-      } finally {
-        setEditOpen(false);
-        setExerciseToEdit(null);
-      }
-    }}
-  />
-)}
 
       {/* Rest Timer - Floating Action Button */}
       <RestTimer defaultDuration={90} />

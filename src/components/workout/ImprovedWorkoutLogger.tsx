@@ -117,6 +117,12 @@ export default function ImprovedWorkoutLogger({
       const exToday = todayData?.exercise;
       const exLast = lastData?.exercise;
 
+      // Debug logging
+      console.log("[ImprovedWorkoutLogger] Today's date:", today);
+      console.log("[ImprovedWorkoutLogger] Exercise ID:", exerciseId);
+      console.log("[ImprovedWorkoutLogger] Today's data:", exToday);
+      console.log("[ImprovedWorkoutLogger] Last workout data:", exLast);
+
       // Store last workout data for display
       if (exLast && exLast.weight && exLast.repsPerSet) {
         setLastWorkout({
@@ -159,9 +165,13 @@ export default function ImprovedWorkoutLogger({
         const loggedR = exToday?.repsPerSet?.[i];
         const loggedDone = exToday?.doneFlags?.[i] ?? false;
 
+        // Only pre-fill weight/reps if the set was explicitly marked as done
+        // This prevents showing old data that wasn't actually completed
+        const shouldPreFill = loggedDone || (typeof loggedW === "number" && loggedW > 0 && typeof loggedR === "number" && loggedR > 0);
+
         nextSets.push({
-          weight: typeof loggedW === "number" && loggedW > 0 ? loggedW : 0,
-          reps: typeof loggedR === "number" && loggedR > 0 ? loggedR : 0,
+          weight: shouldPreFill && typeof loggedW === "number" && loggedW > 0 ? loggedW : 0,
+          reps: shouldPreFill && typeof loggedR === "number" && loggedR > 0 ? loggedR : 0,
           done: !!loggedDone,
           placeholderWeight: placeholderWeightArr[i],
           placeholderReps: placeholderRepsArr[i],
@@ -256,8 +266,10 @@ export default function ImprovedWorkoutLogger({
   useEffect(() => {
     setSets((prev) => {
       const next = prev.map((set, idx) => {
-        const hasWeight = (set.weight || set.placeholderWeight || 0) > 0;
-        const hasReps = (set.reps || set.placeholderReps || 0) > 0;
+        // Only check ACTUAL weight/reps, NOT placeholders
+        // This prevents auto-completing sets based on previous workout data
+        const hasWeight = set.weight > 0;
+        const hasReps = set.reps > 0;
         const shouldBeComplete = hasWeight && hasReps;
 
         // If set should be complete but isn't, mark it as done
@@ -365,10 +377,10 @@ export default function ImprovedWorkoutLogger({
     }
   };
 
-  // Can save if any set has both weight and reps entered
+  // Can save if any set has both weight and reps actually entered (not just placeholders)
   const canSave = sets.some((s) => {
-    const hasWeight = (s.weight || s.placeholderWeight || 0) > 0;
-    const hasReps = (s.reps || s.placeholderReps || 0) > 0;
+    const hasWeight = s.weight > 0;
+    const hasReps = s.reps > 0;
     return hasWeight && hasReps;
   });
 
