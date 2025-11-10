@@ -3,13 +3,13 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "../../public/css/picker.css";
 import { Toaster } from "sonner";
-import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import AuthenticatedLayout from "@/features/shared/components/AuthenticatedLayout";
 import { ThemeProvider } from "next-themes";
-import PageTransition from "@/components/PageTransition";
-import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { useFCM } from "@/hooks/useFCM";
-import WorkoutReminderBanner from "@/components/WorkoutReminderBanner";
+import PageTransition from "@/features/shared/components/PageTransition";
+import ServiceWorkerRegistrar from "@/features/shared/components/ServiceWorkerRegistrar";
+import { ErrorBoundary } from "@/features/shared/components/ErrorBoundary";
+import { useFCM } from "@/features/shared/hooks/useFCM";
+import WorkoutReminderBanner from "@/features/workout/components/WorkoutReminderBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

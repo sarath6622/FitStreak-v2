@@ -1,6 +1,6 @@
 // app/api/save-workout/route.ts
 import { NextResponse } from "next/server";
-import { db } from "@/firebase";
+import { db } from "@/config/firebase";
 import {
   collection,
   getDocs,
@@ -9,7 +9,7 @@ import {
   setDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { saveWorkoutSchema, validateRequestBody } from "@/lib/validations";
+import { saveWorkoutSchema, validateRequestBody } from "@/features/shared/utils/validations";
 
 export async function POST(req: Request) {
   try {

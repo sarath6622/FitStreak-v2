@@ -3,8 +3,8 @@ import Groq from "groq-sdk";
 import {
   getWorkoutsForUser,
   getExerciseNamesByMuscleGroup,
-} from "@/services/workoutService";
-import { recommendWorkoutSchema, validateRequestBody } from "@/lib/validations";
+} from "@/features/shared/services/workoutService";
+import { recommendWorkoutSchema, validateRequestBody } from "@/features/shared/utils/validations";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 

@@ -1,8 +1,8 @@
 // app/api/food/recent-meals/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/firebase";
+import { db } from "@/config/firebase";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
-import { getRecentFoodsSchema, validateQueryParams } from "@/lib/validations";
+import { getRecentFoodsSchema, validateQueryParams } from "@/features/shared/utils/validations";
 
 export async function GET(req: NextRequest) {
   try {

@@ -1,8 +1,8 @@
 // /app/api/edit-exercise/route.ts
 import { NextResponse } from "next/server";
-import { db } from "@/firebase";
+import { db } from "@/config/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { editExerciseSchema, validateRequestBody } from "@/lib/validations";
+import { editExerciseSchema, validateRequestBody } from "@/features/shared/utils/validations";
 
 export async function POST(req: Request) {
   try {

@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { auth, db } from "@/firebase";
+import { auth, db } from "@/config/firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 import { signOut } from "firebase/auth";
-import ProfileCard from "@/components/Profile/ProfileCard";
-import { UserProfile } from "@/types/UserProfile";
+import ProfileCard from "@/features/profile/components/ProfileCard";
+import { UserProfile } from "@/features/shared/types/UserProfile";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import WorkoutReminderSettings from "@/components/WorkoutReminderSettings";
+import WorkoutReminderSettings from "@/features/workout/components/WorkoutReminderSettings";
 
 const ProfilePage: React.FC = () => {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);

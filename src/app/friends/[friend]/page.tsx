@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation"; // 👈 import useRouter
-import { db } from "@/firebase";
+import { db } from "@/config/firebase";
 import { doc, getDoc, collection, getDocs, orderBy, query } from "firebase/firestore";
-import Avatar from "@/components/friends/Avatar";
+import Avatar from "@/features/friends/components/Avatar";
 import { ArrowLeft } from "lucide-react";
 
 export default function FriendProfilePage() {

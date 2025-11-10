@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { db } from "@/firebase";
+import { db } from "@/config/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { addExerciseSchema, validateRequestBody } from "@/lib/validations";
+import { addExerciseSchema, validateRequestBody } from "@/features/shared/utils/validations";
 
 export async function POST(req: Request) {
   try {

@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth, db } from "@/firebase";
+import { auth, db } from "@/config/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
-import Auth from "@/components/Auth";
-import WorkoutTimeline from "@/components/history/WorkoutTimeline";
-import Filters from "@/components/history/Filters";
-import { WorkoutSession } from "@/types";
-import { calculatePRs } from "@/lib/historyUtils";
+import Auth from "@/features/auth/components/Auth";
+import WorkoutTimeline from "@/features/history/components/WorkoutTimeline";
+import Filters from "@/features/history/components/Filters";
+import { WorkoutSession } from "@/features/shared/types";
+import { calculatePRs } from "@/features/history/utils/historyUtils";
 import { Sparkles } from "lucide-react";
-import WorkoutProgression from "@/components/workout/history/WorkoutProgression";
-import HistorySkeleton from "@/components/history/HistorySkeleton";
+import WorkoutProgression from "@/features/workout/components/history/WorkoutProgression";
+import HistorySkeleton from "@/features/history/components/HistorySkeleton";
 
 export default function HistoryPage() {
   const [user, setUser] = useState<User | null>(null);

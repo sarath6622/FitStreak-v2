@@ -1,14 +1,14 @@
 "use client";
 
-import { auth, db } from "@/firebase";
+import { auth, db } from "@/config/firebase";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import SuggestionSection from "@/components/SuggestionSection/index";
+import SuggestionSection from "@/features/workout/components";
 import { useEffect, useState } from "react";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { Dumbbell, Plus, TrendingUp, Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/features/shared/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/features/shared/ui/card";
 
 export default function WorkoutPage() {
   const router = useRouter();

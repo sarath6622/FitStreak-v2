@@ -2,14 +2,14 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth, db } from "@/firebase";
+import { auth, db } from "@/config/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { CaloriesRing, WaterRing, Macros, MealCard } from "@/components/diet";
-import MealModal from "@/components/diet/MealModal";
-import { UserProfile } from "@/types/UserProfile";
-import WaterGlassesCard from "@/components/diet/WaterRing";
-import DietSkeleton from "@/components/diet/DietSkeleton";
-import TodaysLog from "@/components/diet/TodaysLog";
+import { CaloriesRing, WaterRing, Macros, MealCard } from "@/features/diet/components";
+import MealModal from "@/features/diet/components/MealModal";
+import { UserProfile } from "@/features/shared/types/UserProfile";
+import WaterGlassesCard from "@/features/diet/components/WaterRing";
+import DietSkeleton from "@/features/diet/components/DietSkeleton";
+import TodaysLog from "@/features/diet/components/TodaysLog";
 
 type Meal = {
   id?: string; // from Firestore

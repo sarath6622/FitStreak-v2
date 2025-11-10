@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/firebase";
+import { db } from "@/config/firebase";
 import { collection, getDocs } from "firebase/firestore";
 import Groq from "groq-sdk";
-import { analyzeExerciseProgressSchema, validateQueryParams } from "@/lib/validations";
+import { analyzeExerciseProgressSchema, validateQueryParams } from "@/features/shared/utils/validations";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
 

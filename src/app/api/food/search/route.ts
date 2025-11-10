@@ -1,6 +1,6 @@
 // app/api/food/search/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/firebase";
+import { db } from "@/config/firebase";
 import {
   collection,
   query as fsQuery,
@@ -11,7 +11,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import Groq from "groq-sdk";
-import { NormalizedFood } from "@/lib/openfoodfacts";
+import { NormalizedFood } from "@/features/diet/utils/openfoodfacts";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
 

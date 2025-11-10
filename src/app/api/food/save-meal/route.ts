@@ -1,6 +1,6 @@
 // app/api/food/save-meal/route.ts
 import { NextResponse } from "next/server";
-import { db } from "@/firebase";
+import { db } from "@/config/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export async function POST(req: Request) {

@@ -2,17 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth, db } from "@/firebase";
+import { auth, db } from "@/config/firebase";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import Link from "next/link";
-import PRSection from "@/components/history/PRSection";
-import Auth from "@/components/Auth";
-import { calculatePRs } from "@/lib/historyUtils";
-import type { WorkoutSession } from "@/types";
-import type { UserProfile } from "@/types/UserProfile";
-import WorkoutCalendar from "@/components/WorkoutCalendar";
-import StreakTracker from "@/components/StreakTracker";
-import { Skeleton } from "@/components/ui/skeleton";
+import PRSection from "@/features/history/components/PRSection";
+import Auth from "@/features/auth/components/Auth";
+import { calculatePRs } from "@/features/history/utils/historyUtils";
+import type { WorkoutSession } from "@/features/shared/types";
+import type { UserProfile } from "@/features/shared/types/UserProfile";
+import WorkoutCalendar from "@/features/workout/components/WorkoutCalendar";
+import StreakTracker from "@/features/workout/components/StreakTracker";
+import { Skeleton } from "@/features/shared/ui/skeleton";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);

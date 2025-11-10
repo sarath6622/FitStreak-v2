@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth, db } from "@/firebase";
+import { auth, db } from "@/config/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
-import RequestsButton from "@/components/friends/RequestsButton";
-import FriendsList from "@/components/friends/FriendsList";
-import SearchFriends from "@/components/friends/SearchFriends";
-import WorkoutPreviewModal from "@/components/friends/JoinWorkoutModal";
-import Leaderboard from "@/components/friends/Leaderboard";
+import RequestsButton from "@/features/friends/components/RequestsButton";
+import FriendsList from "@/features/friends/components/FriendsList";
+import SearchFriends from "@/features/friends/components/SearchFriends";
+import WorkoutPreviewModal from "@/features/friends/components/JoinWorkoutModal";
+import Leaderboard from "@/features/friends/components/Leaderboard";
 
 export default function FriendsPage() {
   const [user, setUser] = useState<any>(null);

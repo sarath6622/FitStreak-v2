@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { db } from "@/firebase";
+import { db } from "@/config/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { deleteExerciseSchema, validateRequestBody } from "@/lib/validations";
+import { deleteExerciseSchema, validateRequestBody } from "@/features/shared/utils/validations";
 
 export async function POST(req: Request) {
   try {

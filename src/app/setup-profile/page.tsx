@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { auth, db } from "@/firebase";
+import { auth, db } from "@/config/firebase";
 import { doc, setDoc } from "firebase/firestore";
 
 interface FormData {

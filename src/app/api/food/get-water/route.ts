@@ -1,6 +1,6 @@
 // app/api/get-water/route.ts
 import { NextResponse } from "next/server";
-import { db } from "@/firebase";
+import { db } from "@/config/firebase";
 import { collection, getDocs } from "firebase/firestore";
 
 export async function GET(req: Request) {
