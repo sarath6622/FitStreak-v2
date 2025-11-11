@@ -20,17 +20,27 @@ export default function WorkoutModal({
   exerciseId,
   onWorkoutSaved,
 }: WorkoutModalProps) {
-  // Prevent body scroll when modal is open
+  // Prevent body scroll when modal is open (works on mobile too)
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+      // Store original body styles
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      const originalPosition = window.getComputedStyle(document.body).position;
 
-    return () => {
-      document.body.style.overflow = '';
-    };
+      // Prevent scrolling on all devices
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+
+      return () => {
+        // Restore original styles
+        document.body.style.overflow = originalStyle;
+        document.body.style.position = originalPosition;
+        document.body.style.width = '';
+        document.body.style.height = '';
+      };
+    }
   }, [isOpen]);
 
   return (
