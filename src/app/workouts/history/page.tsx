@@ -21,37 +21,15 @@ export default function HistoryPage() {
   const [lastLoggedExercise, setLastLoggedExercise] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
-  const [dateRange, setDateRange] = useState<string>("14d"); // default fetch window
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setAuthReady(true);
       if (firebaseUser) {
-        // initial fetch based on dateRange
+        // Fetch ALL workout data once - let components filter independently
         const workoutsRef = collection(db, "users", firebaseUser.uid, "workouts");
-        // compute start boundary for date-based query using document id (YYYY-MM-DD)
-        const now = new Date();
-        let start: string | null = null;
-        if (dateRange === "14d") {
-          const s = new Date(now);
-          s.setDate(now.getDate() - 13);
-          start = s.toISOString().split("T")[0];
-        } else if (dateRange === "30d") {
-          const s = new Date(now);
-          s.setDate(now.getDate() - 29);
-          start = s.toISOString().split("T")[0];
-        } else {
-          start = null; // all time
-        }
-
-        const qBase = start
-          ? query(
-              workoutsRef,
-              orderBy("__name__", "desc"),
-              where("__name__", ">=", start)
-            )
-          : query(workoutsRef, orderBy("__name__", "desc"));
+        const qBase = query(workoutsRef, orderBy("__name__", "desc"));
 
         const snapshot = await getDocs(qBase);
 
@@ -74,7 +52,7 @@ export default function HistoryPage() {
     });
 
     return unsub;
-  }, [dateRange]);
+  }, []);
 
   if (!authReady) {
     return (
@@ -99,19 +77,17 @@ if (loading) {
 }
 
   return (
-    <div className="min-h-screen bg-black text-[var(--text-primary)] px-4 py-6">
-      {/* ✅ Pass lastLoggedExercise here */}
+    <div className="bg-black text-[var(--text-primary)] px-4 py-4">
       <WorkoutProgression workouts={allWorkouts} defaultExercise={lastLoggedExercise} />
 
-      <div className="mt-6">
+      <div className="mt-4">
         <Filters
           allWorkouts={allWorkouts}
           onFilter={setFilteredWorkouts}
-          onDateRangeChange={setDateRange}
         />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-4">
         <WorkoutTimeline workouts={filteredWorkouts} />
       </div>
     </div>

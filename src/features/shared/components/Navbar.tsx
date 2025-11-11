@@ -101,7 +101,7 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
                     <Link
                       href={href}
                       className={clsx(
-                        "flex items-center p-4 rounded-xl transition-colors duration-150 active:scale-90",
+                        "flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-xl transition-all duration-200 active:scale-95 min-w-[56px]",
                         isActive
                           ? "bg-gradient-to-r from-blue-500/30 to-indigo-500/30 text-blue-300 shadow-inner"
                           : "text-gray-400 hover:text-gray-200"
@@ -109,14 +109,16 @@ const Navbar = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
                       style={{
                         transform: 'translate3d(0, 0, 0)',
                       }}
+                      aria-label={label}
+                      aria-current={isActive ? "page" : undefined}
                     >
-                      {icon}
+                      <div className={clsx(isActive && "scale-110 transition-transform")}>
+                        {icon}
+                      </div>
                       <span
                         className={clsx(
-                          "ml-2 text-sm transition-all duration-300 overflow-hidden",
-                          isActive
-                            ? "opacity-100 max-w-[100px]"
-                            : "opacity-0 max-w-0"
+                          "text-[9px] font-medium transition-all duration-200",
+                          isActive ? "text-blue-300" : "text-gray-500"
                         )}
                       >
                         {label}

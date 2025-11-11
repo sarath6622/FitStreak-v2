@@ -40,7 +40,7 @@ export default function WorkoutModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-start justify-center p-4 overflow-y-auto"
           onClick={onClose}
         >
           <motion.div
@@ -49,7 +49,7 @@ export default function WorkoutModal({
             exit={{ y: 50, opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg min-h-[100vh]"
+            className="w-full max-w-lg mt-8"
           >
             <ImprovedWorkoutLogger
               exercise={exercise}

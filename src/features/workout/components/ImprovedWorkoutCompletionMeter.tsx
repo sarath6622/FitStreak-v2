@@ -105,7 +105,7 @@ export default function ImprovedWorkoutCompletionMeter({
   return (
     <>
       {/* Sticky Progress Header */}
-      <div className="sticky top-0 z-30 bg-gradient-to-br from-[#0f0f0f] via-[#111827] to-[#1f2937] border-b border-[var(--card-border)] shadow-lg">
+      <div className="top-0 z-30 bg-gradient-to-br from-[#0f0f0f] via-[#111827] to-[#1f2937] border-b border-[var(--card-border)] shadow-lg rounded-md">
         <div className="px-4 py-3">
           {/* Top Row - Main Progress */}
           <div className="flex items-center justify-between mb-2">

@@ -11,23 +11,12 @@ import {
 interface Props {
   allWorkouts: WorkoutSession[];
   onFilter: (filtered: WorkoutSession[]) => void;
-  onDateRangeChange?: (range: string) => void; // notify parent to refetch from DB
 }
 
-export default function Filters({ allWorkouts, onFilter, onDateRangeChange }: Props) {
-  const [muscle, setMuscle] = useState("all");
+export default function Filters({ allWorkouts, onFilter }: Props) {
   const [dateRange, setDateRange] = useState<string>("14d"); // default: last 14 days
 
-  // Build muscle group list from *all workouts*
-  const muscleGroups = useMemo(() => {
-    const groups = new Set<string>();
-    allWorkouts.forEach((w) =>
-      w.exercises.forEach((e) => groups.add(e.muscleGroup))
-    );
-    return Array.from(groups).sort();
-  }, [allWorkouts]);
-
-  // Apply combined filters whenever inputs change or data updates
+  // Apply date filter whenever inputs change or data updates
   useEffect(() => {
     const now = new Date();
     let startDate: Date | null = null;
@@ -52,42 +41,20 @@ export default function Filters({ allWorkouts, onFilter, onDateRangeChange }: Pr
       return d >= s && d <= now;
     };
 
-    const passesMuscle = (w: WorkoutSession) => {
-      if (muscle === "all") return true;
-      return w.exercises.some(
-        (e) => e.muscleGroup.toLowerCase() === muscle.toLowerCase()
-      );
-    };
-
-    const filtered = allWorkouts.filter((w) => passesDate(w) && passesMuscle(w));
+    const filtered = allWorkouts.filter((w) => passesDate(w));
     onFilter(filtered);
-  }, [allWorkouts, muscle, dateRange, onFilter]);
-
-  // Notify parent when date range changes so it can refetch from DB
-  useEffect(() => {
-    if (onDateRangeChange) onDateRangeChange(dateRange);
-  }, [dateRange, onDateRangeChange]);
+  }, [allWorkouts, dateRange, onFilter]);
 
   return (
-    <div className="flex gap-2 items-center w-full">
-      {/* Muscle group filter */}
-      <Select value={muscle} onValueChange={setMuscle}>
-        <SelectTrigger className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg">
-          <SelectValue placeholder="Filter by muscle group" />
-        </SelectTrigger>
-        <SelectContent className="bg-gray-900 border border-gray-700 text-white">
-          <SelectItem value="all">All muscle groups</SelectItem>
-          {muscleGroups.map((g) => (
-            <SelectItem key={g} value={g}>
-              {g}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Date range filter */}
+    <div className="space-y-1.5">
+      <label className="text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wide">
+        Filter Timeline by Date
+      </label>
       <Select value={dateRange} onValueChange={setDateRange}>
-        <SelectTrigger className="min-w-[160px] bg-gray-800 border border-gray-700 text-white rounded-lg">
+        <SelectTrigger
+          className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg text-sm h-10"
+          aria-label="Select date range"
+        >
           <SelectValue placeholder="Date range" />
         </SelectTrigger>
         <SelectContent className="bg-gray-900 border border-gray-700 text-white">
